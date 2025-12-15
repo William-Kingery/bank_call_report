@@ -1,0 +1,19 @@
+.main {
+  padding: 2rem;
+  font-family: Arial, sans-serif;
+}
+
+.section {
+  margin-top: 1.5rem;
+}
+
+.healthPre {
+  background: #f6f8fa;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.error {
+  color: red;
+}

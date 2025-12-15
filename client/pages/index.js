@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import styles from '../styles/Home.module.css';
 
 export default function Home() {
   const [health, setHealth] = useState(null);
@@ -22,25 +23,20 @@ export default function Home() {
   }, []);
 
   return (
-    <main style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+    <main className={styles.main}>
       <h1>Welcome</h1>
       <p>Your Next.js frontend is ready to run. Start the dev server with <code>npm run dev</code>.</p>
 
-      <section style={{ marginTop: '1.5rem' }}>
+      <section className={styles.section}>
         <h2>Backend health check</h2>
         {health && (
           <pre
-            style={{
-              background: '#f6f8fa',
-              padding: '1rem',
-              borderRadius: '8px',
-              overflowX: 'auto',
-            }}
+            className={styles.healthPre}
           >
             {JSON.stringify(health, null, 2)}
           </pre>
         )}
-        {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+        {error && <p className={styles.error}>Error: {error}</p>}
         {!health && !error && <p>Checking backend connectivity...</p>}
       </section>
     </main>
