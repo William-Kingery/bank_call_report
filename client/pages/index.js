@@ -116,6 +116,7 @@ export default function Home() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: { ticks: { autoSkip: false } },
             y: { beginAtZero: true },
@@ -140,6 +141,7 @@ export default function Home() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: { ticks: { autoSkip: false } },
             y: { beginAtZero: true },
@@ -166,6 +168,7 @@ export default function Home() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: { ticks: { autoSkip: false } },
           },
@@ -191,6 +194,7 @@ export default function Home() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           scales: {
             x: { ticks: { autoSkip: false } },
           },
@@ -298,19 +302,35 @@ export default function Home() {
         <section className={styles.chartsGrid}>
           <div className={styles.chartCard}>
             <h3>Assets</h3>
-            <canvas ref={assetCanvasRef} aria-label="Assets bar chart" />
+            <canvas
+              ref={assetCanvasRef}
+              className={styles.chartCanvas}
+              aria-label="Assets bar chart"
+            />
           </div>
           <div className={styles.chartCard}>
             <h3>Equity</h3>
-            <canvas ref={equityCanvasRef} aria-label="Equity bar chart" />
+            <canvas
+              ref={equityCanvasRef}
+              className={styles.chartCanvas}
+              aria-label="Equity bar chart"
+            />
           </div>
           <div className={styles.chartCard}>
             <h3>ROE</h3>
-            <canvas ref={roeCanvasRef} aria-label="ROE line chart" />
+            <canvas
+              ref={roeCanvasRef}
+              className={styles.chartCanvas}
+              aria-label="ROE line chart"
+            />
           </div>
           <div className={styles.chartCard}>
             <h3>ROA</h3>
-            <canvas ref={roaCanvasRef} aria-label="ROA line chart" />
+            <canvas
+              ref={roaCanvasRef}
+              className={styles.chartCanvas}
+              aria-label="ROA line chart"
+            />
           </div>
         </section>
       )}
