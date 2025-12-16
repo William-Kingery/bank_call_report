@@ -15,10 +15,12 @@ export default function Home() {
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
 
   const assetCanvasRef = useRef(null);
+  const equityCanvasRef = useRef(null);
   const roeCanvasRef = useRef(null);
   const roaCanvasRef = useRef(null);
 
   const assetChartRef = useRef(null);
+  const equityChartRef = useRef(null);
   const roeChartRef = useRef(null);
   const roaChartRef = useRef(null);
 
@@ -63,6 +65,7 @@ export default function Home() {
   useEffect(() => {
     return () => {
       assetChartRef.current?.destroy();
+      equityChartRef.current?.destroy();
       roeChartRef.current?.destroy();
       roaChartRef.current?.destroy();
     };
@@ -71,6 +74,7 @@ export default function Home() {
   useEffect(() => {
     if (!chartData?.points?.length) {
       assetChartRef.current?.destroy();
+      equityChartRef.current?.destroy();
       roeChartRef.current?.destroy();
       roaChartRef.current?.destroy();
       return;
@@ -92,6 +96,7 @@ export default function Home() {
 
     const labels = chartData.points.map((point) => formatQuarterLabel(point.callym));
     const assetValues = chartData.points.map((point) => point.asset ?? null);
+    const equityValues = chartData.points.map((point) => point.eq ?? null);
     const roeValues = chartData.points.map((point) => point.roe ?? null);
     const roaValues = chartData.points.map((point) => point.roa ?? null);
 
@@ -106,6 +111,30 @@ export default function Home() {
               label: 'Assets',
               data: assetValues,
               backgroundColor: '#4f46e5',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { ticks: { autoSkip: false } },
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    }
+
+    if (equityCanvasRef.current) {
+      equityChartRef.current?.destroy();
+      equityChartRef.current = new Chart(equityCanvasRef.current, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Equity',
+              data: equityValues,
+              backgroundColor: '#0ea5e9',
             },
           ],
         },
@@ -211,7 +240,7 @@ export default function Home() {
           <p className={styles.kicker}>FDIC Call Report explorer</p>
           <h1 className={styles.title}>Search by NameFull and chart performance</h1>
           <p className={styles.subtitle}>
-            Start typing a bank name to view assets, ROE, and ROA over time.
+            Start typing a bank name to view assets, equity, ROE, and ROA over time.
           </p>
         </div>
       </div>
@@ -270,6 +299,10 @@ export default function Home() {
           <div className={styles.chartCard}>
             <h3>Assets</h3>
             <canvas ref={assetCanvasRef} aria-label="Assets bar chart" />
+          </div>
+          <div className={styles.chartCard}>
+            <h3>Equity</h3>
+            <canvas ref={equityCanvasRef} aria-label="Equity bar chart" />
           </div>
           <div className={styles.chartCard}>
             <h3>ROE</h3>
