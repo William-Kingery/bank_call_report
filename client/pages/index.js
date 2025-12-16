@@ -12,6 +12,7 @@ export default function Home() {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasSelectedBank, setHasSelectedBank] = useState(false);
 
   const assetCanvasRef = useRef(null);
   const roeCanvasRef = useRef(null);
@@ -24,7 +25,11 @@ export default function Home() {
   useEffect(() => {
     const controller = new AbortController();
 
-    if (!query || query.length < 2) {
+    if (
+      !query ||
+      query.length < 2 ||
+      (hasSelectedBank && chartData?.points?.length > 0 && query === selectedName)
+    ) {
       setSuggestions([]);
       return undefined;
     }
@@ -53,7 +58,7 @@ export default function Home() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [query]);
+  }, [chartData, hasSelectedBank, query, selectedName]);
 
   useEffect(() => {
     return () => {
@@ -172,6 +177,7 @@ export default function Home() {
   const handleSelect = (item) => {
     setSelectedCert(item.cert);
     setSelectedName(item.nameFull);
+    setHasSelectedBank(true);
     setQuery(item.nameFull);
     setSuggestions([]);
     fetchCharts(item.cert);
@@ -209,10 +215,12 @@ export default function Home() {
           onChange={(e) => {
             setQuery(e.target.value);
             setError(null);
+            setHasSelectedBank(false);
           }}
           onKeyDown={handleSubmit}
         />
-        {suggestions.length > 0 && (
+        {suggestions.length > 0 &&
+          !(hasSelectedBank && chartData?.points?.length > 0 && query === selectedName) && (
           <ul className={styles.suggestions}>
             {suggestions.map((item) => (
               <li key={`${item.cert}-${item.nameFull}`}>
