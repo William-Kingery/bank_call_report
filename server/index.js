@@ -5,6 +5,7 @@ import cors from "cors";
 import pool from './db.js';
 import healthRoutes from './routes/health.js';
 import schemaRoutes from './routes/schema.js';
+import dataRoutes from './routes/data.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -19,6 +20,7 @@ app.use(
 
 app.use(healthRoutes);
 app.use(schemaRoutes);
+app.use(dataRoutes);
 
 const startServer = async () => {
   try {
