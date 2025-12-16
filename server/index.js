@@ -3,7 +3,7 @@ import express from 'express';
 import cors from "cors";
 
 import pool from './db.js';
-import routes from './routes/index.js';
+import routes from './routes/health.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
