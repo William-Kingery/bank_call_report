@@ -1,3 +1,14 @@
-node_modules
+# Node
+node_modules/
 npm-debug.log*
-*.env
+yarn-debug.log*
+pnpm-debug.log*
+
+# Next.js
+client/.next/
+.next/
+out/
+
+# Env
+.env
+.env.*
