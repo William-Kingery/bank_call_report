@@ -2,8 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import cors from "cors";
 
-
 import pool from './db.js';
+import routes from './routes/index.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -16,28 +16,7 @@ app.use(
   })
 );
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Jhakaas Express server is running!' });
-});
-
-app.get('/api/health', async (_req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT 1 AS result');
-
-    res.json({
-      server: 'ok',
-      database: 'connected',
-      result: rows?.[0]?.result ?? null,
-    });
-  } catch (error) {
-    console.error('Database health check failed:', error);
-    res.status(500).json({
-      server: 'ok',
-      database: 'error',
-      message: 'Database check failed',
-    });
-  }
-});
+app.use(routes);
 
 const startServer = async () => {
   try {
