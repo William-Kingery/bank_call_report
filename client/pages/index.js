@@ -76,7 +76,21 @@ export default function Home() {
       return;
     }
 
-    const labels = chartData.points.map((point) => point.callym);
+    const formatQuarterLabel = (callym) => {
+      const year = String(callym).slice(0, 4);
+      const month = String(callym).slice(4);
+      const quarterMap = {
+        '03': 'Q1',
+        '06': 'Q2',
+        '09': 'Q3',
+        '12': 'Q4',
+      };
+
+      const quarter = quarterMap[month] ?? month;
+      return `${year} ${quarter}`;
+    };
+
+    const labels = chartData.points.map((point) => formatQuarterLabel(point.callym));
     const assetValues = chartData.points.map((point) => point.asset ?? null);
     const roeValues = chartData.points.map((point) => point.roe ?? null);
     const roaValues = chartData.points.map((point) => point.roa ?? null);
