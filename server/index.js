@@ -3,7 +3,8 @@ import express from 'express';
 import cors from "cors";
 
 import pool from './db.js';
-import routes from './routes/health.js';
+import healthRoutes from './routes/health.js';
+import schemaRoutes from './routes/schema.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -16,7 +17,8 @@ app.use(
   })
 );
 
-app.use(routes);
+app.use(healthRoutes);
+app.use(schemaRoutes);
 
 const startServer = async () => {
   try {
