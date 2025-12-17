@@ -137,6 +137,12 @@
   gap: 1.25rem;
 }
 
+.landscapeCharts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.25rem;
+}
+
 .chartCard {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -153,6 +159,10 @@
 .chartCanvas {
   width: 100%;
   height: 300px;
+}
+
+.landscapeCanvas {
+  height: 260px;
 }
 
 .error {
