@@ -1,0 +1,179 @@
+.main {
+  padding: 2.5rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #0f172a;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+}
+
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 2rem;
+  margin: 0 0 0.5rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: #475569;
+}
+
+.searchSection {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.suggestions {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.suggestionButton {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.75rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.suggestionButton:hover,
+.suggestionButton:focus {
+  background: #f8fafc;
+  outline: none;
+}
+
+.suggestionName {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.suggestionCert {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.status {
+  color: #475569;
+  margin: 0.5rem 0;
+}
+
+.selectionSummary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #eef2ff, #e0f2fe);
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.selectionLabel {
+  margin: 0;
+  font-weight: 600;
+  color: #475569;
+}
+
+.selectionName {
+  margin: 0.2rem 0 0;
+  font-size: 1.4rem;
+}
+
+.selectionCert {
+  font-weight: 700;
+  color: #312e81;
+}
+
+.chartsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.landscapeCharts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.25rem;
+}
+
+.chartCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.06);
+  width: 100%;
+}
+
+.chartCard h3 {
+  margin: 0 0 0.5rem;
+}
+
+.chartCanvas {
+  width: 100%;
+  height: 240px;
+}
+
+.landscapeCanvas {
+  height: 200px;
+}
+
+.landscapeCanvas {
+  height: 260px;
+}
+
+.error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecdd3;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  margin: 0.5rem 0;
+}
