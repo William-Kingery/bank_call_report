@@ -302,7 +302,7 @@ export default function Home() {
         <section className={styles.chartsGrid}>
           <div className={styles.landscapeCharts}>
             <div className={styles.chartCard}>
-              <h3>Assets</h3>
+              <h3>Assets (in Thousands)</h3>
               <canvas
                 ref={assetCanvasRef}
                 className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
@@ -310,7 +310,7 @@ export default function Home() {
               />
             </div>
             <div className={styles.chartCard}>
-              <h3>Equity</h3>
+              <h3>Equity (in Thousands)</h3>
               <canvas
                 ref={equityCanvasRef}
                 className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
