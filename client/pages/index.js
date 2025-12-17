@@ -300,21 +300,23 @@ export default function Home() {
 
       {chartData?.points?.length > 0 && (
         <section className={styles.chartsGrid}>
-          <div className={styles.chartCard}>
-            <h3>Assets</h3>
-            <canvas
-              ref={assetCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="Assets bar chart"
-            />
-          </div>
-          <div className={styles.chartCard}>
-            <h3>Equity</h3>
-            <canvas
-              ref={equityCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="Equity bar chart"
-            />
+          <div className={styles.landscapeCharts}>
+            <div className={styles.chartCard}>
+              <h3>Assets</h3>
+              <canvas
+                ref={assetCanvasRef}
+                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
+                aria-label="Assets bar chart"
+              />
+            </div>
+            <div className={styles.chartCard}>
+              <h3>Equity</h3>
+              <canvas
+                ref={equityCanvasRef}
+                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
+                aria-label="Equity bar chart"
+              />
+            </div>
           </div>
           <div className={styles.chartCard}>
             <h3>ROE</h3>
