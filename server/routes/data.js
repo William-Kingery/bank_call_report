@@ -59,7 +59,6 @@ router.get('/charts', async (req, res) => {
          f.CALLYM AS callym,
          f.ASSET AS asset,
          f.EQ AS eq,
-         COALESCE(f.TOTDEP, 0) + COALESCE(f.DEP, 0) AS totalDeposits,
          f.DEP AS dep,
          f.RWA AS rwa,
          r.ROA AS roa
