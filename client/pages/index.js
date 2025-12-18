@@ -37,14 +37,55 @@ export default function Home() {
   const assetsByQuarter = useMemo(() => {
     if (!reportData?.points?.length) return [];
 
-    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0));
+    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0), 0);
+    const roaValues = reportData.points
+      .map((point) => Number(point.roa))
+      .filter((value) => Number.isFinite(value));
 
-    return reportData.points.map((point) => ({
-      label: formatQuarterLabel(point.callym),
-      value: point.asset,
-      percentage: maxAsset > 0 ? ((Number(point.asset) || 0) / maxAsset) * 100 : 0,
-    }));
+    const roaMin = roaValues.length ? Math.min(...roaValues) : 0;
+    const roaMax = roaValues.length ? Math.max(...roaValues) : 0;
+    const roaRange = roaMax - roaMin || 1;
+
+    return reportData.points.map((point) => {
+      const roaValue = Number(point.roa);
+      const hasRoa = Number.isFinite(roaValue);
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        value: point.asset,
+        percentage: maxAsset > 0 ? ((Number(point.asset) || 0) / maxAsset) * 100 : 0,
+        roa: hasRoa ? roaValue : null,
+        roaPosition: hasRoa ? ((roaValue - roaMin) / roaRange) * 100 : null,
+      };
+    });
   }, [reportData]);
+
+  const roaLine = useMemo(() => {
+    if (!assetsByQuarter.length) {
+      return { path: '', coordinates: [] };
+    }
+
+    const xMax = Math.max(assetsByQuarter.length - 1, 1);
+    const coordinates = assetsByQuarter
+      .map((point, index) => {
+        if (point.roaPosition === null) return null;
+        const x = assetsByQuarter.length > 1 ? (index / xMax) * 100 : 50;
+        const y = 100 - point.roaPosition;
+        return { x, y, label: point.label, value: point.roa };
+      })
+      .filter(Boolean);
+
+    if (!coordinates.length) {
+      return { path: '', coordinates: [] };
+    }
+
+    const path = coordinates
+      .map((coord, index) => `${index === 0 ? 'M' : 'L'}${coord.x} ${coord.y}`)
+      .join(' ')
+      .trim();
+
+    return { path, coordinates };
+  }, [assetsByQuarter]);
 
   const latestPoint = useMemo(() => {
     if (!reportData?.points?.length) return null;
@@ -241,20 +282,49 @@ export default function Home() {
               </div>
               <p className={styles.chartHint}>Values shown are in thousands</p>
             </div>
-            <div className={styles.barChart} role="figure" aria-label="Assets by quarter bar chart">
-              {assetsByQuarter.map((point) => (
-                <div key={point.label} className={styles.barColumn}>
-                  <div className={styles.barWrapper}>
-                    <div
-                      className={styles.bar}
-                      style={{ height: `${point.percentage}%` }}
-                      aria-label={`${point.label} assets ${formatNumber(point.value)}`}
-                    />
+            <div className={styles.combinedChart}>
+              <div className={styles.barChart} role="figure" aria-label="Assets by quarter bar chart">
+                {assetsByQuarter.map((point) => (
+                  <div key={point.label} className={styles.barColumn}>
+                    <div className={styles.barWrapper}>
+                      <div
+                        className={styles.bar}
+                        style={{ height: `${point.percentage}%` }}
+                        aria-label={`${point.label} assets ${formatNumber(point.value)}`}
+                      />
+                    </div>
+                    <span className={styles.barLabel}>{point.label}</span>
+                    <span className={styles.barValue}>{formatNumber(point.value)}</span>
                   </div>
-                  <span className={styles.barLabel}>{point.label}</span>
-                  <span className={styles.barValue}>{formatNumber(point.value)}</span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {roaLine.coordinates.length > 0 && (
+                <>
+                  <svg
+                    className={styles.roaChartOverlay}
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path className={styles.roaPath} d={roaLine.path} />
+                    {roaLine.coordinates.map((coord) => (
+                      <circle
+                        key={`${coord.label}-${coord.value}`}
+                        className={styles.roaPoint}
+                        cx={coord.x}
+                        cy={coord.y}
+                        r="1.8"
+                      />
+                    ))}
+                  </svg>
+                  <div className={styles.roaLegend}>
+                    <span className={styles.roaLegendDot} aria-hidden="true" />
+                    <span className={styles.roaLegendLabel}>ROA trend</span>
+                  </div>
+                </>
+              )}
             </div>
           </section>
         </>

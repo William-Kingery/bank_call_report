@@ -251,6 +251,10 @@
   align-items: end;
 }
 
+.combinedChart {
+  position: relative;
+}
+
 .barColumn {
   display: flex;
   flex-direction: column;
@@ -291,4 +295,54 @@
 
 .barValue {
   color: #475569;
+}
+
+.roaChartOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 240px;
+  pointer-events: none;
+}
+
+.roaPath {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2;
+}
+
+.roaPoint {
+  fill: #2563eb;
+  stroke: #ffffff;
+  stroke-width: 1;
+}
+
+.roaLegend {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.14);
+}
+
+.roaLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.roaLegendLabel {
+  line-height: 1;
 }
