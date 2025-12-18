@@ -365,6 +365,16 @@ export default function Home() {
                 {(roaScale.hasData || roeScale.hasData) && (
                   <p className={styles.chartHint}>ROA follows assets and ROE follows equity</p>
                 )}
+                <div className={styles.chartStatsRow}>
+                  <div className={styles.chartStat}>
+                    <p className={styles.chartStatLabel}>Latest deposits</p>
+                    <p className={styles.chartStatValue}>{formatNumber(latestDeposits)}</p>
+                  </div>
+                  <div className={styles.chartStat}>
+                    <p className={styles.chartStatLabel}>Latest RWA</p>
+                    <p className={styles.chartStatValue}>{formatNumber(latestRwa)}</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -495,13 +505,11 @@ export default function Home() {
                               style={{ height: `${point.equityPercentage}%` }}
                               aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
                             />
-                          </div>
-                          <span className={styles.barLabel}>{point.label}</span>
-                          <div className={styles.barValues}>
-                            <span className={`${styles.barValue} ${styles.equityValue}`}>
-                              <strong>Equity:</strong> {formatNumber(point.equity)}
+                            <span className={styles.barHoverValue}>
+                              {formatNumber(point.equity)}
                             </span>
                           </div>
+                          <span className={styles.barLabel}>{point.label}</span>
                         </div>
                       ))}
                     </div>
@@ -516,13 +524,22 @@ export default function Home() {
                       >
                         <path className={`${styles.trendPath} ${styles.trendPathRoe}`} d={roeLine.path} />
                         {roeLine.coordinates.map((coord) => (
-                          <circle
-                            key={`${coord.label}-${coord.value}-roe`}
-                            className={`${styles.trendPoint} ${styles.trendPointRoe}`}
-                            cx={coord.x}
-                            cy={coord.y}
-                            r="1.8"
-                          />
+                          <g key={`${coord.label}-${coord.value}-roe`}>
+                            <circle
+                              className={`${styles.trendPoint} ${styles.trendPointRoe}`}
+                              cx={coord.x}
+                              cy={coord.y}
+                              r="1.8"
+                            />
+                            <text
+                              className={styles.trendLabel}
+                              x={coord.x}
+                              y={Math.max(coord.y - 3, 6)}
+                              textAnchor="middle"
+                            >
+                              {formatNumber(coord.meta?.equity)}
+                            </text>
+                          </g>
                         ))}
                       </svg>
                     )}
