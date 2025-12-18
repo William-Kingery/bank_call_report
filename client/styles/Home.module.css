@@ -126,6 +126,11 @@
   font-size: 1.4rem;
 }
 
+.selectionLocation {
+  margin: 0.15rem 0 0;
+  color: #334155;
+}
+
 .selectionCert {
   font-weight: 700;
   color: #312e81;

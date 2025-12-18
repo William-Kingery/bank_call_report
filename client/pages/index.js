@@ -39,6 +39,13 @@ export default function Home() {
     return reportData.points[reportData.points.length - 1];
   }, [reportData]);
 
+  const formattedLocation = useMemo(() => {
+    if (!reportData) return null;
+
+    const parts = [reportData.city, reportData.stateName, reportData.zipCode].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : null;
+  }, [reportData]);
+
   const latestLiabilities =
     latestPoint?.asset != null && latestPoint?.eq != null
       ? latestPoint.asset - latestPoint.eq
@@ -171,7 +178,10 @@ export default function Home() {
         <section className={styles.selectionSummary}>
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
-            <h2 className={styles.selectionName}>{selectedName}</h2>
+            <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
+            {formattedLocation && (
+              <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
         </section>
