@@ -110,7 +110,7 @@ export default function Home() {
             {
               label: 'Assets',
               data: assetValues,
-              backgroundColor: '#4f46e5',
+              backgroundColor: '#22c55e',
             },
           ],
         },
@@ -314,25 +314,27 @@ export default function Home() {
               <canvas
                 ref={equityCanvasRef}
                 className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
-                aria-label="Equity bar chart"
+              aria-label="Equity bar chart"
               />
             </div>
           </div>
-          <div className={styles.chartCard}>
-            <h3>ROE</h3>
-            <canvas
-              ref={roeCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="ROE line chart"
-            />
-          </div>
-          <div className={styles.chartCard}>
-            <h3>ROA</h3>
-            <canvas
-              ref={roaCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="ROA line chart"
-            />
+          <div className={styles.lineCharts}>
+            <div className={styles.chartCard}>
+              <h3>ROE</h3>
+              <canvas
+                ref={roeCanvasRef}
+                className={styles.chartCanvas}
+                aria-label="ROE line chart"
+              />
+            </div>
+            <div className={styles.chartCard}>
+              <h3>ROA</h3>
+              <canvas
+                ref={roaCanvasRef}
+                className={styles.chartCanvas}
+                aria-label="ROA line chart"
+              />
+            </div>
           </div>
         </section>
       )}

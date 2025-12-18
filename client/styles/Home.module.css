@@ -143,6 +143,12 @@
   gap: 1.25rem;
 }
 
+.lineCharts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.25rem;
+}
+
 .chartCard {
   background: #fff;
   border: 1px solid #e2e8f0;
