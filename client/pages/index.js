@@ -34,6 +34,56 @@ export default function Home() {
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
 
+  const assetsByQuarter = useMemo(() => {
+    if (!reportData?.points?.length) return [];
+
+    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0));
+
+    return reportData.points.map((point) => ({
+      label: formatQuarterLabel(point.callym),
+      value: point.asset,
+      percentage: maxAsset > 0 ? ((Number(point.asset) || 0) / maxAsset) * 100 : 0,
+    }));
+  }, [reportData]);
+
+  const roaTrend = useMemo(() => {
+    if (!reportData?.points?.length) return { points: '', coords: [] };
+
+    const values = reportData.points
+      .map((point) =>
+        point?.roa === null || point?.roa === undefined ? null : Number.parseFloat(point.roa)
+      )
+      .filter((value) => value !== null && !Number.isNaN(value));
+
+    if (!values.length) return { points: '', coords: [] };
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const lastIndex = Math.max(reportData.points.length - 1, 1);
+
+    const coords = reportData.points
+      .map((point, index) => {
+        const value = Number.parseFloat(point?.roa);
+        if (Number.isNaN(value)) return null;
+
+        const x = reportData.points.length === 1 ? 50 : (index / lastIndex) * 100;
+        const y = 100 - ((value - min) / range) * 100;
+
+        return {
+          x,
+          y,
+          label: formatQuarterLabel(point.callym),
+          value: value.toFixed(2),
+        };
+      })
+      .filter(Boolean);
+
+    const points = coords.map(({ x, y }) => `${x},${y}`).join(' ');
+
+    return { points, coords };
+  }, [reportData]);
+
   const latestPoint = useMemo(() => {
     if (!reportData?.points?.length) return null;
     return reportData.points[reportData.points.length - 1];
@@ -217,6 +267,62 @@ export default function Home() {
               <div className={styles.metricCard}>
                 <p className={styles.metricName}>ROA</p>
                 <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.chartSection}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.chartKicker}>Time series</p>
+                <h3 className={styles.sectionTitle}>Assets by quarter</h3>
+              </div>
+              <p className={styles.chartHint}>Values shown are in thousands</p>
+            </div>
+            <div className={styles.barChartWrapper}>
+              {roaTrend.points && (
+                <svg
+                  className={styles.roaLine}
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  aria-label="ROA trend line"
+                >
+                  <polyline className={styles.roaLinePath} points={roaTrend.points} />
+                  {roaTrend.coords.map((coord) => (
+                    <circle
+                      key={`${coord.label}-${coord.value}`}
+                      className={styles.roaPoint}
+                      cx={coord.x}
+                      cy={coord.y}
+                      r="1.2"
+                    />
+                  ))}
+                </svg>
+              )}
+              <div className={styles.barChart} role="figure" aria-label="Assets by quarter bar chart">
+                {assetsByQuarter.map((point) => (
+                  <div key={point.label} className={styles.barColumn}>
+                    <div className={styles.barWrapper}>
+                      <div
+                        className={styles.bar}
+                        style={{ height: `${point.percentage}%` }}
+                        aria-label={`${point.label} assets ${formatNumber(point.value)}`}
+                      />
+                    </div>
+                    <span className={styles.barLabel}>{point.label}</span>
+                    <span className={styles.barValue}>{formatNumber(point.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className={styles.chartLegend}>
+              <div className={styles.legendItem}>
+                <span className={styles.legendSwatch} aria-hidden="true" />
+                <span>Assets</span>
+              </div>
+              <div className={styles.legendItem}>
+                <span className={styles.legendLine} aria-hidden="true" />
+                <span>ROA trend</span>
               </div>
             </div>
           </section>
