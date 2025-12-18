@@ -59,20 +59,45 @@ export default function Home() {
   const assetsByQuarter = useMemo(() => {
     if (!reportData?.points?.length) return [];
 
-    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0), 0);
+    const sortedPoints = [...reportData.points].sort(
+      (a, b) => Number(a.callym) - Number(b.callym),
+    );
 
-    return reportData.points.map((point) => {
-      const roaValue = Number(point.roa);
+    const latestYear = String(sortedPoints[sortedPoints.length - 1].callym).slice(0, 4);
+    const quarterMap = [
+      { month: '03', label: 'Q1' },
+      { month: '06', label: 'Q2' },
+      { month: '09', label: 'Q3' },
+      { month: '12', label: 'Q4' },
+    ];
+
+    const latestYearPoints = sortedPoints.filter(
+      (point) => String(point.callym).slice(0, 4) === latestYear,
+    );
+
+    const quarterData = quarterMap.map(({ month, label }) => {
+      const point = latestYearPoints.find((p) => String(p.callym).endsWith(month));
+
+      const roaValue = Number(point?.roa);
       const hasRoa = Number.isFinite(roaValue);
 
       return {
-        label: formatQuarterLabel(point.callym),
-        value: point.asset,
-        percentage: maxAsset > 0 ? ((Number(point.asset) || 0) / maxAsset) * 100 : 0,
+        label: `${latestYear} ${label}`,
+        value: point?.asset ?? null,
         roa: hasRoa ? roaValue : null,
-        roaPosition: hasRoa ? ((roaValue - roaScale.min) / roaScale.range) * 100 : null,
       };
     });
+
+    const maxAsset = Math.max(...quarterData.map((point) => Number(point.value) || 0), 0);
+
+    return quarterData.map((point) => ({
+      ...point,
+      percentage: maxAsset > 0 ? ((Number(point.value) || 0) / maxAsset) * 100 : 0,
+      roaPosition:
+        point.roa !== null && roaScale.range > 0
+          ? ((point.roa - roaScale.min) / roaScale.range) * 100
+          : null,
+    }));
   }, [reportData, roaScale]);
 
   const roaLine = useMemo(() => {
