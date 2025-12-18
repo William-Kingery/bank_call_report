@@ -224,6 +224,36 @@
   align-items: start;
 }
 
+.chartCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chartCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chartCardTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.chartCardSubhead {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
 .sectionHeader {
   display: flex;
   align-items: flex-start;
@@ -453,6 +483,15 @@
 
 .trendPointRoe {
   fill: #8b5cf6;
+}
+
+.trendLabel {
+  fill: #0f172a;
+  font-size: 2.8px;
+  font-weight: 700;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 0.4px;
 }
 
 .legendAssets {
