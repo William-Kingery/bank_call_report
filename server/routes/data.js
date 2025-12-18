@@ -39,8 +39,8 @@ router.get('/charts', async (req, res) => {
       `SELECT
          NAMEFULL AS nameFull,
          CITY AS city,
-         STATENAME AS stateName,
-         ZIPCODE AS zipCode
+         STNAME AS stateName,
+         ZIP AS zipCode
        FROM fdic_structure
        WHERE CERT = ?
        ORDER BY CALLYM DESC
