@@ -269,15 +269,6 @@ export default function Home() {
               </div>
             </div>
           </section>
-          <div className={styles.rwaCallout}>
-            <div>
-              <p className={styles.rwaCalloutLabel}>Latest quarterly RWA</p>
-              <p className={styles.rwaCalloutQuarter}>
-                As of {formatQuarterLabel(latestPoint?.callym)}
-              </p>
-            </div>
-            <p className={styles.rwaCalloutValue}>{formatNumber(latestRwa)}</p>
-          </div>
           <section className={styles.chartSection}>
             <div className={styles.sectionHeader}>
               <div>
