@@ -55,63 +55,53 @@ export default function Home() {
     return [...reportData.points].sort((a, b) => Number(a.callym) - Number(b.callym));
   }, [reportData]);
 
-  const roaScale = useMemo(
-    () => createTrendScale(sortedPoints.map((point) => Number(point.roa))),
+  const trendScale = useMemo(() => {
+    const trendValues = sortedPoints.flatMap((point) => [Number(point.roa), Number(point.roe)]);
+    return createTrendScale(trendValues);
+  }, [sortedPoints]);
+
+  const maxBarValue = useMemo(
+    () =>
+      sortedPoints.reduce(
+        (maxValue, point) =>
+          Math.max(maxValue, Number(point.asset) || 0, Number(point.eq) || 0),
+        0,
+      ),
     [sortedPoints],
   );
 
-  const roeScale = useMemo(
-    () => createTrendScale(sortedPoints.map((point) => Number(point.roe))),
-    [sortedPoints],
-  );
-
-  const assetsByQuarter = useMemo(() => {
+  const quarterlySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
-
-    const maxAsset = Math.max(...sortedPoints.map((point) => Number(point.asset) || 0), 0);
 
     return sortedPoints.map((point) => {
       const assetValue = Number(point.asset);
-      const roaValue = Number(point.roa);
-      const hasAsset = Number.isFinite(assetValue);
-      const hasRoa = Number.isFinite(roaValue);
-
-      return {
-        label: formatQuarterLabel(point.callym),
-        value: hasAsset ? assetValue : null,
-        percentage: maxAsset > 0 && hasAsset ? (assetValue / maxAsset) * 100 : 0,
-        roa: hasRoa ? roaValue : null,
-        roaPosition:
-          hasRoa && roaScale.range > 0
-            ? ((roaValue - roaScale.min) / roaScale.range) * 100
-            : null,
-      };
-    });
-  }, [roaScale, sortedPoints]);
-
-  const equityByQuarter = useMemo(() => {
-    if (!sortedPoints.length) return [];
-
-    const maxEquity = Math.max(...sortedPoints.map((point) => Number(point.eq) || 0), 0);
-
-    return sortedPoints.map((point) => {
       const equityValue = Number(point.eq);
+      const roaValue = Number(point.roa);
       const roeValue = Number(point.roe);
+      const hasAsset = Number.isFinite(assetValue);
       const hasEquity = Number.isFinite(equityValue);
+      const hasRoa = Number.isFinite(roaValue);
       const hasRoe = Number.isFinite(roeValue);
 
       return {
         label: formatQuarterLabel(point.callym),
-        value: hasEquity ? equityValue : null,
-        percentage: maxEquity > 0 && hasEquity ? (equityValue / maxEquity) * 100 : 0,
+        asset: hasAsset ? assetValue : null,
+        equity: hasEquity ? equityValue : null,
+        assetPercentage: maxBarValue > 0 && hasAsset ? (assetValue / maxBarValue) * 100 : 0,
+        equityPercentage: maxBarValue > 0 && hasEquity ? (equityValue / maxBarValue) * 100 : 0,
+        roa: hasRoa ? roaValue : null,
         roe: hasRoe ? roeValue : null,
+        roaPosition:
+          hasRoa && trendScale.range > 0
+            ? ((roaValue - trendScale.min) / trendScale.range) * 100
+            : null,
         roePosition:
-          hasRoe && roeScale.range > 0
-            ? ((roeValue - roeScale.min) / roeScale.range) * 100
+          hasRoe && trendScale.range > 0
+            ? ((roeValue - trendScale.min) / trendScale.range) * 100
             : null,
       };
     });
-  }, [roeScale, sortedPoints]);
+  }, [maxBarValue, sortedPoints, trendScale]);
 
   const buildTrendLine = (series, positionKey, valueKey) => {
     if (!series.length) {
@@ -141,13 +131,13 @@ export default function Home() {
   };
 
   const roaLine = useMemo(
-    () => buildTrendLine(assetsByQuarter, 'roaPosition', 'roa'),
-    [assetsByQuarter],
+    () => buildTrendLine(quarterlySeries, 'roaPosition', 'roa'),
+    [quarterlySeries],
   );
 
   const roeLine = useMemo(
-    () => buildTrendLine(equityByQuarter, 'roePosition', 'roe'),
-    [equityByQuarter],
+    () => buildTrendLine(quarterlySeries, 'roePosition', 'roe'),
+    [quarterlySeries],
   );
 
   const latestPoint = useMemo(() => {
@@ -166,6 +156,8 @@ export default function Home() {
     latestPoint?.asset != null && latestPoint?.eq != null
       ? latestPoint.asset - latestPoint.eq
       : null;
+
+  const latestDeposits = latestPoint?.totalDeposits ?? null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -323,6 +315,10 @@ export default function Home() {
                 <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
               </div>
               <div className={styles.metricCard}>
+                <p className={styles.metricName}>Total deposits</p>
+                <p className={styles.metricValue}>{formatNumber(latestDeposits)}</p>
+              </div>
+              <div className={styles.metricCard}>
                 <p className={styles.metricName}>Equity</p>
                 <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
               </div>
@@ -336,158 +332,129 @@ export default function Home() {
               </div>
             </div>
           </section>
-
-          <div className={styles.chartGrid}>
-            <section className={styles.chartSection}>
-              <div className={styles.sectionHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Time series</p>
-                  <h3 className={styles.sectionTitle}>Assets by quarter</h3>
-                </div>
-                <p className={styles.chartHint}>Values shown are in thousands</p>
+          <section className={styles.chartSection}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <p className={styles.chartKicker}>Time series</p>
+                <h3 className={styles.sectionTitle}>Assets and equity by quarter</h3>
               </div>
-              <div className={styles.combinedChart}>
-                <div className={styles.chartBody}>
-                  <div
-                    className={styles.barChart}
-                    role="figure"
-                    aria-label="Assets by quarter bar chart"
-                    style={{
-                      gridTemplateColumns: `repeat(${assetsByQuarter.length}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {assetsByQuarter.map((point) => (
-                      <div key={point.label} className={styles.barColumn}>
-                        <div className={styles.barWrapper}>
+              <div className={styles.sectionHeaderMeta}>
+                <p className={styles.chartHint}>Values shown are in thousands</p>
+                {trendScale.hasData && (
+                  <p className={styles.chartHint}>ROA and ROE shown as secondary trends</p>
+                )}
+              </div>
+            </div>
+
+            <div className={styles.chartLegendRow} aria-hidden="true">
+              <div className={styles.legendItem}>
+                <span className={`${styles.legendSwatch} ${styles.legendAssets}`} />
+                <span className={styles.legendLabel}>Assets</span>
+              </div>
+              <div className={styles.legendItem}>
+                <span className={`${styles.legendSwatch} ${styles.legendEquity}`} />
+                <span className={styles.legendLabel}>Equity</span>
+              </div>
+              <div className={styles.legendItem}>
+                <span className={`${styles.legendSwatch} ${styles.legendRoa}`} />
+                <span className={styles.legendLabel}>ROA trend</span>
+              </div>
+              <div className={styles.legendItem}>
+                <span className={`${styles.legendSwatch} ${styles.legendRoe}`} />
+                <span className={styles.legendLabel}>ROE trend</span>
+              </div>
+            </div>
+
+            <div className={styles.combinedChart}>
+              <div className={styles.chartBody}>
+                <div
+                  className={styles.barChart}
+                  role="figure"
+                  aria-label="Assets and equity by quarter bar chart"
+                  style={{
+                    gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                  }}
+                >
+                  {quarterlySeries.map((point) => (
+                    <div key={point.label} className={styles.barColumn}>
+                      <div className={styles.barWrapper}>
+                        <div className={styles.barGroup}>
                           <div
-                            className={styles.bar}
-                            style={{ height: `${point.percentage}%` }}
-                            aria-label={`${point.label} assets ${formatNumber(point.value)}`}
+                            className={`${styles.bar} ${styles.assetBar}`}
+                            style={{ height: `${point.assetPercentage}%` }}
+                            aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                          />
+                          <div
+                            className={`${styles.bar} ${styles.equityBar}`}
+                            style={{ height: `${point.equityPercentage}%` }}
+                            aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
                           />
                         </div>
-                        <span className={styles.barLabel}>{point.label}</span>
-                        <span className={styles.barValue}>{formatNumber(point.value)}</span>
                       </div>
-                    ))}
-                  </div>
+                      <span className={styles.barLabel}>{point.label}</span>
+                      <div className={styles.barValues}>
+                        <span className={styles.barValue}>
+                          <strong>Assets:</strong> {formatNumber(point.asset)}
+                        </span>
+                        <span className={`${styles.barValue} ${styles.equityValue}`}>
+                          <strong>Equity:</strong> {formatNumber(point.equity)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-                  {roaLine.coordinates.length > 0 && (
-                    <>
-                      <svg
-                        className={styles.trendChartOverlay}
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path className={styles.trendPath} d={roaLine.path} />
+                {(roaLine.coordinates.length > 0 || roeLine.coordinates.length > 0) && (
+                  <svg
+                    className={styles.trendChartOverlay}
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    {roaLine.coordinates.length > 0 && (
+                      <>
+                        <path className={`${styles.trendPath} ${styles.trendPathRoa}`} d={roaLine.path} />
                         {roaLine.coordinates.map((coord) => (
                           <circle
-                            key={`${coord.label}-${coord.value}`}
-                            className={styles.trendPoint}
+                            key={`${coord.label}-${coord.value}-roa`}
+                            className={`${styles.trendPoint} ${styles.trendPointRoa}`}
                             cx={coord.x}
                             cy={coord.y}
                             r="1.8"
                           />
                         ))}
-                      </svg>
-                      <div className={styles.trendLegend}>
-                        <span className={styles.trendLegendDot} aria-hidden="true" />
-                        <span className={styles.trendLegendLabel}>ROA trend</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                {roaScale.hasData && (
-                  <div className={styles.trendAxis} aria-hidden="true">
-                    <div className={styles.trendAxisTicks}>
-                      {roaScale.ticks.map((tick) => (
-                        <span key={tick} className={styles.trendAxisLabel}>
-                          {formatPercentage(tick)}
-                        </span>
-                      ))}
-                    </div>
-                    <span className={styles.trendAxisTitle}>ROA trend</span>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className={styles.chartSection}>
-              <div className={styles.sectionHeader}>
-                <div>
-                  <p className={styles.chartKicker}>Time series</p>
-                  <h3 className={styles.sectionTitle}>Equity by quarter</h3>
-                </div>
-                <p className={styles.chartHint}>Values shown are in thousands</p>
-              </div>
-              <div className={styles.combinedChart}>
-                <div className={styles.chartBody}>
-                  <div
-                    className={styles.barChart}
-                    role="figure"
-                    aria-label="Equity by quarter bar chart"
-                    style={{
-                      gridTemplateColumns: `repeat(${equityByQuarter.length}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {equityByQuarter.map((point) => (
-                      <div key={point.label} className={styles.barColumn}>
-                        <div className={styles.barWrapper}>
-                          <div
-                            className={styles.bar}
-                            style={{ height: `${point.percentage}%` }}
-                            aria-label={`${point.label} equity ${formatNumber(point.value)}`}
-                          />
-                        </div>
-                        <span className={styles.barLabel}>{point.label}</span>
-                        <span className={styles.barValue}>{formatNumber(point.value)}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {roeLine.coordinates.length > 0 && (
-                    <>
-                      <svg
-                        className={styles.trendChartOverlay}
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path className={styles.trendPath} d={roeLine.path} />
+                      </>
+                    )}
+                    {roeLine.coordinates.length > 0 && (
+                      <>
+                        <path className={`${styles.trendPath} ${styles.trendPathRoe}`} d={roeLine.path} />
                         {roeLine.coordinates.map((coord) => (
                           <circle
-                            key={`${coord.label}-${coord.value}`}
-                            className={styles.trendPoint}
+                            key={`${coord.label}-${coord.value}-roe`}
+                            className={`${styles.trendPoint} ${styles.trendPointRoe}`}
                             cx={coord.x}
                             cy={coord.y}
                             r="1.8"
                           />
                         ))}
-                      </svg>
-                      <div className={styles.trendLegend}>
-                        <span className={styles.trendLegendDot} aria-hidden="true" />
-                        <span className={styles.trendLegendLabel}>ROE trend</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                {roeScale.hasData && (
-                  <div className={styles.trendAxis} aria-hidden="true">
-                    <div className={styles.trendAxisTicks}>
-                      {roeScale.ticks.map((tick) => (
-                        <span key={tick} className={styles.trendAxisLabel}>
-                          {formatPercentage(tick)}
-                        </span>
-                      ))}
-                    </div>
-                    <span className={styles.trendAxisTitle}>ROE trend</span>
-                  </div>
+                      </>
+                    )}
+                  </svg>
                 )}
               </div>
-            </section>
-          </div>
+              {trendScale.hasData && (
+                <div className={styles.trendAxis} aria-hidden="true">
+                  <div className={styles.trendAxisTicks}>
+                    {trendScale.ticks.map((tick) => (
+                      <span key={tick} className={styles.trendAxisTick} />
+                    ))}
+                  </div>
+                  <span className={styles.trendAxisTitle}>ROA &amp; ROE trend</span>
+                </div>
+              )}
+            </div>
+          </section>
         </>
       )}
     </main>

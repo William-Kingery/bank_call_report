@@ -232,6 +232,13 @@
   margin-bottom: 1rem;
 }
 
+.sectionHeaderMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
 .chartKicker {
   margin: 0;
   text-transform: uppercase;
@@ -258,6 +265,38 @@
   align-items: end;
 }
 
+.chartLegendRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+}
+
+.legendSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #94a3b8;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.legendLabel {
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1;
+}
+
 .combinedChart {
   position: relative;
   display: grid;
@@ -282,25 +321,46 @@
   height: 240px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: linear-gradient(180deg, #ecfdf3, #ffffff);
-  padding: 0.5rem;
+  background: linear-gradient(180deg, #f1f5f9, #ffffff);
+  padding: 0.65rem 0.65rem 0.9rem;
   display: flex;
   align-items: flex-end;
   box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.03);
 }
 
+.barGroup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+}
+
 .bar {
   width: 100%;
   border-radius: 8px;
-  background: linear-gradient(180deg, #34d399, #059669);
-  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.35);
+  background: var(--bar-bg, linear-gradient(180deg, #34d399, #059669));
+  box-shadow: var(--bar-shadow, 0 8px 18px rgba(16, 185, 129, 0.35));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .bar:hover,
 .bar:focus {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.4);
+  box-shadow: var(--bar-hover-shadow, 0 12px 24px rgba(16, 185, 129, 0.4));
+}
+
+.assetBar {
+  --bar-bg: linear-gradient(180deg, #34d399, #059669);
+  --bar-shadow: 0 8px 18px rgba(16, 185, 129, 0.35);
+  --bar-hover-shadow: 0 12px 24px rgba(16, 185, 129, 0.4);
+}
+
+.equityBar {
+  --bar-bg: linear-gradient(180deg, #93c5fd, #2563eb);
+  --bar-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+  --bar-hover-shadow: 0 12px 24px rgba(37, 99, 235, 0.45);
 }
 
 .barLabel {
@@ -310,6 +370,17 @@
 
 .barValue {
   color: #475569;
+}
+
+.barValues {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.equityValue {
+  color: #1d4ed8;
 }
 
 .trendChartOverlay {
@@ -329,7 +400,7 @@
   align-items: flex-end;
   padding-left: 0.75rem;
   border-left: 1px dashed #cbd5e1;
-  color: #1d4ed8;
+  color: #0f172a;
   font-weight: 700;
   gap: 0.5rem;
 }
@@ -343,11 +414,11 @@
   gap: 0.5rem;
 }
 
-.trendAxisLabel {
-  font-size: 0.9rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(37, 99, 235, 0.08);
-  border-radius: 6px;
+.trendAxisTick {
+  width: 18px;
+  height: 3px;
+  background: #cbd5e1;
+  border-radius: 999px;
 }
 
 .trendAxisTitle {
@@ -368,31 +439,36 @@
   stroke-width: 1;
 }
 
-.trendLegend {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.6rem;
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.14);
+.trendPathRoa {
+  stroke: #f59e0b;
 }
 
-.trendLegendDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+.trendPointRoa {
+  fill: #f59e0b;
 }
 
-.trendLegendLabel {
-  line-height: 1;
+.trendPathRoe {
+  stroke: #8b5cf6;
+}
+
+.trendPointRoe {
+  fill: #8b5cf6;
+}
+
+.legendAssets {
+  background: linear-gradient(180deg, #34d399, #059669);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.2);
+}
+
+.legendEquity {
+  background: linear-gradient(180deg, #93c5fd, #2563eb);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.legendRoa {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+}
+
+.legendRoe {
+  background: linear-gradient(180deg, #d8b4fe, #8b5cf6);
 }

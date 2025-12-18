@@ -59,6 +59,7 @@ router.get('/charts', async (req, res) => {
          f.CALLYM AS callym,
          f.ASSET AS asset,
          f.EQ AS eq,
+         f.TOTDEP AS totalDeposits,
          r.ROE AS roe,
          r.ROA AS roa
        FROM fdic_fts f
