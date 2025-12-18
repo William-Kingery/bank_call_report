@@ -407,7 +407,6 @@ export default function Home() {
                               aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
                             />
                           </div>
-                          <span className={styles.barLabel}>{point.label}</span>
                           <div className={styles.barValues}>
                             <span className={styles.barValue}>
                               <strong>Assets:</strong> {formatNumber(point.asset)}
