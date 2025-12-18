@@ -95,6 +95,8 @@ export default function Home() {
       ? latestPoint.asset - latestPoint.eq
       : null;
 
+  const latestRwa = latestPoint?.rwa;
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -240,6 +242,13 @@ export default function Home() {
                 <p className={styles.latestQuarter}>{formatQuarterLabel(latestPoint?.callym)}</p>
               </div>
               <p className={styles.latestHint}>Values shown are in thousands</p>
+            </div>
+            <div className={styles.rwaSummary}>
+              <div>
+                <p className={styles.rwaLabel}>Risk-weighted assets</p>
+                <p className={styles.rwaQuarter}>As of {formatQuarterLabel(latestPoint?.callym)}</p>
+              </div>
+              <p className={styles.rwaValue}>{formatNumber(latestRwa)}</p>
             </div>
             <div className={styles.metricsGrid}>
               <div className={styles.metricCard}>
