@@ -408,16 +408,72 @@
   pointer-events: none;
 }
 
-.linePath {
-  stroke: #c026d3;
-  stroke-width: 1.5;
-  opacity: 0.9;
+.lineChartBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #e2e8f0;
 }
 
-.linePoint {
-  fill: #c026d3;
+.lineChartHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.lineChartTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.lineChartSubhead {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.lineChartBody {
+  position: relative;
+  height: 160px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+  overflow: hidden;
+}
+
+.lineChartLabels {
+  display: grid;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+.roaLinePath {
+  stroke: #db2777;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.95;
+}
+
+.roaLinePoint {
+  fill: #db2777;
   stroke: #fff;
-  stroke-width: 0.4;
+  stroke-width: 0.5;
+}
+
+.roeLinePath {
+  stroke: #0ea5e9;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.95;
+}
+
+.roeLinePoint {
+  fill: #0ea5e9;
+  stroke: #fff;
+  stroke-width: 0.5;
 }
 
 .barColumn {

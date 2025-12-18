@@ -63,13 +63,19 @@ export default function Home() {
     return sortedPoints.map((point) => {
       const assetValue = Number(point.asset);
       const equityValue = Number(point.eq);
+      const roaValue = Number(point.roa);
+      const roeValue = Number(point.roe);
       const hasAsset = Number.isFinite(assetValue);
       const hasEquity = Number.isFinite(equityValue);
+      const hasRoa = Number.isFinite(roaValue);
+      const hasRoe = Number.isFinite(roeValue);
 
       return {
         label: formatQuarterLabel(point.callym),
         asset: hasAsset ? assetValue : null,
         equity: hasEquity ? equityValue : null,
+        roa: hasRoa ? roaValue : null,
+        roe: hasRoe ? roeValue : null,
         assetPercentage:
           assetMaxValue > 0 && hasAsset ? (assetValue / assetMaxValue) * 100 : 0,
         equityPercentage:
@@ -77,6 +83,44 @@ export default function Home() {
       };
     });
   }, [assetMaxValue, equityMaxValue, sortedPoints]);
+
+  const buildLineSeries = (seriesKey) => {
+    if (!quarterlySeries.length) return null;
+
+    const values = quarterlySeries
+      .map((point) => point[seriesKey])
+      .filter((value) => value !== null);
+
+    if (!values.length) return null;
+
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue || 1;
+    const step = quarterlySeries.length > 1 ? 100 / (quarterlySeries.length - 1) : 0;
+
+    const points = quarterlySeries.map((point, index) => {
+      if (point[seriesKey] === null) return null;
+      const x = step * index;
+      const y = 100 - ((point[seriesKey] - minValue) / range) * 100;
+      return {
+        x,
+        y,
+        label: point.label,
+        value: point[seriesKey],
+      };
+    });
+
+    const path = points.reduce((acc, point) => {
+      if (!point) return acc;
+      const command = acc ? 'L' : 'M';
+      return `${acc} ${command} ${point.x} ${point.y}`;
+    }, '');
+
+    return { points: points.filter(Boolean), path };
+  };
+
+  const roaLineSeries = useMemo(() => buildLineSeries('roa'), [quarterlySeries]);
+  const roeLineSeries = useMemo(() => buildLineSeries('roe'), [quarterlySeries]);
 
   const latestPoint = useMemo(() => {
     if (!sortedPoints.length) return null;
@@ -267,6 +311,10 @@ export default function Home() {
                 <p className={styles.metricName}>ROA</p>
                 <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
               </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>ROE</p>
+                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+              </div>
             </div>
           </section>
           <section className={styles.chartSection}>
@@ -323,6 +371,47 @@ export default function Home() {
 
                   </div>
                 </div>
+
+                <div className={styles.lineChartBlock}>
+                  <div className={styles.lineChartHeader}>
+                    <h5 className={styles.lineChartTitle}>ROA by quarter</h5>
+                    <p className={styles.lineChartSubhead}>Return on assets</p>
+                  </div>
+                  <div className={styles.lineChartBody}>
+                    <svg
+                      className={styles.lineOverlay}
+                      viewBox="0 0 100 100"
+                      role="img"
+                      aria-label="ROA by quarter line chart"
+                      preserveAspectRatio="none"
+                    >
+                      {roaLineSeries?.path && (
+                        <path className={styles.roaLinePath} d={roaLineSeries.path} />
+                      )}
+                      {roaLineSeries?.points.map((point) => (
+                        <circle
+                          key={`${point.label}-roa`}
+                          className={styles.roaLinePoint}
+                          cx={point.x}
+                          cy={point.y}
+                          r="1.8"
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                  <div
+                    className={styles.lineChartLabels}
+                    style={{
+                      gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {quarterlySeries.map((point) => (
+                      <span key={`${point.label}-roa-label`} className={styles.barLabel}>
+                        {point.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className={styles.chartCard}>
@@ -365,6 +454,47 @@ export default function Home() {
                       ))}
                     </div>
 
+                  </div>
+                </div>
+
+                <div className={styles.lineChartBlock}>
+                  <div className={styles.lineChartHeader}>
+                    <h5 className={styles.lineChartTitle}>ROE by quarter</h5>
+                    <p className={styles.lineChartSubhead}>Return on equity</p>
+                  </div>
+                  <div className={styles.lineChartBody}>
+                    <svg
+                      className={styles.lineOverlay}
+                      viewBox="0 0 100 100"
+                      role="img"
+                      aria-label="ROE by quarter line chart"
+                      preserveAspectRatio="none"
+                    >
+                      {roeLineSeries?.path && (
+                        <path className={styles.roeLinePath} d={roeLineSeries.path} />
+                      )}
+                      {roeLineSeries?.points.map((point) => (
+                        <circle
+                          key={`${point.label}-roe`}
+                          className={styles.roeLinePoint}
+                          cx={point.x}
+                          cy={point.y}
+                          r="1.8"
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                  <div
+                    className={styles.lineChartLabels}
+                    style={{
+                      gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                    }}
+                  >
+                    {quarterlySeries.map((point) => (
+                      <span key={`${point.label}-roe-label`} className={styles.barLabel}>
+                        {point.label}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
