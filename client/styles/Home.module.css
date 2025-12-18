@@ -131,6 +131,70 @@
   color: #312e81;
 }
 
+.latestMetrics {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 5px 20px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1.25rem;
+}
+
+.latestHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.latestLabel {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.latestQuarter {
+  margin: 0.2rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.latestHint {
+  margin: 0;
+  color: #64748b;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.metricCard {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fafc, #ffffff);
+}
+
+.metricName {
+  margin: 0;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.metricValue {
+  margin: 0.35rem 0 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
 .chartsGrid {
   display: flex;
   flex-direction: column;
@@ -173,6 +237,10 @@
 
 .landscapeCanvas {
   height: 260px;
+}
+
+.assetCanvas {
+  height: 25vh;
 }
 
 .error {

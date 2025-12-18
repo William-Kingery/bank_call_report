@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 import styles from '../styles/Home.module.css';
 
@@ -23,6 +23,37 @@ export default function Home() {
   const equityChartRef = useRef(null);
   const roeChartRef = useRef(null);
   const roaChartRef = useRef(null);
+
+  const formatQuarterLabel = (callym) => {
+    if (!callym) return 'N/A';
+
+    const year = String(callym).slice(0, 4);
+    const month = String(callym).slice(4);
+    const quarterMap = {
+      '03': 'Q1',
+      '06': 'Q2',
+      '09': 'Q3',
+      '12': 'Q4',
+    };
+
+    const quarter = quarterMap[month] ?? month;
+    return `${year} ${quarter}`;
+  };
+
+  const formatNumber = (value) =>
+    value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
+  const formatPercentage = (value) =>
+    value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+
+  const latestPoint = useMemo(() => {
+    if (!chartData?.points?.length) return null;
+    return chartData.points[chartData.points.length - 1];
+  }, [chartData]);
+
+  const latestLiabilities =
+    latestPoint?.asset != null && latestPoint?.eq != null
+      ? latestPoint.asset - latestPoint.eq
+      : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -79,20 +110,6 @@ export default function Home() {
       roaChartRef.current?.destroy();
       return;
     }
-
-    const formatQuarterLabel = (callym) => {
-      const year = String(callym).slice(0, 4);
-      const month = String(callym).slice(4);
-      const quarterMap = {
-        '03': 'Q1',
-        '06': 'Q2',
-        '09': 'Q3',
-        '12': 'Q4',
-      };
-
-      const quarter = quarterMap[month] ?? month;
-      return `${year} ${quarter}`;
-    };
 
     const labels = chartData.points.map((point) => formatQuarterLabel(point.callym));
     const assetValues = chartData.points.map((point) => point.asset ?? null);
@@ -299,44 +316,78 @@ export default function Home() {
       )}
 
       {chartData?.points?.length > 0 && (
-        <section className={styles.chartsGrid}>
-          <div className={styles.landscapeCharts}>
-            <div className={styles.chartCard}>
-              <h3>Assets (in Thousands)</h3>
-              <canvas
-                ref={assetCanvasRef}
-                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
-                aria-label="Assets bar chart"
-              />
+        <>
+          <section className={styles.latestMetrics}>
+            <div className={styles.latestHeader}>
+              <div>
+                <p className={styles.latestLabel}>Latest quarter</p>
+                <p className={styles.latestQuarter}>{formatQuarterLabel(latestPoint?.callym)}</p>
+              </div>
+              <p className={styles.latestHint}>Values shown are in thousands</p>
             </div>
-            <div className={styles.chartCard}>
-              <h3>Equity (in Thousands)</h3>
-              <canvas
-                ref={equityCanvasRef}
-                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
-              aria-label="Equity bar chart"
-              />
+            <div className={styles.metricsGrid}>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Assets</p>
+                <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Liabilities</p>
+                <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Equity</p>
+                <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>ROE</p>
+                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>ROA</p>
+                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+              </div>
             </div>
-          </div>
-          <div className={styles.lineCharts}>
-            <div className={styles.chartCard}>
-              <h3>ROE</h3>
-              <canvas
-                ref={roeCanvasRef}
-                className={styles.chartCanvas}
-                aria-label="ROE line chart"
-              />
+          </section>
+
+          <section className={styles.chartsGrid}>
+            <div className={styles.landscapeCharts}>
+              <div className={styles.chartCard}>
+                <h3>Assets (in Thousands)</h3>
+                <canvas
+                  ref={assetCanvasRef}
+                  className={`${styles.chartCanvas} ${styles.landscapeCanvas} ${styles.assetCanvas}`}
+                  aria-label="Assets bar chart"
+                />
+              </div>
+              <div className={styles.chartCard}>
+                <h3>Equity (in Thousands)</h3>
+                <canvas
+                  ref={equityCanvasRef}
+                  className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
+                aria-label="Equity bar chart"
+                />
+              </div>
             </div>
-            <div className={styles.chartCard}>
-              <h3>ROA</h3>
-              <canvas
-                ref={roaCanvasRef}
-                className={styles.chartCanvas}
-                aria-label="ROA line chart"
-              />
+            <div className={styles.lineCharts}>
+              <div className={styles.chartCard}>
+                <h3>ROE</h3>
+                <canvas
+                  ref={roeCanvasRef}
+                  className={styles.chartCanvas}
+                  aria-label="ROE line chart"
+                />
+              </div>
+              <div className={styles.chartCard}>
+                <h3>ROA</h3>
+                <canvas
+                  ref={roaCanvasRef}
+                  className={styles.chartCanvas}
+                  aria-label="ROA line chart"
+                />
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </>
       )}
     </main>
   );
