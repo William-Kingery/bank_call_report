@@ -57,28 +57,6 @@ export default function Home() {
     [sortedPoints],
   );
 
-  const { roeMaxValue, roeMinValue } = useMemo(() => {
-    if (!sortedPoints.length) {
-      return { roeMaxValue: 0, roeMinValue: 0 };
-    }
-
-    return sortedPoints.reduce(
-      (bounds, point) => {
-        const roeValue = Number(point.roe);
-
-        if (!Number.isFinite(roeValue)) {
-          return bounds;
-        }
-
-        return {
-          roeMaxValue: Math.max(bounds.roeMaxValue, roeValue),
-          roeMinValue: Math.min(bounds.roeMinValue, roeValue),
-        };
-      },
-      { roeMaxValue: Number.NEGATIVE_INFINITY, roeMinValue: Number.POSITIVE_INFINITY },
-    );
-  }, [sortedPoints]);
-
   const quarterlySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
 
@@ -92,44 +70,13 @@ export default function Home() {
         label: formatQuarterLabel(point.callym),
         asset: hasAsset ? assetValue : null,
         equity: hasEquity ? equityValue : null,
-        roe: hasRoe ? roeValue : null,
         assetPercentage:
           assetMaxValue > 0 && hasAsset ? (assetValue / assetMaxValue) * 100 : 0,
         equityPercentage:
           equityMaxValue > 0 && hasEquity ? (equityValue / equityMaxValue) * 100 : 0,
-        roePosition:
-          hasRoe && Number.isFinite(roeMaxValue) && Number.isFinite(roeMinValue)
-            ? Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((roeMaxValue - roeValue) / Math.max(roeMaxValue - roeMinValue || 1, 1)) * 100,
-                ),
-              )
-            : 50,
       };
     });
-  }, [assetMaxValue, equityMaxValue, roeMaxValue, roeMinValue, sortedPoints]);
-
-  const roeLinePoints = useMemo(() => {
-    if (!quarterlySeries.length) return '';
-
-    const validPoints = quarterlySeries
-      .map((point, index) => ({ point, index }))
-      .filter(({ point }) => point.roe !== null && point.roe !== undefined);
-
-    if (!validPoints.length) return '';
-
-    const divisor = Math.max(quarterlySeries.length - 1, 1);
-
-    return validPoints
-      .map(({ point, index }) => {
-        const x = quarterlySeries.length > 1 ? (index / divisor) * 100 : 50;
-        const y = point.roePosition ?? 50;
-        return `${x},${y}`;
-      })
-      .join(' ');
-  }, [quarterlySeries]);
+  }, [assetMaxValue, equityMaxValue, sortedPoints]);
 
   const latestPoint = useMemo(() => {
     if (!sortedPoints.length) return null;
@@ -227,7 +174,7 @@ export default function Home() {
           <p className={styles.kicker}>FDIC Call Report explorer</p>
           <h1 className={styles.title}>Search by NameFull and view performance metrics</h1>
           <p className={styles.subtitle}>
-            Start typing a bank name to view assets, equity, ROE, and ROA over time.
+            Start typing a bank name to view assets, equity, and ROA over time.
           </p>
         </div>
       </div>
@@ -308,10 +255,6 @@ export default function Home() {
                 <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
               </div>
               <div className={styles.metricCard}>
-                <p className={styles.metricName}>ROE</p>
-                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
-              </div>
-              <div className={styles.metricCard}>
                 <p className={styles.metricName}>ROA</p>
                 <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
               </div>
@@ -384,52 +327,10 @@ export default function Home() {
                     <span className={`${styles.legendSwatch} ${styles.legendEquity}`} />
                     <span className={styles.legendLabel}>Equity</span>
                   </div>
-                  <div className={styles.legendItem}>
-                    <span className={`${styles.legendSwatch} ${styles.legendRoe}`} />
-                    <span className={styles.legendLabel}>ROE</span>
-                  </div>
                 </div>
 
                 <div className={styles.combinedChart}>
                   <div className={styles.chartBody}>
-                    {roeLinePoints && (
-                      <svg
-                        className={styles.lineOverlay}
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        role="img"
-                        aria-label="ROE trend by quarter"
-                      >
-                        <polyline
-                          className={styles.linePath}
-                          points={roeLinePoints}
-                          fill="none"
-                          vectorEffect="non-scaling-stroke"
-                        />
-                        {quarterlySeries.map((point, index) => {
-                          if (point.roe === null || point.roe === undefined) {
-                            return null;
-                          }
-
-                          const divisor = Math.max(quarterlySeries.length - 1, 1);
-                          const cx = quarterlySeries.length > 1 ? (index / divisor) * 100 : 50;
-                          const cy = point.roePosition ?? 50;
-
-                          return (
-                            <circle
-                              key={`${point.label}-roe`}
-                              className={styles.linePoint}
-                              cx={cx}
-                              cy={cy}
-                              r={1.6}
-                              vectorEffect="non-scaling-stroke"
-                            >
-                              <title>{`${point.label} ROE ${formatPercentage(point.roe)}`}</title>
-                            </circle>
-                          );
-                        })}
-                      </svg>
-                    )}
                     <div
                       className={styles.barChart}
                       role="figure"
