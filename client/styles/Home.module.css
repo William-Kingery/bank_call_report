@@ -359,8 +359,7 @@
 .combinedChart {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 1.25rem;
+  grid-template-columns: 1fr;
   align-items: start;
 }
 
@@ -467,87 +466,6 @@
   color: #1d4ed8;
 }
 
-.trendChartOverlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 240px;
-  pointer-events: none;
-}
-
-.trendAxis {
-  height: 240px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding-left: 0.75rem;
-  border-left: 1px dashed #cbd5e1;
-  color: #0f172a;
-  font-weight: 700;
-  gap: 0.5rem;
-}
-
-.trendAxisTicks {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 0.5rem;
-}
-
-.trendAxisTick {
-  width: 18px;
-  height: 3px;
-  background: #cbd5e1;
-  border-radius: 999px;
-}
-
-.trendAxisTitle {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.trendPath {
-  fill: none;
-  stroke: #2563eb;
-  stroke-width: 2;
-}
-
-.trendPoint {
-  fill: #2563eb;
-  stroke: #ffffff;
-  stroke-width: 1;
-}
-
-.trendPathRoa {
-  stroke: #f59e0b;
-}
-
-.trendPointRoa {
-  fill: #f59e0b;
-}
-
-.trendPathRoe {
-  stroke: #8b5cf6;
-}
-
-.trendPointRoe {
-  fill: #8b5cf6;
-}
-
-.trendLabel {
-  fill: #0f172a;
-  font-size: 2.8px;
-  font-weight: 700;
-  paint-order: stroke;
-  stroke: #f8fafc;
-  stroke-width: 0.4px;
-}
-
 .legendAssets {
   background: linear-gradient(180deg, #34d399, #059669);
   box-shadow: 0 8px 18px rgba(16, 185, 129, 0.2);
@@ -556,12 +474,4 @@
 .legendEquity {
   background: linear-gradient(180deg, #93c5fd, #2563eb);
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
-}
-
-.legendRoa {
-  background: linear-gradient(180deg, #fbbf24, #f59e0b);
-}
-
-.legendRoe {
-  background: linear-gradient(180deg, #d8b4fe, #8b5cf6);
 }
