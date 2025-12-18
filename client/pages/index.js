@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import Chart from 'chart.js/auto';
+import { useEffect, useMemo, useState } from 'react';
 import styles from '../styles/Home.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
@@ -9,20 +8,48 @@ export default function Home() {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedCert, setSelectedCert] = useState(null);
   const [selectedName, setSelectedName] = useState('');
-  const [chartData, setChartData] = useState(null);
+  const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
 
-  const assetCanvasRef = useRef(null);
-  const equityCanvasRef = useRef(null);
-  const roeCanvasRef = useRef(null);
-  const roaCanvasRef = useRef(null);
+  const formatQuarterLabel = (callym) => {
+    if (!callym) return 'N/A';
 
-  const assetChartRef = useRef(null);
-  const equityChartRef = useRef(null);
-  const roeChartRef = useRef(null);
-  const roaChartRef = useRef(null);
+    const year = String(callym).slice(0, 4);
+    const month = String(callym).slice(4);
+    const quarterMap = {
+      '03': 'Q1',
+      '06': 'Q2',
+      '09': 'Q3',
+      '12': 'Q4',
+    };
+
+    const quarter = quarterMap[month] ?? month;
+    return `${year} ${quarter}`;
+  };
+
+  const formatNumber = (value) =>
+    value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
+  const formatPercentage = (value) =>
+    value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+
+  const latestPoint = useMemo(() => {
+    if (!reportData?.points?.length) return null;
+    return reportData.points[reportData.points.length - 1];
+  }, [reportData]);
+
+  const formattedLocation = useMemo(() => {
+    if (!reportData) return null;
+
+    const parts = [reportData.city, reportData.stateName, reportData.zipCode].filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : null;
+  }, [reportData]);
+
+  const latestLiabilities =
+    latestPoint?.asset != null && latestPoint?.eq != null
+      ? latestPoint.asset - latestPoint.eq
+      : null;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -30,7 +57,7 @@ export default function Home() {
     if (
       !query ||
       query.length < 2 ||
-      (hasSelectedBank && chartData?.points?.length > 0 && query === selectedName)
+      (hasSelectedBank && reportData?.points?.length > 0 && query === selectedName)
     ) {
       setSuggestions([]);
       return undefined;
@@ -60,162 +87,21 @@ export default function Home() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [chartData, hasSelectedBank, query, selectedName]);
+  }, [hasSelectedBank, query, reportData, selectedName]);
 
-  useEffect(() => {
-    return () => {
-      assetChartRef.current?.destroy();
-      equityChartRef.current?.destroy();
-      roeChartRef.current?.destroy();
-      roaChartRef.current?.destroy();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!chartData?.points?.length) {
-      assetChartRef.current?.destroy();
-      equityChartRef.current?.destroy();
-      roeChartRef.current?.destroy();
-      roaChartRef.current?.destroy();
-      return;
-    }
-
-    const formatQuarterLabel = (callym) => {
-      const year = String(callym).slice(0, 4);
-      const month = String(callym).slice(4);
-      const quarterMap = {
-        '03': 'Q1',
-        '06': 'Q2',
-        '09': 'Q3',
-        '12': 'Q4',
-      };
-
-      const quarter = quarterMap[month] ?? month;
-      return `${year} ${quarter}`;
-    };
-
-    const labels = chartData.points.map((point) => formatQuarterLabel(point.callym));
-    const assetValues = chartData.points.map((point) => point.asset ?? null);
-    const equityValues = chartData.points.map((point) => point.eq ?? null);
-    const roeValues = chartData.points.map((point) => point.roe ?? null);
-    const roaValues = chartData.points.map((point) => point.roa ?? null);
-
-    if (assetCanvasRef.current) {
-      assetChartRef.current?.destroy();
-      assetChartRef.current = new Chart(assetCanvasRef.current, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Assets',
-              data: assetValues,
-              backgroundColor: '#4f46e5',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { ticks: { autoSkip: false } },
-            y: { beginAtZero: true },
-          },
-        },
-      });
-    }
-
-    if (equityCanvasRef.current) {
-      equityChartRef.current?.destroy();
-      equityChartRef.current = new Chart(equityCanvasRef.current, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Equity',
-              data: equityValues,
-              backgroundColor: '#0ea5e9',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { ticks: { autoSkip: false } },
-            y: { beginAtZero: true },
-          },
-        },
-      });
-    }
-
-    if (roeCanvasRef.current) {
-      roeChartRef.current?.destroy();
-      roeChartRef.current = new Chart(roeCanvasRef.current, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'ROE',
-              data: roeValues,
-              borderColor: '#16a34a',
-              backgroundColor: 'rgba(22, 163, 74, 0.2)',
-              tension: 0.2,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { ticks: { autoSkip: false } },
-          },
-        },
-      });
-    }
-
-    if (roaCanvasRef.current) {
-      roaChartRef.current?.destroy();
-      roaChartRef.current = new Chart(roaCanvasRef.current, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'ROA',
-              data: roaValues,
-              borderColor: '#f59e0b',
-              backgroundColor: 'rgba(245, 158, 11, 0.2)',
-              tension: 0.2,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { ticks: { autoSkip: false } },
-          },
-        },
-      });
-    }
-  }, [chartData]);
-
-  const fetchCharts = async (cert) => {
+  const fetchReportData = async (cert) => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(`${API_BASE}/charts?cert=${cert}`);
       if (!response.ok) {
-        throw new Error('Failed to load chart data');
+        throw new Error('Failed to load performance data');
       }
       const data = await response.json();
-      setChartData(data);
+      setReportData(data);
     } catch (err) {
       setError(err.message);
-      setChartData(null);
+      setReportData(null);
     } finally {
       setLoading(false);
     }
@@ -227,7 +113,7 @@ export default function Home() {
     setHasSelectedBank(true);
     setQuery(item.nameFull);
     setSuggestions([]);
-    fetchCharts(item.cert);
+    fetchReportData(item.cert);
   };
 
   const handleSubmit = (event) => {
@@ -242,7 +128,7 @@ export default function Home() {
       <div className={styles.header}>
         <div>
           <p className={styles.kicker}>FDIC Call Report explorer</p>
-          <h1 className={styles.title}>Search by NameFull and chart performance</h1>
+          <h1 className={styles.title}>Search by NameFull and view performance metrics</h1>
           <p className={styles.subtitle}>
             Start typing a bank name to view assets, equity, ROE, and ROA over time.
           </p>
@@ -267,74 +153,74 @@ export default function Home() {
           onKeyDown={handleSubmit}
         />
         {suggestions.length > 0 &&
-          !(hasSelectedBank && chartData?.points?.length > 0 && query === selectedName) && (
-          <ul className={styles.suggestions}>
-            {suggestions.map((item) => (
-              <li key={`${item.cert}-${item.nameFull}`}>
-                <button
-                  type="button"
-                  className={styles.suggestionButton}
-                  onClick={() => handleSelect(item)}
-                >
-                  <span className={styles.suggestionName}>{item.nameFull}</span>
-                  <span className={styles.suggestionCert}>CERT: {item.cert}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          !(hasSelectedBank && reportData?.points?.length > 0 && query === selectedName) && (
+            <ul className={styles.suggestions}>
+              {suggestions.map((item) => (
+                <li key={`${item.cert}-${item.nameFull}`}>
+                  <button
+                    type="button"
+                    className={styles.suggestionButton}
+                    onClick={() => handleSelect(item)}
+                  >
+                    <span className={styles.suggestionName}>{item.nameFull}</span>
+                    <span className={styles.suggestionCert}>CERT: {item.cert}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
       </section>
 
-      {loading && <p className={styles.status}>Loading chart data...</p>}
+      {loading && <p className={styles.status}>Loading metrics...</p>}
       {error && <p className={styles.error}>Error: {error}</p>}
 
       {selectedCert && selectedName && !loading && (
         <section className={styles.selectionSummary}>
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
-            <h2 className={styles.selectionName}>{selectedName}</h2>
+            <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
+            {formattedLocation && (
+              <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
         </section>
       )}
 
-      {chartData?.points?.length > 0 && (
-        <section className={styles.chartsGrid}>
-          <div className={styles.landscapeCharts}>
-            <div className={styles.chartCard}>
-              <h3>Assets (in Thousands)</h3>
-              <canvas
-                ref={assetCanvasRef}
-                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
-                aria-label="Assets bar chart"
-              />
+      {reportData?.points?.length > 0 && (
+        <>
+          <section className={styles.latestMetrics}>
+            <div className={styles.latestHeader}>
+              <div>
+                <p className={styles.latestLabel}>Latest quarter</p>
+                <p className={styles.latestQuarter}>{formatQuarterLabel(latestPoint?.callym)}</p>
+              </div>
+              <p className={styles.latestHint}>Values shown are in thousands</p>
             </div>
-            <div className={styles.chartCard}>
-              <h3>Equity (in Thousands)</h3>
-              <canvas
-                ref={equityCanvasRef}
-                className={`${styles.chartCanvas} ${styles.landscapeCanvas}`}
-                aria-label="Equity bar chart"
-              />
+            <div className={styles.metricsGrid}>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Assets</p>
+                <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Liabilities</p>
+                <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>Equity</p>
+                <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>ROE</p>
+                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+              </div>
+              <div className={styles.metricCard}>
+                <p className={styles.metricName}>ROA</p>
+                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+              </div>
             </div>
-          </div>
-          <div className={styles.chartCard}>
-            <h3>ROE</h3>
-            <canvas
-              ref={roeCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="ROE line chart"
-            />
-          </div>
-          <div className={styles.chartCard}>
-            <h3>ROA</h3>
-            <canvas
-              ref={roaCanvasRef}
-              className={styles.chartCanvas}
-              aria-label="ROA line chart"
-            />
-          </div>
-        </section>
+          </section>
+        </>
       )}
     </main>
   );
