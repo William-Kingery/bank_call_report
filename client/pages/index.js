@@ -34,17 +34,32 @@ export default function Home() {
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
 
-  const assetsByQuarter = useMemo(() => {
-    if (!reportData?.points?.length) return [];
+  const roaScale = useMemo(() => {
+    if (!reportData?.points?.length) {
+      return { min: 0, max: 0, range: 1, hasData: false, ticks: [] };
+    }
 
-    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0), 0);
     const roaValues = reportData.points
       .map((point) => Number(point.roa))
       .filter((value) => Number.isFinite(value));
 
-    const roaMin = roaValues.length ? Math.min(...roaValues) : 0;
-    const roaMax = roaValues.length ? Math.max(...roaValues) : 0;
-    const roaRange = roaMax - roaMin || 1;
+    if (!roaValues.length) {
+      return { min: 0, max: 0, range: 1, hasData: false, ticks: [] };
+    }
+
+    const min = Math.min(...roaValues);
+    const max = Math.max(...roaValues);
+    const range = max - min || 1;
+    const midpoint = min + range / 2;
+    const ticks = Array.from(new Set([max, midpoint, min]));
+
+    return { min, max, range, hasData: true, ticks };
+  }, [reportData]);
+
+  const assetsByQuarter = useMemo(() => {
+    if (!reportData?.points?.length) return [];
+
+    const maxAsset = Math.max(...reportData.points.map((point) => Number(point.asset) || 0), 0);
 
     return reportData.points.map((point) => {
       const roaValue = Number(point.roa);
@@ -55,21 +70,20 @@ export default function Home() {
         value: point.asset,
         percentage: maxAsset > 0 ? ((Number(point.asset) || 0) / maxAsset) * 100 : 0,
         roa: hasRoa ? roaValue : null,
-        roaPosition: hasRoa ? ((roaValue - roaMin) / roaRange) * 100 : null,
+        roaPosition: hasRoa ? ((roaValue - roaScale.min) / roaScale.range) * 100 : null,
       };
     });
-  }, [reportData]);
+  }, [reportData, roaScale]);
 
   const roaLine = useMemo(() => {
     if (!assetsByQuarter.length) {
       return { path: '', coordinates: [] };
     }
 
-    const xMax = Math.max(assetsByQuarter.length - 1, 1);
     const coordinates = assetsByQuarter
       .map((point, index) => {
         if (point.roaPosition === null) return null;
-        const x = assetsByQuarter.length > 1 ? (index / xMax) * 100 : 50;
+        const x = ((index + 0.5) / assetsByQuarter.length) * 100;
         const y = 100 - point.roaPosition;
         return { x, y, label: point.label, value: point.roa };
       })
@@ -283,47 +297,68 @@ export default function Home() {
               <p className={styles.chartHint}>Values shown are in thousands</p>
             </div>
             <div className={styles.combinedChart}>
-              <div className={styles.barChart} role="figure" aria-label="Assets by quarter bar chart">
-                {assetsByQuarter.map((point) => (
-                  <div key={point.label} className={styles.barColumn}>
-                    <div className={styles.barWrapper}>
-                      <div
-                        className={styles.bar}
-                        style={{ height: `${point.percentage}%` }}
-                        aria-label={`${point.label} assets ${formatNumber(point.value)}`}
-                      />
+              <div className={styles.chartBody}>
+                <div
+                  className={styles.barChart}
+                  role="figure"
+                  aria-label="Assets by quarter bar chart"
+                  style={{
+                    gridTemplateColumns: `repeat(${assetsByQuarter.length}, minmax(0, 1fr))`,
+                  }}
+                >
+                  {assetsByQuarter.map((point) => (
+                    <div key={point.label} className={styles.barColumn}>
+                      <div className={styles.barWrapper}>
+                        <div
+                          className={styles.bar}
+                          style={{ height: `${point.percentage}%` }}
+                          aria-label={`${point.label} assets ${formatNumber(point.value)}`}
+                        />
+                      </div>
+                      <span className={styles.barLabel}>{point.label}</span>
+                      <span className={styles.barValue}>{formatNumber(point.value)}</span>
                     </div>
-                    <span className={styles.barLabel}>{point.label}</span>
-                    <span className={styles.barValue}>{formatNumber(point.value)}</span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {roaLine.coordinates.length > 0 && (
-                <>
-                  <svg
-                    className={styles.roaChartOverlay}
-                    viewBox="0 0 100 100"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path className={styles.roaPath} d={roaLine.path} />
-                    {roaLine.coordinates.map((coord) => (
-                      <circle
-                        key={`${coord.label}-${coord.value}`}
-                        className={styles.roaPoint}
-                        cx={coord.x}
-                        cy={coord.y}
-                        r="1.8"
-                      />
+                {roaLine.coordinates.length > 0 && (
+                  <>
+                    <svg
+                      className={styles.roaChartOverlay}
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path className={styles.roaPath} d={roaLine.path} />
+                      {roaLine.coordinates.map((coord) => (
+                        <circle
+                          key={`${coord.label}-${coord.value}`}
+                          className={styles.roaPoint}
+                          cx={coord.x}
+                          cy={coord.y}
+                          r="1.8"
+                        />
+                      ))}
+                    </svg>
+                    <div className={styles.roaLegend}>
+                      <span className={styles.roaLegendDot} aria-hidden="true" />
+                      <span className={styles.roaLegendLabel}>ROA trend</span>
+                    </div>
+                  </>
+                )}
+              </div>
+              {roaScale.hasData && (
+                <div className={styles.roaAxis} aria-hidden="true">
+                  <div className={styles.roaAxisTicks}>
+                    {roaScale.ticks.map((tick) => (
+                      <span key={tick} className={styles.roaAxisLabel}>
+                        {formatPercentage(tick)}
+                      </span>
                     ))}
-                  </svg>
-                  <div className={styles.roaLegend}>
-                    <span className={styles.roaLegendDot} aria-hidden="true" />
-                    <span className={styles.roaLegendLabel}>ROA trend</span>
                   </div>
-                </>
+                  <span className={styles.roaAxisTitle}>ROA trend</span>
+                </div>
               )}
             </div>
           </section>
