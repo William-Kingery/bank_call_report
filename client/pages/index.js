@@ -110,7 +110,7 @@ export default function Home() {
             {
               label: 'Assets',
               data: assetValues,
-              backgroundColor: '#4f46e5',
+              backgroundColor: '#22c55e',
             },
           ],
         },
