@@ -217,6 +217,13 @@
   box-shadow: 0 5px 20px rgba(15, 23, 42, 0.06);
 }
 
+.chartGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
 .sectionHeader {
   display: flex;
   align-items: flex-start;
@@ -305,7 +312,7 @@
   color: #475569;
 }
 
-.roaChartOverlay {
+.trendChartOverlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -314,7 +321,7 @@
   pointer-events: none;
 }
 
-.roaAxis {
+.trendAxis {
   height: 240px;
   display: flex;
   flex-direction: column;
@@ -327,7 +334,7 @@
   gap: 0.5rem;
 }
 
-.roaAxisTicks {
+.trendAxisTicks {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -336,32 +343,32 @@
   gap: 0.5rem;
 }
 
-.roaAxisLabel {
+.trendAxisLabel {
   font-size: 0.9rem;
   padding: 0.25rem 0.5rem;
   background: rgba(37, 99, 235, 0.08);
   border-radius: 6px;
 }
 
-.roaAxisTitle {
+.trendAxisTitle {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.roaPath {
+.trendPath {
   fill: none;
   stroke: #2563eb;
   stroke-width: 2;
 }
 
-.roaPoint {
+.trendPoint {
   fill: #2563eb;
   stroke: #ffffff;
   stroke-width: 1;
 }
 
-.roaLegend {
+.trendLegend {
   position: absolute;
   top: 0.5rem;
   right: 0.75rem;
@@ -378,7 +385,7 @@
   box-shadow: 0 10px 25px rgba(37, 99, 235, 0.14);
 }
 
-.roaLegendDot {
+.trendLegendDot {
   width: 10px;
   height: 10px;
   border-radius: 999px;
@@ -386,6 +393,6 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.roaLegendLabel {
+.trendLegendLabel {
   line-height: 1;
 }
