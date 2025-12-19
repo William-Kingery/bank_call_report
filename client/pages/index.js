@@ -12,6 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
+  const [activeTab, setActiveTab] = useState('portfolio');
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -292,227 +293,274 @@ export default function Home() {
 
       {reportData?.points?.length > 0 && (
         <>
-          <section className={styles.latestMetrics}>
-            <div className={styles.latestHeader}>
-              <div>
-                <p className={styles.latestLabel}>Latest quarter</p>
-                <p className={styles.latestQuarter}>{formatQuarterLabel(latestPoint?.callym)}</p>
-              </div>
-              <p className={styles.latestHint}>Values shown are in thousands</p>
-            </div>
-            <div className={styles.rwaSummary}>
-              <div>
-                <p className={styles.rwaLabel}>Risk-weighted assets</p>
-                <p className={styles.rwaQuarter}>As of {formatQuarterLabel(latestPoint?.callym)}</p>
-              </div>
-              <p className={styles.rwaValue}>{formatNumber(latestRwa)}</p>
-            </div>
-            <div className={styles.metricsGrid}>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Assets</p>
-                <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Liabilities</p>
-                <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Equity</p>
-                <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>ROA</p>
-                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>ROE</p>
-                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
-              </div>
-            </div>
-          </section>
-          <section className={styles.chartSection}>
-            <div className={styles.sectionHeader}>
-              <div>
-                <p className={styles.chartKicker}>Time series</p>
-                <h3 className={styles.sectionTitle}>Quarterly assets and equity performance</h3>
-              </div>
-              <div className={styles.sectionHeaderMeta}>
-                <p className={styles.chartHint}>Values shown are in thousands</p>
-              </div>
-            </div>
+          <div className={styles.tabs} role="tablist" aria-label="Performance views">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'portfolio'}
+              className={`${styles.tabButton} ${
+                activeTab === 'portfolio' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('portfolio')}
+            >
+              Portfolio Trends
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'asset-quality'}
+              className={`${styles.tabButton} ${
+                activeTab === 'asset-quality' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('asset-quality')}
+            >
+              Asset Quality
+            </button>
+          </div>
 
-            <div className={styles.chartGrid}>
-              <div className={styles.chartCard}>
-                <div className={styles.chartCardHeader}>
-                  <h4 className={styles.chartCardTitle}>Assets by quarter</h4>
-                  <p className={styles.chartCardSubhead}>Quarterly asset balances</p>
+          {activeTab === 'portfolio' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.latestMetrics}>
+                <div className={styles.latestHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Latest quarter</p>
+                    <p className={styles.latestQuarter}>
+                      {formatQuarterLabel(latestPoint?.callym)}
+                    </p>
+                  </div>
+                  <p className={styles.latestHint}>Values shown are in thousands</p>
                 </div>
-
-                <div className={styles.chartLegendRow} aria-hidden="true">
-                  <div className={styles.legendItem}>
-                    <span className={`${styles.legendSwatch} ${styles.legendAssets}`} />
-                    <span className={styles.legendLabel}>Assets</span>
+                <div className={styles.rwaSummary}>
+                  <div>
+                    <p className={styles.rwaLabel}>Risk-weighted assets</p>
+                    <p className={styles.rwaQuarter}>
+                      As of {formatQuarterLabel(latestPoint?.callym)}
+                    </p>
+                  </div>
+                  <p className={styles.rwaValue}>{formatNumber(latestRwa)}</p>
+                </div>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Assets</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Liabilities</p>
+                    <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Equity</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>ROA</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>ROE</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+                  </div>
+                </div>
+              </section>
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Time series</p>
+                    <h3 className={styles.sectionTitle}>
+                      Quarterly assets and equity performance
+                    </h3>
+                  </div>
+                  <div className={styles.sectionHeaderMeta}>
+                    <p className={styles.chartHint}>Values shown are in thousands</p>
                   </div>
                 </div>
 
-                <div className={styles.combinedChart}>
-                  <div className={styles.chartBody}>
-                    <div
-                      className={styles.barChart}
-                      role="figure"
-                      aria-label="Assets by quarter"
-                      style={{
-                        gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                      }}
-                    >
-                      {quarterlySeries.map((point) => (
-                        <div key={point.label} className={styles.barColumn}>
-                          <div className={styles.barWrapper}>
-                            <span className={styles.barHoverValue}>
-                              {formatNumber(point.asset)}
-                            </span>
-                            <div
-                              className={`${styles.bar} ${styles.assetBar}`}
-                              style={{ height: `${point.assetPercentage}%` }}
-                              aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
-                            />
-                          </div>
-                          <span className={styles.barLabel}>{point.label}</span>
-                        </div>
-                      ))}
+                <div className={styles.chartGrid}>
+                  <div className={styles.chartCard}>
+                    <div className={styles.chartCardHeader}>
+                      <h4 className={styles.chartCardTitle}>Assets by quarter</h4>
+                      <p className={styles.chartCardSubhead}>Quarterly asset balances</p>
                     </div>
 
-                  </div>
-                </div>
-
-                <div className={styles.lineChartBlock}>
-                  <div className={styles.lineChartHeader}>
-                    <h5 className={styles.lineChartTitle}>ROA by quarter</h5>
-                    <p className={styles.lineChartSubhead}>Return on assets</p>
-                  </div>
-                  <div className={styles.lineChartBody}>
-                    <svg
-                      className={styles.lineOverlay}
-                      viewBox="0 0 100 100"
-                      role="img"
-                      aria-label="ROA by quarter line chart"
-                      preserveAspectRatio="none"
-                    >
-                      {roaLineSeries?.path && (
-                        <path className={styles.roaLinePath} d={roaLineSeries.path} />
-                      )}
-                      {roaLineSeries?.points.map((point) => (
-                        <circle
-                          key={`${point.label}-roa`}
-                          className={styles.roaLinePoint}
-                          cx={point.x}
-                          cy={point.y}
-                          r="1.8"
-                        />
-                      ))}
-                    </svg>
-                  </div>
-                  <div
-                    className={styles.lineChartLabels}
-                    style={{
-                      gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {quarterlySeries.map((point) => (
-                      <span key={`${point.label}-roa-label`} className={styles.barLabel}>
-                        {point.label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.chartCard}>
-                <div className={styles.chartCardHeader}>
-                  <h4 className={styles.chartCardTitle}>Equity by quarter</h4>
-                  <p className={styles.chartCardSubhead}>Quarterly equity levels</p>
-                </div>
-
-                <div className={styles.chartLegendRow} aria-hidden="true">
-                  <div className={styles.legendItem}>
-                    <span className={`${styles.legendSwatch} ${styles.legendEquity}`} />
-                    <span className={styles.legendLabel}>Equity</span>
-                  </div>
-                </div>
-
-                <div className={styles.combinedChart}>
-                  <div className={styles.chartBody}>
-                    <div
-                      className={styles.barChart}
-                      role="figure"
-                      aria-label="Equity by quarter"
-                      style={{
-                        gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                      }}
-                    >
-                      {quarterlySeries.map((point) => (
-                        <div key={point.label} className={styles.barColumn}>
-                          <div className={styles.barWrapper}>
-                            <div
-                              className={`${styles.bar} ${styles.equityBar}`}
-                              style={{ height: `${point.equityPercentage}%` }}
-                              aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
-                            />
-                            <span className={styles.barHoverValue}>
-                              {formatNumber(point.equity)}
-                            </span>
-                          </div>
-                          <span className={styles.barLabel}>{point.label}</span>
-                        </div>
-                      ))}
+                    <div className={styles.chartLegendRow} aria-hidden="true">
+                      <div className={styles.legendItem}>
+                        <span className={`${styles.legendSwatch} ${styles.legendAssets}`} />
+                        <span className={styles.legendLabel}>Assets</span>
+                      </div>
                     </div>
 
-                  </div>
-                </div>
+                    <div className={styles.combinedChart}>
+                      <div className={styles.chartBody}>
+                        <div
+                          className={styles.barChart}
+                          role="figure"
+                          aria-label="Assets by quarter"
+                          style={{
+                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {quarterlySeries.map((point) => (
+                            <div key={point.label} className={styles.barColumn}>
+                              <div className={styles.barWrapper}>
+                                <span className={styles.barHoverValue}>
+                                  {formatNumber(point.asset)}
+                                </span>
+                                <div
+                                  className={`${styles.bar} ${styles.assetBar}`}
+                                  style={{ height: `${point.assetPercentage}%` }}
+                                  aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                                />
+                              </div>
+                              <span className={styles.barLabel}>{point.label}</span>
+                            </div>
+                          ))}
+                        </div>
 
-                <div className={styles.lineChartBlock}>
-                  <div className={styles.lineChartHeader}>
-                    <h5 className={styles.lineChartTitle}>ROE by quarter</h5>
-                    <p className={styles.lineChartSubhead}>Return on equity</p>
+                      </div>
+                    </div>
+
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h5 className={styles.lineChartTitle}>ROA by quarter</h5>
+                        <p className={styles.lineChartSubhead}>Return on assets</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <svg
+                          className={styles.lineOverlay}
+                          viewBox="0 0 100 100"
+                          role="img"
+                          aria-label="ROA by quarter line chart"
+                          preserveAspectRatio="none"
+                        >
+                          {roaLineSeries?.path && (
+                            <path className={styles.roaLinePath} d={roaLineSeries.path} />
+                          )}
+                          {roaLineSeries?.points.map((point) => (
+                            <circle
+                              key={`${point.label}-roa`}
+                              className={styles.roaLinePoint}
+                              cx={point.x}
+                              cy={point.y}
+                              r="1.8"
+                            />
+                          ))}
+                        </svg>
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {quarterlySeries.map((point) => (
+                          <span key={`${point.label}-roa-label`} className={styles.barLabel}>
+                            {point.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className={styles.lineChartBody}>
-                    <svg
-                      className={styles.lineOverlay}
-                      viewBox="0 0 100 100"
-                      role="img"
-                      aria-label="ROE by quarter line chart"
-                      preserveAspectRatio="none"
-                    >
-                      {roeLineSeries?.path && (
-                        <path className={styles.roeLinePath} d={roeLineSeries.path} />
-                      )}
-                      {roeLineSeries?.points.map((point) => (
-                        <circle
-                          key={`${point.label}-roe`}
-                          className={styles.roeLinePoint}
-                          cx={point.x}
-                          cy={point.y}
-                          r="1.8"
-                        />
-                      ))}
-                    </svg>
-                  </div>
-                  <div
-                    className={styles.lineChartLabels}
-                    style={{
-                      gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {quarterlySeries.map((point) => (
-                      <span key={`${point.label}-roe-label`} className={styles.barLabel}>
-                        {point.label}
-                      </span>
-                    ))}
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.chartCardHeader}>
+                      <h4 className={styles.chartCardTitle}>Equity by quarter</h4>
+                      <p className={styles.chartCardSubhead}>Quarterly equity levels</p>
+                    </div>
+
+                    <div className={styles.chartLegendRow} aria-hidden="true">
+                      <div className={styles.legendItem}>
+                        <span className={`${styles.legendSwatch} ${styles.legendEquity}`} />
+                        <span className={styles.legendLabel}>Equity</span>
+                      </div>
+                    </div>
+
+                    <div className={styles.combinedChart}>
+                      <div className={styles.chartBody}>
+                        <div
+                          className={styles.barChart}
+                          role="figure"
+                          aria-label="Equity by quarter"
+                          style={{
+                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {quarterlySeries.map((point) => (
+                            <div key={point.label} className={styles.barColumn}>
+                              <div className={styles.barWrapper}>
+                                <div
+                                  className={`${styles.bar} ${styles.equityBar}`}
+                                  style={{ height: `${point.equityPercentage}%` }}
+                                  aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
+                                />
+                                <span className={styles.barHoverValue}>
+                                  {formatNumber(point.equity)}
+                                </span>
+                              </div>
+                              <span className={styles.barLabel}>{point.label}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h5 className={styles.lineChartTitle}>ROE by quarter</h5>
+                        <p className={styles.lineChartSubhead}>Return on equity</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <svg
+                          className={styles.lineOverlay}
+                          viewBox="0 0 100 100"
+                          role="img"
+                          aria-label="ROE by quarter line chart"
+                          preserveAspectRatio="none"
+                        >
+                          {roeLineSeries?.path && (
+                            <path className={styles.roeLinePath} d={roeLineSeries.path} />
+                          )}
+                          {roeLineSeries?.points.map((point) => (
+                            <circle
+                              key={`${point.label}-roe`}
+                              className={styles.roeLinePoint}
+                              cx={point.x}
+                              cy={point.y}
+                              r="1.8"
+                            />
+                          ))}
+                        </svg>
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {quarterlySeries.map((point) => (
+                          <span key={`${point.label}-roe-label`} className={styles.barLabel}>
+                            {point.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
-          </section>
+          )}
+
+          {activeTab === 'asset-quality' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Asset Quality</h3>
+                <p className={styles.assetQualityText}>
+                  Asset quality insights will appear here once they are available. For now,
+                  continue exploring the portfolio trends above.
+                </p>
+              </section>
+            </div>
+          )}
         </>
       )}
     </main>

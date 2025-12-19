@@ -136,6 +136,67 @@
   color: #312e81;
 }
 
+.tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  background: #f1f5f9;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tabButton:hover,
+.tabButton:focus {
+  color: #1e293b;
+  background: #e2e8f0;
+  outline: none;
+}
+
+.tabButtonActive {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.assetQualityCard {
+  border: 1px dashed #cbd5f5;
+  border-radius: 16px;
+  padding: 2rem;
+  background: linear-gradient(180deg, #ffffff, #eef2ff);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.08);
+}
+
+.assetQualityTitle {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+  color: #1e1b4b;
+}
+
+.assetQualityText {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 .latestMetrics {
   border: 1px solid #e2e8f0;
   background: #fff;
