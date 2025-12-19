@@ -292,6 +292,28 @@ export default function Home() {
             >
               Earnings
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'capital'}
+              className={`${styles.tabButton} ${
+                activeTab === 'capital' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('capital')}
+            >
+              Capital
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'benchmark'}
+              className={`${styles.tabButton} ${
+                activeTab === 'benchmark' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('benchmark')}
+            >
+              Benchmark
+            </button>
           </div>
 
           {activeTab === 'portfolio' && (
@@ -488,6 +510,28 @@ export default function Home() {
                 <h3 className={styles.assetQualityTitle}>Earnings</h3>
                 <p className={styles.assetQualityText}>
                   Earnings performance trends will be displayed here once the data is connected.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'capital' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Capital</h3>
+                <p className={styles.assetQualityText}>
+                  Capital ratios and buffers will be summarized here when the data is ready.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'benchmark' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Benchmark</h3>
+                <p className={styles.assetQualityText}>
+                  Peer benchmarking insights will appear here in a forthcoming update.
                 </p>
               </section>
             </div>
