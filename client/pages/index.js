@@ -378,6 +378,9 @@ export default function Home() {
                     <p className={styles.lineChartSubhead}>Return on assets</p>
                   </div>
                   <div className={styles.lineChartBody}>
+                    <span className={styles.lineChartYAxis} aria-hidden="true">
+                      ROA (%)
+                    </span>
                     <svg
                       className={styles.lineOverlay}
                       viewBox="0 0 100 100"
@@ -463,6 +466,9 @@ export default function Home() {
                     <p className={styles.lineChartSubhead}>Return on equity</p>
                   </div>
                   <div className={styles.lineChartBody}>
+                    <span className={styles.lineChartYAxis} aria-hidden="true">
+                      ROE (%)
+                    </span>
                     <svg
                       className={styles.lineOverlay}
                       viewBox="0 0 100 100"
