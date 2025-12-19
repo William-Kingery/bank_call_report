@@ -316,6 +316,39 @@ export default function Home() {
             >
               Asset Quality
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'profitability'}
+              className={`${styles.tabButton} ${
+                activeTab === 'profitability' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('profitability')}
+            >
+              Profitability
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'liquidity'}
+              className={`${styles.tabButton} ${
+                activeTab === 'liquidity' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('liquidity')}
+            >
+              Liquidity
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'earnings'}
+              className={`${styles.tabButton} ${
+                activeTab === 'earnings' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('earnings')}
+            >
+              Earnings
+            </button>
           </div>
 
           {activeTab === 'portfolio' && (
@@ -557,6 +590,41 @@ export default function Home() {
                 <p className={styles.assetQualityText}>
                   Asset quality insights will appear here once they are available. For now,
                   continue exploring the portfolio trends above.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'profitability' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Profitability</h3>
+                <p className={styles.assetQualityText}>
+                  Profitability highlights will show key margin and return metrics for the
+                  selected bank once the data is available.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'liquidity' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Liquidity</h3>
+                <p className={styles.assetQualityText}>
+                  Liquidity coverage and funding insights will be summarized here in an upcoming
+                  update.
+                </p>
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'earnings' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.assetQualityCard}>
+                <h3 className={styles.assetQualityTitle}>Earnings</h3>
+                <p className={styles.assetQualityText}>
+                  Earnings performance trends will be displayed here once the data is connected.
                 </p>
               </section>
             </div>
