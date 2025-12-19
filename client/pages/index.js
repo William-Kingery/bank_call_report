@@ -84,6 +84,9 @@ export default function Home() {
     });
   }, [assetMaxValue, equityMaxValue, sortedPoints]);
 
+  const clampValue = (value, minValue, maxValue) =>
+    Math.min(maxValue, Math.max(minValue, value));
+
   const buildLineSeries = (seriesKey) => {
     if (!quarterlySeries.length) return null;
 
@@ -116,7 +119,17 @@ export default function Home() {
       return `${acc} ${command} ${point.x} ${point.y}`;
     }, '');
 
-    return { points: points.filter(Boolean), path };
+    const tickValues =
+      maxValue === minValue ? [maxValue] : [maxValue, (maxValue + minValue) / 2, minValue];
+    const ticks = tickValues.map((value) => {
+      const rawY = maxValue === minValue ? 50 : 100 - ((value - minValue) / range) * 100;
+      return {
+        value,
+        y: clampValue(rawY, 4, 96),
+      };
+    });
+
+    return { points: points.filter(Boolean), path, ticks };
   };
 
   const roaLineSeries = useMemo(() => buildLineSeries('roa'), [quarterlySeries]);
@@ -381,6 +394,16 @@ export default function Home() {
                     <span className={styles.lineChartYAxis} aria-hidden="true">
                       ROA (%)
                     </span>
+                    {roaLineSeries?.ticks?.map((tick, index) => (
+                      <span
+                        key={`roa-tick-${index}`}
+                        className={styles.lineChartTick}
+                        style={{ top: `${tick.y}%` }}
+                        aria-hidden="true"
+                      >
+                        {formatPercentage(tick.value)}
+                      </span>
+                    ))}
                     <svg
                       className={styles.lineOverlay}
                       viewBox="0 0 100 100"
@@ -469,6 +492,16 @@ export default function Home() {
                     <span className={styles.lineChartYAxis} aria-hidden="true">
                       ROE (%)
                     </span>
+                    {roeLineSeries?.ticks?.map((tick, index) => (
+                      <span
+                        key={`roe-tick-${index}`}
+                        className={styles.lineChartTick}
+                        style={{ top: `${tick.y}%` }}
+                        aria-hidden="true"
+                      >
+                        {formatPercentage(tick.value)}
+                      </span>
+                    ))}
                     <svg
                       className={styles.lineOverlay}
                       viewBox="0 0 100 100"
