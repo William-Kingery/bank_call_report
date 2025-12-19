@@ -232,7 +232,7 @@ export default function Home() {
       <div className={styles.header}>
         <div>
           <p className={styles.kicker}>FDIC Call Report explorer</p>
-          <h1 className={styles.title}>Search by NameFull and view performance metrics</h1>
+          <h1 className={styles.title}>Search by Bank and view performance metrics</h1>
           <p className={styles.subtitle}>
             Start typing a bank name to view assets, equity, and ROA over time.
           </p>
