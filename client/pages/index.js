@@ -58,6 +58,15 @@ export default function Home() {
     [sortedPoints],
   );
 
+  const assetYAxisTicks = useMemo(() => {
+    if (!assetMaxValue) return [];
+    const tickCount = 5;
+    const step = assetMaxValue / (tickCount - 1);
+    return Array.from({ length: tickCount }, (_, index) =>
+      Math.round(assetMaxValue - step * index),
+    );
+  }, [assetMaxValue]);
+
   const quarterlySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
 
@@ -389,29 +398,46 @@ export default function Home() {
 
                     <div className={styles.combinedChart}>
                       <div className={styles.chartBody}>
-                        <div
-                          className={styles.barChart}
-                          role="figure"
-                          aria-label="Assets by quarter"
-                          style={{
-                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                          }}
-                        >
-                          {quarterlySeries.map((point) => (
-                            <div key={point.label} className={styles.barColumn}>
-                              <div className={styles.barWrapper}>
-                                <span className={styles.barHoverValue}>
-                                  {formatNumber(point.asset)}
-                                </span>
-                                <div
-                                  className={`${styles.bar} ${styles.assetBar}`}
-                                  style={{ height: `${point.assetPercentage}%` }}
-                                  aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
-                                />
+                        <div className={styles.barChartWithAxis}>
+                          <div className={styles.barChartYAxis} aria-hidden="true">
+                            {assetYAxisTicks.map((value, index) => (
+                              <span
+                                key={`asset-tick-${value}-${index}`}
+                                className={styles.barChartYAxisTick}
+                                style={{
+                                  top: `${
+                                    (index / Math.max(assetYAxisTicks.length - 1, 1)) * 100
+                                  }%`,
+                                }}
+                              >
+                                {formatNumber(value)}
+                              </span>
+                            ))}
+                          </div>
+                          <div
+                            className={styles.barChart}
+                            role="figure"
+                            aria-label="Assets by quarter"
+                            style={{
+                              gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {quarterlySeries.map((point) => (
+                              <div key={point.label} className={styles.barColumn}>
+                                <div className={styles.barWrapper}>
+                                  <span className={styles.barHoverValue}>
+                                    {formatNumber(point.asset)}
+                                  </span>
+                                  <div
+                                    className={`${styles.bar} ${styles.assetBar}`}
+                                    style={{ height: `${point.assetPercentage}%` }}
+                                    aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                                  />
+                                </div>
+                                <span className={styles.barLabel}>{point.label}</span>
                               </div>
-                              <span className={styles.barLabel}>{point.label}</span>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
 
                       </div>
