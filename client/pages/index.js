@@ -9,6 +9,9 @@ export default function Home() {
   const [selectedCert, setSelectedCert] = useState(null);
   const [selectedName, setSelectedName] = useState('');
   const [reportData, setReportData] = useState(null);
+  const [benchmarkData, setBenchmarkData] = useState([]);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(false);
+  const [benchmarkError, setBenchmarkError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -106,6 +109,31 @@ export default function Home() {
       : null;
 
   const latestRwa = latestPoint?.rwa;
+
+  useEffect(() => {
+    if (activeTab !== 'benchmark' || benchmarkData.length > 0 || benchmarkLoading) {
+      return;
+    }
+
+    const fetchBenchmarkData = async () => {
+      setBenchmarkLoading(true);
+      setBenchmarkError(null);
+      try {
+        const response = await fetch(`${API_BASE}/benchmark`);
+        if (!response.ok) {
+          throw new Error('Failed to load benchmark data');
+        }
+        const data = await response.json();
+        setBenchmarkData(data.results ?? []);
+      } catch (err) {
+        setBenchmarkError(err.message);
+      } finally {
+        setBenchmarkLoading(false);
+      }
+    };
+
+    fetchBenchmarkData();
+  }, [activeTab, benchmarkData.length, benchmarkLoading]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -572,11 +600,57 @@ export default function Home() {
 
           {activeTab === 'benchmark' && (
             <div className={styles.tabPanel} role="tabpanel">
-              <section className={styles.assetQualityCard}>
-                <h3 className={styles.assetQualityTitle}>Benchmark</h3>
-                <p className={styles.assetQualityText}>
-                  Peer benchmarking insights will appear here in a forthcoming update.
-                </p>
+              <section className={styles.benchmarkCard}>
+                <div className={styles.benchmarkHeader}>
+                  <div>
+                    <h3 className={styles.benchmarkTitle}>Benchmark</h3>
+                    <p className={styles.benchmarkSubtitle}>
+                      Top 10 banks by assets with asset segmentation and profitability ratios.
+                    </p>
+                  </div>
+                  <p className={styles.benchmarkHint}>Asset values are reported in thousands.</p>
+                </div>
+
+                {benchmarkLoading && (
+                  <p className={styles.status}>Loading benchmark data...</p>
+                )}
+                {benchmarkError && (
+                  <p className={styles.error}>Error: {benchmarkError}</p>
+                )}
+
+                {!benchmarkLoading && !benchmarkError && (
+                  <div className={styles.benchmarkTableWrapper}>
+                    <table className={styles.benchmarkTable}>
+                      <thead>
+                        <tr>
+                          <th>Bank</th>
+                          <th>City</th>
+                          <th>State</th>
+                          <th>Asset Segment</th>
+                          <th>ROA</th>
+                          <th>ROE</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {benchmarkData.map((bank) => (
+                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                            <td className={styles.benchmarkBank}>{bank.nameFull}</td>
+                            <td>{bank.city ?? 'N/A'}</td>
+                            <td>{bank.stateName ?? 'N/A'}</td>
+                            <td>{bank.assetSegment}</td>
+                            <td>{formatPercentage(bank.roa)}</td>
+                            <td>{formatPercentage(bank.roe)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {benchmarkData.length === 0 && (
+                      <p className={styles.benchmarkEmpty}>
+                        No benchmark data is available right now.
+                      </p>
+                    )}
+                  </div>
+                )}
               </section>
             </div>
           )}

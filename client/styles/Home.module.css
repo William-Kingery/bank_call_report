@@ -197,6 +197,76 @@
   line-height: 1.5;
 }
 
+.benchmarkCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.benchmarkHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.benchmarkTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #0f172a;
+}
+
+.benchmarkSubtitle {
+  margin: 0.35rem 0 0;
+  color: #475569;
+}
+
+.benchmarkHint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.benchmarkTableWrapper {
+  overflow-x: auto;
+}
+
+.benchmarkTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.benchmarkTable th,
+.benchmarkTable td {
+  text-align: left;
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.benchmarkTable th {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.benchmarkBank {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.benchmarkEmpty {
+  margin: 1rem 0 0;
+  color: #64748b;
+}
+
 .latestMetrics {
   border: 1px solid #e2e8f0;
   background: #fff;

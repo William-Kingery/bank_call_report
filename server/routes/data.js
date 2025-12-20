@@ -91,4 +91,59 @@ router.get('/charts', async (req, res) => {
   }
 });
 
+router.get('/benchmark', async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         s.NAMEFULL AS nameFull,
+         s.CITY AS city,
+         s.STNAME AS stateName,
+         f.ASSET AS asset,
+         r.ROA AS roa,
+         r.ROE AS roe,
+         CASE
+           WHEN f.ASSET >= 1000000000 THEN 'Over 1 Trillion'
+           WHEN f.ASSET >= 250000000 THEN 'Between $250 B and 1 Trillion'
+           WHEN f.ASSET >= 100000000 THEN 'Between $100 B and 250 B'
+           WHEN f.ASSET >= 10000000 THEN 'Between $10 B and 100 B'
+           WHEN f.ASSET >= 1000000 THEN 'Between $1 B and 10 B'
+           ELSE 'Less than 1 B'
+         END AS assetSegment
+       FROM (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ) latest_fts
+       JOIN fdic_fts f
+         ON f.CERT = latest_fts.CERT
+         AND f.CALLYM = latest_fts.callym
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
+       LEFT JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_rat
+         GROUP BY CERT
+       ) latest_rat
+         ON latest_rat.CERT = f.CERT
+       LEFT JOIN fdic_rat r
+         ON r.CERT = latest_rat.CERT
+         AND r.CALLYM = latest_rat.callym
+       ORDER BY f.ASSET DESC
+       LIMIT 10`
+    );
+
+    res.json({ results: rows });
+  } catch (error) {
+    console.error('Error fetching benchmark data:', error);
+    res.status(500).json({ message: 'Failed to fetch benchmark data' });
+  }
+});
+
 export default router;
