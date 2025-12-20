@@ -58,6 +58,9 @@ router.get('/charts', async (req, res) => {
       `SELECT
          f.CALLYM AS callym,
          f.ASSET AS asset,
+         f.P3ASSET AS P3Asset,
+         f.P9ASSET AS P9Asset,
+         f.NAASSET AS NAAsset,
          f.EQ AS eq,
          f.DEP AS dep,
          c.RWA AS rwa,

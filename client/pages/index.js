@@ -499,9 +499,22 @@ export default function Home() {
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Asset Quality</h3>
                 <p className={styles.assetQualityText}>
-                  Asset quality insights will appear here once they are available. For now,
-                  continue exploring the portfolio trends above.
+                  Latest delinquency metrics from the call report. Values shown are in thousands.
                 </p>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>30-89 Delinquencies</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.P3Asset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>90+ Delinquencies</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.P9Asset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Non-Accrual</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.NAAsset)}</p>
+                  </div>
+                </div>
               </section>
             </div>
           )}
