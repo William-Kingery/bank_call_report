@@ -504,7 +504,12 @@ export default function Home() {
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>30-89 Delinquencies</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.P3Asset)}</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestPoint?.P3Asset)}</p>
+                      <p className={styles.metricRatio}>
+                        {formatPercentage(latestPoint?.P3LNLSY1)}
+                      </p>
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>90+ Delinquencies</p>
