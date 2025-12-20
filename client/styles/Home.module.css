@@ -293,6 +293,26 @@
   color: #0f172a;
 }
 
+.metricValueRow {
+  margin-top: 0.35rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.metricValueRow .metricValue {
+  margin: 0;
+}
+
+.metricRatio {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2563eb;
+  white-space: nowrap;
+}
+
 .error {
   color: #b91c1c;
   background: #fef2f2;
