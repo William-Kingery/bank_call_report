@@ -12,6 +12,7 @@ export default function Home() {
   const [benchmarkData, setBenchmarkData] = useState([]);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [benchmarkError, setBenchmarkError] = useState(null);
+  const [benchmarkSegment, setBenchmarkSegment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -38,6 +39,17 @@ export default function Home() {
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
 
+  const getAssetSegment = (assetValue) => {
+    const asset = Number(assetValue);
+    if (!Number.isFinite(asset)) return null;
+    if (asset >= 1000000000) return 'Over 1 Trillion';
+    if (asset >= 250000000) return 'Between $250 B and 1 Trillion';
+    if (asset >= 100000000) return 'Between $100 B and 250 B';
+    if (asset >= 10000000) return 'Between $10 B and 100 B';
+    if (asset >= 1000000) return 'Between $1 B and 10 B';
+    return 'Less than 1 B';
+  };
+
   const sortedPoints = useMemo(() => {
     if (!reportData?.points?.length) return [];
     return [...reportData.points].sort((a, b) => Number(a.callym) - Number(b.callym));
@@ -60,15 +72,6 @@ export default function Home() {
       ),
     [sortedPoints],
   );
-
-  const assetYAxisTicks = useMemo(() => {
-    if (!assetMaxValue) return [];
-    const tickCount = 5;
-    const step = assetMaxValue / (tickCount - 1);
-    return Array.from({ length: tickCount }, (_, index) =>
-      Math.round(assetMaxValue - step * index),
-    );
-  }, [assetMaxValue]);
 
   const quarterlySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
@@ -96,6 +99,15 @@ export default function Home() {
     return sortedPoints[sortedPoints.length - 1];
   }, [sortedPoints]);
 
+  const selectedAssetSegment = useMemo(
+    () => getAssetSegment(latestPoint?.asset),
+    [latestPoint?.asset],
+  );
+
+  const benchmarkSubtitle = selectedAssetSegment
+    ? `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
+    : 'Top 10 banks by assets with asset segmentation and profitability ratios.';
+
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
 
@@ -111,7 +123,17 @@ export default function Home() {
   const latestRwa = latestPoint?.rwa;
 
   useEffect(() => {
-    if (activeTab !== 'benchmark' || benchmarkData.length > 0 || benchmarkLoading) {
+    if (activeTab !== 'benchmark' || benchmarkLoading) {
+      return;
+    }
+
+    if (!selectedAssetSegment) {
+      setBenchmarkData([]);
+      setBenchmarkSegment(null);
+      return;
+    }
+
+    if (benchmarkSegment === selectedAssetSegment && benchmarkData.length > 0) {
       return;
     }
 
@@ -119,12 +141,15 @@ export default function Home() {
       setBenchmarkLoading(true);
       setBenchmarkError(null);
       try {
-        const response = await fetch(`${API_BASE}/benchmark`);
+        const response = await fetch(
+          `${API_BASE}/benchmark?segment=${encodeURIComponent(selectedAssetSegment)}`,
+        );
         if (!response.ok) {
           throw new Error('Failed to load benchmark data');
         }
         const data = await response.json();
         setBenchmarkData(data.results ?? []);
+        setBenchmarkSegment(selectedAssetSegment);
       } catch (err) {
         setBenchmarkError(err.message);
       } finally {
@@ -133,7 +158,13 @@ export default function Home() {
     };
 
     fetchBenchmarkData();
-  }, [activeTab, benchmarkData.length, benchmarkLoading]);
+  }, [
+    activeTab,
+    benchmarkData.length,
+    benchmarkLoading,
+    benchmarkSegment,
+    selectedAssetSegment,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -392,10 +423,6 @@ export default function Home() {
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Total loans and leases</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.lnlsgr)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROA</p>
                     <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
                   </div>
@@ -434,46 +461,29 @@ export default function Home() {
 
                     <div className={styles.combinedChart}>
                       <div className={styles.chartBody}>
-                        <div className={styles.barChartWithAxis}>
-                          <div className={styles.barChartYAxis} aria-hidden="true">
-                            {assetYAxisTicks.map((value, index) => (
-                              <span
-                                key={`asset-tick-${value}-${index}`}
-                                className={styles.barChartYAxisTick}
-                                style={{
-                                  top: `${
-                                    (index / Math.max(assetYAxisTicks.length - 1, 1)) * 100
-                                  }%`,
-                                }}
-                              >
-                                {formatNumber(value)}
-                              </span>
-                            ))}
-                          </div>
-                          <div
-                            className={styles.barChart}
-                            role="figure"
-                            aria-label="Assets by quarter"
-                            style={{
-                              gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                            }}
-                          >
-                            {quarterlySeries.map((point) => (
-                              <div key={point.label} className={styles.barColumn}>
-                                <div className={styles.barWrapper}>
-                                  <span className={styles.barHoverValue}>
-                                    {formatNumber(point.asset)}
-                                  </span>
-                                  <div
-                                    className={`${styles.bar} ${styles.assetBar}`}
-                                    style={{ height: `${point.assetPercentage}%` }}
-                                    aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
-                                  />
-                                </div>
-                                <span className={styles.barLabel}>{point.label}</span>
+                        <div
+                          className={styles.barChart}
+                          role="figure"
+                          aria-label="Assets by quarter"
+                          style={{
+                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {quarterlySeries.map((point) => (
+                            <div key={point.label} className={styles.barColumn}>
+                              <div className={styles.barWrapper}>
+                                <span className={styles.barHoverValue}>
+                                  {formatNumber(point.asset)}
+                                </span>
+                                <div
+                                  className={`${styles.bar} ${styles.assetBar}`}
+                                  style={{ height: `${point.assetPercentage}%` }}
+                                  aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                                />
                               </div>
-                            ))}
-                          </div>
+                              <span className={styles.barLabel}>{point.label}</span>
+                            </div>
+                          ))}
                         </div>
 
                       </div>
@@ -612,9 +622,7 @@ export default function Home() {
                 <div className={styles.benchmarkHeader}>
                   <div>
                     <h3 className={styles.benchmarkTitle}>Benchmark</h3>
-                    <p className={styles.benchmarkSubtitle}>
-                      Top 10 banks by assets with asset segmentation and profitability ratios.
-                    </p>
+                    <p className={styles.benchmarkSubtitle}>{benchmarkSubtitle}</p>
                   </div>
                   <p className={styles.benchmarkHint}>Asset values are reported in thousands.</p>
                 </div>
