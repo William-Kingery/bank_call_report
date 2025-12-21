@@ -94,6 +94,30 @@ router.get('/charts', async (req, res) => {
 
 router.get('/benchmark', async (_req, res) => {
   try {
+    const segment = _req.query.segment;
+    const segmentRanges = {
+      'Over 1 Trillion': { min: 1000000000 },
+      'Between $250 B and 1 Trillion': { min: 250000000, max: 1000000000 },
+      'Between $100 B and 250 B': { min: 100000000, max: 250000000 },
+      'Between $10 B and 100 B': { min: 10000000, max: 100000000 },
+      'Between $1 B and 10 B': { min: 1000000, max: 10000000 },
+      'Less than 1 B': { max: 1000000 },
+    };
+    const range = segmentRanges[segment] ?? null;
+    const conditions = [];
+    const params = [];
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
     const [rows] = await pool.query(
       `SELECT
          s.NAMEFULL AS nameFull,
@@ -136,8 +160,11 @@ router.get('/benchmark', async (_req, res) => {
        LEFT JOIN fdic_rat r
          ON r.CERT = latest_rat.CERT
          AND r.CALLYM = latest_rat.callym
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ORDER BY f.ASSET DESC
        LIMIT 10`
+      ,
+      params
     );
 
     res.json({ results: rows });
