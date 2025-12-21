@@ -388,6 +388,14 @@ export default function Home() {
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
                   </div>
                   <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Total deposits</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Total loans and leases</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.lnlsgr)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROA</p>
                     <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
                   </div>
