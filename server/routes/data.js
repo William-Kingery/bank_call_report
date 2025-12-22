@@ -124,7 +124,7 @@ router.get('/benchmark', async (_req, res) => {
          s.CITY AS city,
          s.STNAME AS stateName,
          f.ASSET AS asset,
-         f.DEP AS dep,
+         dep_fts.DEP AS dep,
          r.ROA AS roa,
          r.ROE AS roe
        FROM (
@@ -144,6 +144,16 @@ router.get('/benchmark', async (_req, res) => {
        JOIN fdic_structure s
          ON s.CERT = latest_structure.CERT
          AND s.CALLYM = latest_structure.callym
+       LEFT JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         WHERE DEP IS NOT NULL
+         GROUP BY CERT
+       ) latest_dep
+         ON latest_dep.CERT = f.CERT
+       LEFT JOIN fdic_fts dep_fts
+         ON dep_fts.CERT = latest_dep.CERT
+         AND dep_fts.CALLYM = latest_dep.callym
        LEFT JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_rat
