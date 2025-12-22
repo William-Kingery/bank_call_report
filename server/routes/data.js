@@ -124,16 +124,9 @@ router.get('/benchmark', async (_req, res) => {
          s.CITY AS city,
          s.STNAME AS stateName,
          f.ASSET AS asset,
+         f.DEP AS dep,
          r.ROA AS roa,
-         r.ROE AS roe,
-         CASE
-           WHEN f.ASSET >= 1000000000 THEN 'Over 1 Trillion'
-           WHEN f.ASSET >= 250000000 THEN 'Between $250 B and 1 Trillion'
-           WHEN f.ASSET >= 100000000 THEN 'Between $100 B and 250 B'
-           WHEN f.ASSET >= 10000000 THEN 'Between $10 B and 100 B'
-           WHEN f.ASSET >= 1000000 THEN 'Between $1 B and 10 B'
-           ELSE 'Less than 1 B'
-         END AS assetSegment
+         r.ROE AS roe
        FROM (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_fts
