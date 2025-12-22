@@ -13,6 +13,8 @@ export default function Home() {
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [benchmarkError, setBenchmarkError] = useState(null);
   const [benchmarkSegment, setBenchmarkSegment] = useState(null);
+  const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
+  const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -106,7 +108,27 @@ export default function Home() {
 
   const benchmarkSubtitle = selectedAssetSegment
     ? `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
-    : 'Top 10 banks by assets with asset segmentation and profitability ratios.';
+    : 'Top 10 banks by assets with profitability ratios.';
+
+  const benchmarkSortedData = useMemo(() => {
+    if (!benchmarkData.length) return [];
+
+    const sorted = [...benchmarkData];
+    sorted.sort((a, b) => {
+      const aValue = Number(a?.[benchmarkSortField]);
+      const bValue = Number(b?.[benchmarkSortField]);
+      const aHasValue = Number.isFinite(aValue);
+      const bHasValue = Number.isFinite(bValue);
+
+      if (!aHasValue && !bHasValue) return 0;
+      if (!aHasValue) return 1;
+      if (!bHasValue) return -1;
+
+      return benchmarkSortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+
+    return sorted;
+  }, [benchmarkData, benchmarkSortField, benchmarkSortOrder]);
 
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
@@ -626,6 +648,44 @@ export default function Home() {
                   </div>
                   <p className={styles.benchmarkHint}>Asset values are reported in thousands.</p>
                 </div>
+                <div className={styles.benchmarkControls}>
+                  <label className={styles.benchmarkControlLabel} htmlFor="benchmark-sort-field">
+                    Sort by
+                  </label>
+                  <select
+                    id="benchmark-sort-field"
+                    className={styles.benchmarkSelect}
+                    value={benchmarkSortField}
+                    onChange={(event) => setBenchmarkSortField(event.target.value)}
+                  >
+                    <option value="asset">Total assets</option>
+                    <option value="dep">Total deposits</option>
+                    <option value="roa">ROA</option>
+                    <option value="roe">ROE</option>
+                  </select>
+                  <div className={styles.benchmarkSortButtons} role="group" aria-label="Sort order">
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        benchmarkSortOrder === 'desc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setBenchmarkSortOrder('desc')}
+                      aria-pressed={benchmarkSortOrder === 'desc'}
+                    >
+                      Descending
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        benchmarkSortOrder === 'asc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setBenchmarkSortOrder('asc')}
+                      aria-pressed={benchmarkSortOrder === 'asc'}
+                    >
+                      Ascending
+                    </button>
+                  </div>
+                </div>
 
                 {benchmarkLoading && (
                   <p className={styles.status}>Loading benchmark data...</p>
@@ -642,18 +702,20 @@ export default function Home() {
                           <th>Bank</th>
                           <th>City</th>
                           <th>State</th>
-                          <th>Asset Segment</th>
+                          <th>Total Assets</th>
+                          <th>Total Deposits</th>
                           <th>ROA</th>
                           <th>ROE</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {benchmarkData.map((bank) => (
+                        {benchmarkSortedData.map((bank) => (
                           <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{bank.city ?? 'N/A'}</td>
                             <td>{bank.stateName ?? 'N/A'}</td>
-                            <td>{bank.assetSegment}</td>
+                            <td>{formatNumber(bank.asset)}</td>
+                            <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.roa)}</td>
                             <td>{formatPercentage(bank.roe)}</td>
                           </tr>
