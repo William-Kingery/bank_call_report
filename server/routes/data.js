@@ -83,6 +83,22 @@ router.get('/charts', async (req, res) => {
       [cert]
     );
 
+    const [ratRows] = await pool.query(
+      `SELECT
+         r.CALLYM AS callym,
+         r.NIMY AS nimy,
+         r.P3LNLSY1 AS P3LNLSY1,
+         r.LNAGY1 AS LNAGY1,
+         r.LNCIY1 AS LNCIY1,
+         r.LNCOMRY1 AS LNCOMRY1,
+         r.LNCONY1 AS LNCONY1
+       FROM fdic_rat r
+       WHERE r.CERT = ?
+       ORDER BY r.CALLYM DESC
+       LIMIT 1`,
+      [cert]
+    );
+
     res.json({
       cert,
       nameFull,
@@ -90,6 +106,7 @@ router.get('/charts', async (req, res) => {
       stateName,
       zipCode,
       points: seriesRows,
+      latestRat: ratRows?.[0] ?? null,
     });
   } catch (error) {
     console.error('Error fetching chart data:', error);
