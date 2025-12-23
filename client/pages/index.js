@@ -100,6 +100,7 @@ export default function Home() {
     if (!sortedPoints.length) return null;
     return sortedPoints[sortedPoints.length - 1];
   }, [sortedPoints]);
+  const latestRatPoint = reportData?.latestRat ?? null;
 
   const selectedAssetSegment = useMemo(
     () => getAssetSegment(latestPoint?.asset),
@@ -143,6 +144,11 @@ export default function Home() {
       : null;
 
   const latestRwa = latestPoint?.rwa;
+  const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
+  const latestAgLoans = latestRatPoint?.LNAGY1 ?? latestPoint?.LNAGY1;
+  const latestCILoans = latestRatPoint?.LNCIY1 ?? latestPoint?.LNCIY1;
+  const latestCreLoans = latestRatPoint?.LNCOMRY1 ?? latestPoint?.LNCOMRY1;
+  const latestConsumerLoans = latestRatPoint?.LNCONY1 ?? latestPoint?.LNCONY1;
 
   useEffect(() => {
     if (activeTab !== 'benchmark' || benchmarkLoading) {
@@ -446,7 +452,7 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>NIM</p>
-                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.nimy)}</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestNim)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROA</p>
@@ -593,19 +599,19 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Ag Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNAGY1)}</p>
+                    <p className={styles.metricValue}>{formatNumber(latestAgLoans)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>C&amp;I Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCIY1)}</p>
+                    <p className={styles.metricValue}>{formatNumber(latestCILoans)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>CRE Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCOMRY1)}</p>
+                    <p className={styles.metricValue}>{formatNumber(latestCreLoans)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Consumer Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCONY1)}</p>
+                    <p className={styles.metricValue}>{formatNumber(latestConsumerLoans)}</p>
                   </div>
                 </div>
               </section>
