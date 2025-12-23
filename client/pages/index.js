@@ -445,6 +445,10 @@ export default function Home() {
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
                   </div>
                   <div className={styles.metricCard}>
+                    <p className={styles.metricName}>NIM</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.nimy)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROA</p>
                     <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
                   </div>
@@ -586,6 +590,22 @@ export default function Home() {
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Non-Accrual</p>
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.NAAsset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Ag Loans</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNAGY1)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>C&amp;I Loans</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCIY1)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>CRE Loans</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCOMRY1)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Consumer Loans</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.LNCONY1)}</p>
                   </div>
                 </div>
               </section>
