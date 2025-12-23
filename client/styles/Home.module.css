@@ -716,6 +716,19 @@
   stroke-width: 0.5;
 }
 
+.nimLinePath {
+  stroke: #22c55e;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.95;
+}
+
+.nimLinePoint {
+  fill: #22c55e;
+  stroke: #fff;
+  stroke-width: 0.5;
+}
+
 .roeLinePath {
   stroke: #0ea5e9;
   stroke-width: 2;
@@ -725,6 +738,19 @@
 
 .roeLinePoint {
   fill: #0ea5e9;
+  stroke: #fff;
+  stroke-width: 0.5;
+}
+
+.efficiencyLinePath {
+  stroke: #f97316;
+  stroke-width: 2;
+  fill: none;
+  opacity: 0.95;
+}
+
+.efficiencyLinePoint {
+  fill: #f97316;
   stroke: #fff;
   stroke-width: 0.5;
 }
