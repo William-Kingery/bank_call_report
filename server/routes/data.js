@@ -68,6 +68,7 @@ router.get('/charts', async (req, res) => {
          r.ROA AS roa,
          r.ROE AS roe,
          r.NIMY AS nimy,
+         r.EEFFR AS efficiencyRatio,
          r.P3LNLSY1 AS P3LNLSY1,
          r.LNAGY1 AS LNAGY1,
          r.LNCIY1 AS LNCIY1,
@@ -87,6 +88,7 @@ router.get('/charts', async (req, res) => {
       `SELECT
          r.CALLYM AS callym,
          r.NIMY AS nimy,
+         r.EEFFR AS efficiencyRatio,
          r.P3LNLSY1 AS P3LNLSY1,
          r.LNAGY1 AS LNAGY1,
          r.LNCIY1 AS LNCIY1,

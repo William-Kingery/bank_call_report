@@ -3,6 +3,60 @@ import styles from '../styles/Home.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
+const buildLineData = (series, key) => {
+  if (!series?.length) {
+    return {
+      path: '',
+      points: [],
+      min: null,
+      max: null,
+    };
+  }
+
+  const values = series
+    .map((point) => Number(point?.[key]))
+    .filter((value) => Number.isFinite(value));
+
+  if (!values.length) {
+    return {
+      path: '',
+      points: [],
+      min: null,
+      max: null,
+    };
+  }
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const step = series.length > 1 ? 100 / (series.length - 1) : 0;
+
+  let path = '';
+  let hasStarted = false;
+  const points = [];
+
+  series.forEach((point, index) => {
+    const value = Number(point?.[key]);
+    if (!Number.isFinite(value)) {
+      hasStarted = false;
+      return;
+    }
+
+    const x = series.length > 1 ? index * step : 50;
+    const y = 100 - ((value - min) / range) * 100;
+    path += `${hasStarted ? 'L' : 'M'}${x},${y}`;
+    hasStarted = true;
+    points.push({ x, y, value, label: point.label });
+  });
+
+  return {
+    path,
+    points,
+    min,
+    max,
+  };
+};
+
 export default function Home() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -95,6 +149,35 @@ export default function Home() {
       };
     });
   }, [assetMaxValue, equityMaxValue, sortedPoints]);
+
+  const profitabilitySeries = useMemo(() => {
+    if (!sortedPoints.length) return [];
+
+    return sortedPoints.map((point) => {
+      const nimValue = Number(point.nimy);
+      const roaValue = Number(point.roa);
+      const roeValue = Number(point.roe);
+      const efficiencyValue = Number(point.efficiencyRatio);
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        nim: Number.isFinite(nimValue) ? nimValue : null,
+        roa: Number.isFinite(roaValue) ? roaValue : null,
+        roe: Number.isFinite(roeValue) ? roeValue : null,
+        efficiencyRatio: Number.isFinite(efficiencyValue) ? efficiencyValue : null,
+      };
+    });
+  }, [sortedPoints]);
+
+  const profitabilityLineData = useMemo(
+    () => ({
+      nim: buildLineData(profitabilitySeries, 'nim'),
+      roa: buildLineData(profitabilitySeries, 'roa'),
+      roe: buildLineData(profitabilitySeries, 'roe'),
+      efficiencyRatio: buildLineData(profitabilitySeries, 'efficiencyRatio'),
+    }),
+    [profitabilitySeries],
+  );
 
   const latestPoint = useMemo(() => {
     if (!sortedPoints.length) return null;
@@ -623,9 +706,266 @@ export default function Home() {
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Profitability</h3>
                 <p className={styles.assetQualityText}>
-                  Profitability highlights will show key margin and return metrics for the
-                  selected bank once the data is available.
+                  Review net interest margin, return metrics, and efficiency ratio trends across
+                  all reported quarters.
                 </p>
+              </section>
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Trend lines</p>
+                    <h3 className={styles.sectionTitle}>Quarterly profitability ratios</h3>
+                  </div>
+                  <div className={styles.sectionHeaderMeta}>
+                    <p className={styles.chartHint}>Values shown are percentages</p>
+                  </div>
+                </div>
+
+                <div className={styles.chartGrid}>
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Net interest margin (NIM)</h4>
+                        <p className={styles.lineChartSubhead}>Interest income strength</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {profitabilityLineData.nim.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(profitabilityLineData.nim.max)}
+                          </span>
+                        )}
+                        {profitabilityLineData.nim.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(profitabilityLineData.nim.min)}
+                          </span>
+                        )}
+                        {profitabilityLineData.nim.path ? (
+                          <svg
+                            className={styles.lineOverlay}
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            role="img"
+                            aria-label="Net interest margin trend line"
+                          >
+                            <path
+                              className={styles.nimLinePath}
+                              d={profitabilityLineData.nim.path}
+                            />
+                            {profitabilityLineData.nim.points.map((point) => (
+                              <circle
+                                key={`nim-${point.label}`}
+                                className={styles.nimLinePoint}
+                                cx={point.x}
+                                cy={point.y}
+                                r="1.6"
+                              >
+                                <title>
+                                  {point.label}: {formatPercentage(point.value)}
+                                </title>
+                              </circle>
+                            ))}
+                          </svg>
+                        ) : (
+                          <p className={styles.status}>No NIM data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {profitabilitySeries.map((point) => (
+                          <span key={`nim-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Return on assets (ROA)</h4>
+                        <p className={styles.lineChartSubhead}>Core profitability</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {profitabilityLineData.roa.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(profitabilityLineData.roa.max)}
+                          </span>
+                        )}
+                        {profitabilityLineData.roa.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(profitabilityLineData.roa.min)}
+                          </span>
+                        )}
+                        {profitabilityLineData.roa.path ? (
+                          <svg
+                            className={styles.lineOverlay}
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            role="img"
+                            aria-label="Return on assets trend line"
+                          >
+                            <path
+                              className={styles.roaLinePath}
+                              d={profitabilityLineData.roa.path}
+                            />
+                            {profitabilityLineData.roa.points.map((point) => (
+                              <circle
+                                key={`roa-${point.label}`}
+                                className={styles.roaLinePoint}
+                                cx={point.x}
+                                cy={point.y}
+                                r="1.6"
+                              >
+                                <title>
+                                  {point.label}: {formatPercentage(point.value)}
+                                </title>
+                              </circle>
+                            ))}
+                          </svg>
+                        ) : (
+                          <p className={styles.status}>No ROA data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {profitabilitySeries.map((point) => (
+                          <span key={`roa-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Return on equity (ROE)</h4>
+                        <p className={styles.lineChartSubhead}>Shareholder returns</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {profitabilityLineData.roe.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(profitabilityLineData.roe.max)}
+                          </span>
+                        )}
+                        {profitabilityLineData.roe.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(profitabilityLineData.roe.min)}
+                          </span>
+                        )}
+                        {profitabilityLineData.roe.path ? (
+                          <svg
+                            className={styles.lineOverlay}
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            role="img"
+                            aria-label="Return on equity trend line"
+                          >
+                            <path
+                              className={styles.roeLinePath}
+                              d={profitabilityLineData.roe.path}
+                            />
+                            {profitabilityLineData.roe.points.map((point) => (
+                              <circle
+                                key={`roe-${point.label}`}
+                                className={styles.roeLinePoint}
+                                cx={point.x}
+                                cy={point.y}
+                                r="1.6"
+                              >
+                                <title>
+                                  {point.label}: {formatPercentage(point.value)}
+                                </title>
+                              </circle>
+                            ))}
+                          </svg>
+                        ) : (
+                          <p className={styles.status}>No ROE data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {profitabilitySeries.map((point) => (
+                          <span key={`roe-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Efficiency ratio</h4>
+                        <p className={styles.lineChartSubhead}>Operating expense control</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {profitabilityLineData.efficiencyRatio.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(profitabilityLineData.efficiencyRatio.max)}
+                          </span>
+                        )}
+                        {profitabilityLineData.efficiencyRatio.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(profitabilityLineData.efficiencyRatio.min)}
+                          </span>
+                        )}
+                        {profitabilityLineData.efficiencyRatio.path ? (
+                          <svg
+                            className={styles.lineOverlay}
+                            viewBox="0 0 100 100"
+                            preserveAspectRatio="none"
+                            role="img"
+                            aria-label="Efficiency ratio trend line"
+                          >
+                            <path
+                              className={styles.efficiencyLinePath}
+                              d={profitabilityLineData.efficiencyRatio.path}
+                            />
+                            {profitabilityLineData.efficiencyRatio.points.map((point) => (
+                              <circle
+                                key={`eff-${point.label}`}
+                                className={styles.efficiencyLinePoint}
+                                cx={point.x}
+                                cy={point.y}
+                                r="1.6"
+                              >
+                                <title>
+                                  {point.label}: {formatPercentage(point.value)}
+                                </title>
+                              </circle>
+                            ))}
+                          </svg>
+                        ) : (
+                          <p className={styles.status}>No efficiency data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {profitabilitySeries.map((point) => (
+                          <span key={`eff-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </section>
             </div>
           )}
