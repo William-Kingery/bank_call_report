@@ -168,9 +168,9 @@ export default function Home() {
   }, [sortedPoints]);
 
   const efficiencySeries = useMemo(() => {
-    if (!reportData?.efficiencySeries?.length) return [];
+    if (!sortedPoints.length) return [];
 
-    return reportData.efficiencySeries.map((point) => {
+    return sortedPoints.map((point) => {
       const efficiencyValue = Number(point.efficiencyRatio);
 
       return {
@@ -178,7 +178,7 @@ export default function Home() {
         efficiencyRatio: Number.isFinite(efficiencyValue) ? efficiencyValue : null,
       };
     });
-  }, [reportData]);
+  }, [sortedPoints]);
 
   const profitabilityLineData = useMemo(
     () => ({

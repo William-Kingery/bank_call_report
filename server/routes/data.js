@@ -101,16 +101,6 @@ router.get('/charts', async (req, res) => {
       [cert]
     );
 
-    const [efficiencyRows] = await pool.query(
-      `SELECT
-         r.CALLYM AS callym,
-         r.EEFFR AS efficiencyRatio
-       FROM fdic_rat r
-       WHERE r.CERT = ?
-       ORDER BY r.CALLYM ASC`,
-      [cert]
-    );
-
     res.json({
       cert,
       nameFull,
@@ -118,7 +108,6 @@ router.get('/charts', async (req, res) => {
       stateName,
       zipCode,
       points: seriesRows,
-      efficiencySeries: efficiencyRows,
       latestRat: ratRows?.[0] ?? null,
     });
   } catch (error) {
