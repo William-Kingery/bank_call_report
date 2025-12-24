@@ -57,6 +57,18 @@ const buildLineData = (series, key) => {
   };
 };
 
+const buildQuarterSeries = (points, mapper) => {
+  const grouped = new Map();
+
+  points.forEach((point) => {
+    const mapped = mapper(point);
+    if (!mapped?.label) return;
+    grouped.set(mapped.label, mapped);
+  });
+
+  return Array.from(grouped.values());
+};
+
 export default function Home() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -153,7 +165,7 @@ export default function Home() {
   const profitabilitySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
 
-    return sortedPoints.map((point) => {
+    return buildQuarterSeries(sortedPoints, (point) => {
       const nimValue = Number(point.nimy);
       const roaValue = Number(point.roa);
       const roeValue = Number(point.roe);
@@ -170,7 +182,7 @@ export default function Home() {
   const efficiencySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
 
-    return sortedPoints.map((point) => {
+    return buildQuarterSeries(sortedPoints, (point) => {
       const efficiencyValue = Number(point.efficiencyRatio);
 
       return {
