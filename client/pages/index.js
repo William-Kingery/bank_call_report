@@ -62,6 +62,41 @@ const buildQuarterSeries = (points, mapper) => {
   return Array.from(grouped.values());
 };
 
+const clampNumber = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const hexToRgb = (hex) => {
+  const normalized = hex.replace('#', '');
+  const fullHex =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => `${char}${char}`)
+          .join('')
+      : normalized;
+  const parsed = Number.parseInt(fullHex, 16);
+  return {
+    r: (parsed >> 16) & 255,
+    g: (parsed >> 8) & 255,
+    b: parsed & 255,
+  };
+};
+
+const rgbToHex = (r, g, b) =>
+  `#${[r, g, b]
+    .map((value) => Math.round(value).toString(16).padStart(2, '0'))
+    .join('')}`;
+
+const mixColors = (baseColor, mixColor, amount) => {
+  const base = hexToRgb(baseColor);
+  const mix = hexToRgb(mixColor);
+  const clamped = clampNumber(amount, 0, 1);
+  return rgbToHex(
+    base.r + (mix.r - base.r) * clamped,
+    base.g + (mix.g - base.g) * clamped,
+    base.b + (mix.b - base.b) * clamped,
+  );
+};
+
 export default function Home() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -266,6 +301,8 @@ export default function Home() {
     const roeRange = maxRoe - minRoe || 1;
     const minRadius = 8;
     const maxRadius = 32;
+    const lowRoeColor = '#f97316';
+    const highRoeColor = '#22c55e';
 
     const count = points.length;
     const scaleX = (index) => {
@@ -288,11 +325,19 @@ export default function Home() {
     const chartPoints = points.map((point) => {
       const radiusScale = maxAsset > 0 ? point.asset / maxAsset : 0;
       const radius = minRadius + radiusScale * (maxRadius - minRadius);
+      const roeRatio = clampNumber((point.roe - minRoe) / roeRange, 0, 1);
+      const baseColor = mixColors(lowRoeColor, highRoeColor, roeRatio);
+      const highlightColor = mixColors(baseColor, '#ffffff', 0.45);
+      const shadowColor = mixColors(baseColor, '#0f172a', 0.35);
       return {
         ...point,
         x: scaleX(point.index),
         y: scaleY(point.roe),
         r: radius,
+        color: baseColor,
+        highlightColor,
+        shadowColor,
+        gradientId: `bubble-gradient-${point.index}`,
       };
     });
 
@@ -303,6 +348,8 @@ export default function Home() {
       minRoe,
       maxRoe,
       points: chartPoints,
+      lowRoeColor,
+      highRoeColor,
       ticks,
     };
   }, [benchmarkSortedData]);
@@ -1307,7 +1354,8 @@ export default function Home() {
                       <div>
                         <h4 className={styles.benchmarkBubbleTitle}>ROE vs. Asset Size</h4>
                         <p className={styles.benchmarkBubbleSubtitle}>
-                          Bubble size reflects total assets (in thousands).
+                          Bubble size reflects total assets (in thousands) and color grades
+                          with ROE.
                         </p>
                       </div>
                     </div>
@@ -1317,6 +1365,45 @@ export default function Home() {
                         role="img"
                         aria-label="Bubble chart comparing return on equity and total assets"
                       >
+                        <defs>
+                          <linearGradient
+                            id="roeScaleLegend"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="0%"
+                          >
+                            <stop offset="0%" stopColor={benchmarkBubbleChart.lowRoeColor} />
+                            <stop offset="100%" stopColor={benchmarkBubbleChart.highRoeColor} />
+                          </linearGradient>
+                          <filter
+                            id="bubbleShadow"
+                            x="-30%"
+                            y="-30%"
+                            width="160%"
+                            height="160%"
+                          >
+                            <feDropShadow
+                              dx="0"
+                              dy="6"
+                              stdDeviation="6"
+                              floodColor="rgba(15, 23, 42, 0.25)"
+                            />
+                          </filter>
+                          {benchmarkBubbleChart.points.map((point) => (
+                            <radialGradient
+                              key={point.gradientId}
+                              id={point.gradientId}
+                              cx="30%"
+                              cy="30%"
+                              r="70%"
+                            >
+                              <stop offset="0%" stopColor={point.highlightColor} />
+                              <stop offset="45%" stopColor={point.color} />
+                              <stop offset="100%" stopColor={point.shadowColor} />
+                            </radialGradient>
+                          ))}
+                        </defs>
                         <rect
                           x="0"
                           y="0"
@@ -1381,6 +1468,15 @@ export default function Home() {
                         >
                           Banks (sorted by assets)
                         </text>
+                        <g transform={`translate(${benchmarkBubbleChart.chartWidth - 190} 18)`}>
+                          <rect width="120" height="8" rx="4" fill="url(#roeScaleLegend)" />
+                          <text x="0" y="20" fontSize="10" fill="#64748b">
+                            Lower ROE
+                          </text>
+                          <text x="70" y="20" fontSize="10" fill="#64748b">
+                            Higher ROE
+                          </text>
+                        </g>
                         {benchmarkBubbleChart.points.map((point) => (
                           <g
                             key={`${point.bank.nameFull}-${point.bank.city}-${point.bank.stateName}`}
@@ -1389,9 +1485,10 @@ export default function Home() {
                               cx={point.x}
                               cy={point.y}
                               r={point.r}
-                              fill="rgba(79, 70, 229, 0.25)"
-                              stroke="#4f46e5"
+                              fill={`url(#${point.gradientId})`}
+                              stroke={point.shadowColor}
                               strokeWidth="1.5"
+                              filter="url(#bubbleShadow)"
                             >
                               <title>
                                 {`${point.bank.nameFull} • Assets: ${formatNumber(
