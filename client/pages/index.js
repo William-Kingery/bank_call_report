@@ -157,26 +157,37 @@ export default function Home() {
       const nimValue = Number(point.nimy);
       const roaValue = Number(point.roa);
       const roeValue = Number(point.roe);
-      const efficiencyValue = Number(point.efficiencyRatio);
 
       return {
         label: formatQuarterLabel(point.callym),
         nim: Number.isFinite(nimValue) ? nimValue : null,
         roa: Number.isFinite(roaValue) ? roaValue : null,
         roe: Number.isFinite(roeValue) ? roeValue : null,
-        efficiencyRatio: Number.isFinite(efficiencyValue) ? efficiencyValue : null,
       };
     });
   }, [sortedPoints]);
+
+  const efficiencySeries = useMemo(() => {
+    if (!reportData?.efficiencySeries?.length) return [];
+
+    return reportData.efficiencySeries.map((point) => {
+      const efficiencyValue = Number(point.efficiencyRatio);
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        efficiencyRatio: Number.isFinite(efficiencyValue) ? efficiencyValue : null,
+      };
+    });
+  }, [reportData]);
 
   const profitabilityLineData = useMemo(
     () => ({
       nim: buildLineData(profitabilitySeries, 'nim'),
       roa: buildLineData(profitabilitySeries, 'roa'),
       roe: buildLineData(profitabilitySeries, 'roe'),
-      efficiencyRatio: buildLineData(profitabilitySeries, 'efficiencyRatio'),
+      efficiencyRatio: buildLineData(efficiencySeries, 'efficiencyRatio'),
     }),
-    [profitabilitySeries],
+    [efficiencySeries, profitabilitySeries],
   );
 
   const latestPoint = useMemo(() => {
@@ -956,10 +967,10 @@ export default function Home() {
                       <div
                         className={styles.lineChartLabels}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${efficiencySeries.length}, minmax(0, 1fr))`,
                         }}
                       >
-                        {profitabilitySeries.map((point) => (
+                        {efficiencySeries.map((point) => (
                           <span key={`eff-label-${point.label}`}>{point.label}</span>
                         ))}
                       </div>
