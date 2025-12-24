@@ -230,6 +230,87 @@ export default function Home() {
     return sorted;
   }, [benchmarkData, benchmarkSortField, benchmarkSortOrder]);
 
+  const benchmarkBubbleChart = useMemo(() => {
+    const chartWidth = 640;
+    const chartHeight = 320;
+    const padding = 48;
+    const points = benchmarkSortedData
+      .map((bank, index) => {
+        const asset = Number(bank?.asset);
+        const roe = Number(bank?.roe);
+        if (!Number.isFinite(asset) || !Number.isFinite(roe)) {
+          return null;
+        }
+        return {
+          bank,
+          asset,
+          roe,
+          index,
+        };
+      })
+      .filter(Boolean);
+
+    if (!points.length) {
+      return {
+        chartWidth,
+        chartHeight,
+        padding,
+        points: [],
+        ticks: [],
+      };
+    }
+
+    const maxAsset = Math.max(...points.map((point) => point.asset));
+    const minRoe = Math.min(...points.map((point) => point.roe));
+    const maxRoe = Math.max(...points.map((point) => point.roe));
+    const roeRange = maxRoe - minRoe || 1;
+    const minRadius = 8;
+    const maxRadius = 32;
+    const bubbleColors = ['#6366f1', '#22c55e', '#f97316', '#0ea5e9', '#a855f7'];
+
+    const count = points.length;
+    const scaleX = (index) => {
+      if (count === 1) return chartWidth / 2;
+      return padding + (index / (count - 1)) * (chartWidth - padding * 2);
+    };
+
+    const scaleY = (value) =>
+      padding + (1 - (value - minRoe) / roeRange) * (chartHeight - padding * 2);
+
+    const ticks = Array.from({ length: 4 }, (_, tickIndex) => {
+      const ratio = tickIndex / 3;
+      const value = minRoe + ratio * roeRange;
+      return {
+        value,
+        y: scaleY(value),
+      };
+    });
+
+    const chartPoints = points.map((point) => {
+      const radiusScale = maxAsset > 0 ? point.asset / maxAsset : 0;
+      const radius = minRadius + radiusScale * (maxRadius - minRadius);
+      const color = bubbleColors[point.index % bubbleColors.length];
+      return {
+        ...point,
+        x: scaleX(point.index),
+        y: scaleY(point.roe),
+        r: radius,
+        color,
+      };
+    });
+
+    return {
+      chartWidth,
+      chartHeight,
+      padding,
+      minRoe,
+      maxRoe,
+      points: chartPoints,
+      bubbleColors,
+      ticks,
+    };
+  }, [benchmarkSortedData]);
+
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
 
@@ -1221,6 +1302,136 @@ export default function Home() {
                         No benchmark data is available right now.
                       </p>
                     )}
+                  </div>
+                )}
+
+                {!benchmarkLoading && !benchmarkError && benchmarkSortedData.length > 0 && (
+                  <div className={styles.benchmarkBubbleSection}>
+                    <div className={styles.benchmarkBubbleHeader}>
+                      <div>
+                        <h4 className={styles.benchmarkBubbleTitle}>ROE vs. Asset Size</h4>
+                        <p className={styles.benchmarkBubbleSubtitle}>
+                          Bubble size reflects total assets (in thousands).
+                        </p>
+                      </div>
+                    </div>
+                    <div className={styles.benchmarkBubbleChart}>
+                      <svg
+                        viewBox={`0 0 ${benchmarkBubbleChart.chartWidth} ${benchmarkBubbleChart.chartHeight}`}
+                        role="img"
+                        aria-label="Bubble chart comparing return on equity and total assets"
+                      >
+                        <defs>
+                          {benchmarkBubbleChart.points.map((point) => (
+                            <radialGradient
+                              key={`bubble-gradient-${point.index}`}
+                              id={`bubble-gradient-${point.index}`}
+                              cx="30%"
+                              cy="30%"
+                              r="70%"
+                            >
+                              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+                              <stop offset="45%" stopColor={point.color} stopOpacity="0.85" />
+                              <stop offset="100%" stopColor={point.color} stopOpacity="0.3" />
+                            </radialGradient>
+                          ))}
+                          <filter id="bubble-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow
+                              dx="0"
+                              dy="4"
+                              stdDeviation="6"
+                              floodColor="#1e293b"
+                              floodOpacity="0.2"
+                            />
+                          </filter>
+                        </defs>
+                        <rect
+                          x="0"
+                          y="0"
+                          width={benchmarkBubbleChart.chartWidth}
+                          height={benchmarkBubbleChart.chartHeight}
+                          rx="12"
+                          fill="#f8fafc"
+                        />
+                        <line
+                          x1={benchmarkBubbleChart.padding}
+                          y1={benchmarkBubbleChart.padding}
+                          x2={benchmarkBubbleChart.padding}
+                          y2={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          stroke="#cbd5f5"
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1={benchmarkBubbleChart.padding}
+                          y1={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          x2={benchmarkBubbleChart.chartWidth - benchmarkBubbleChart.padding}
+                          y2={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          stroke="#cbd5f5"
+                          strokeWidth="1"
+                        />
+                        {benchmarkBubbleChart.ticks.map((tick) => (
+                          <g key={`roe-tick-${tick.value}`}>
+                            <line
+                              x1={benchmarkBubbleChart.padding - 6}
+                              y1={tick.y}
+                              x2={benchmarkBubbleChart.padding}
+                              y2={tick.y}
+                              stroke="#94a3b8"
+                              strokeWidth="1"
+                            />
+                            <text
+                              x={benchmarkBubbleChart.padding - 10}
+                              y={tick.y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#64748b"
+                            >
+                              {tick.value.toFixed(2)}%
+                            </text>
+                          </g>
+                        ))}
+                        <text
+                          x="14"
+                          y={benchmarkBubbleChart.chartHeight / 2}
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#475569"
+                          transform={`rotate(-90 14 ${benchmarkBubbleChart.chartHeight / 2})`}
+                        >
+                          ROE (%)
+                        </text>
+                        <text
+                          x={benchmarkBubbleChart.chartWidth / 2}
+                          y={benchmarkBubbleChart.chartHeight - 12}
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#475569"
+                        >
+                          Banks (sorted by assets)
+                        </text>
+                        {benchmarkBubbleChart.points.map((point) => (
+                          <g
+                            key={`${point.bank.nameFull}-${point.bank.city}-${point.bank.stateName}`}
+                          >
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r={point.r}
+                              fill={`url(#bubble-gradient-${point.index})`}
+                              stroke={point.color}
+                              strokeWidth="1.5"
+                              filter="url(#bubble-shadow)"
+                            >
+                              <title>
+                                {`${point.bank.nameFull} • Assets: ${formatNumber(
+                                  point.asset,
+                                )} • ROE: ${formatPercentage(point.roe)}`}
+                              </title>
+                            </circle>
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
                   </div>
                 )}
               </section>

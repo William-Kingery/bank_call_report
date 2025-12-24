@@ -314,6 +314,44 @@
   color: #64748b;
 }
 
+.benchmarkBubbleSection {
+  margin-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 1.25rem;
+}
+
+.benchmarkBubbleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.benchmarkBubbleTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.benchmarkBubbleSubtitle {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.benchmarkBubbleChart {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.benchmarkBubbleChart svg {
+  width: 100%;
+  height: auto;
+  min-width: 560px;
+  display: block;
+}
+
 .latestMetrics {
   border: 1px solid #e2e8f0;
   background: #fff;
