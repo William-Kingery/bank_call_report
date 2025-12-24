@@ -239,10 +239,11 @@ export default function Home() {
 
   const latestRwa = latestPoint?.rwa;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
-  const latestAgLoans = latestRatPoint?.LNAGY1 ?? latestPoint?.LNAGY1;
-  const latestCILoans = latestRatPoint?.LNCIY1 ?? latestPoint?.LNCIY1;
-  const latestCreLoans = latestRatPoint?.LNCOMRY1 ?? latestPoint?.LNCOMRY1;
-  const latestConsumerLoans = latestRatPoint?.LNCONY1 ?? latestPoint?.LNCONY1;
+  const latestAgLoans = latestPoint?.LNAG;
+  const latestCILoans = latestPoint?.LNCI;
+  const latestCreLoans = latestPoint?.LNCOMRE;
+  const latestReLoans = latestPoint?.LNRE;
+  const latestConsumerLoans = latestPoint?.LNCON;
 
   useEffect(() => {
     if (activeTab !== 'benchmark' || benchmarkLoading) {
@@ -702,6 +703,10 @@ export default function Home() {
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>CRE Loans</p>
                     <p className={styles.metricValue}>{formatNumber(latestCreLoans)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>RE Loans</p>
+                    <p className={styles.metricValue}>{formatNumber(latestReLoans)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Consumer Loans</p>
