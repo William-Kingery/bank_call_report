@@ -230,6 +230,83 @@ export default function Home() {
     return sorted;
   }, [benchmarkData, benchmarkSortField, benchmarkSortOrder]);
 
+  const benchmarkBubbleChart = useMemo(() => {
+    const chartWidth = 640;
+    const chartHeight = 320;
+    const padding = 48;
+    const points = benchmarkSortedData
+      .map((bank, index) => {
+        const asset = Number(bank?.asset);
+        const roe = Number(bank?.roe);
+        if (!Number.isFinite(asset) || !Number.isFinite(roe)) {
+          return null;
+        }
+        return {
+          bank,
+          asset,
+          roe,
+          index,
+        };
+      })
+      .filter(Boolean);
+
+    if (!points.length) {
+      return {
+        chartWidth,
+        chartHeight,
+        padding,
+        points: [],
+        ticks: [],
+      };
+    }
+
+    const maxAsset = Math.max(...points.map((point) => point.asset));
+    const minRoe = Math.min(...points.map((point) => point.roe));
+    const maxRoe = Math.max(...points.map((point) => point.roe));
+    const roeRange = maxRoe - minRoe || 1;
+    const minRadius = 8;
+    const maxRadius = 32;
+
+    const count = points.length;
+    const scaleX = (index) => {
+      if (count === 1) return chartWidth / 2;
+      return padding + (index / (count - 1)) * (chartWidth - padding * 2);
+    };
+
+    const scaleY = (value) =>
+      padding + (1 - (value - minRoe) / roeRange) * (chartHeight - padding * 2);
+
+    const ticks = Array.from({ length: 4 }, (_, tickIndex) => {
+      const ratio = tickIndex / 3;
+      const value = minRoe + ratio * roeRange;
+      return {
+        value,
+        y: scaleY(value),
+      };
+    });
+
+    const chartPoints = points.map((point) => {
+      const radiusScale = maxAsset > 0 ? point.asset / maxAsset : 0;
+      const radius = minRadius + radiusScale * (maxRadius - minRadius);
+      return {
+        ...point,
+        x: scaleX(point.index),
+        y: scaleY(point.roe),
+        r: radius,
+      };
+    });
+
+    return {
+      chartWidth,
+      chartHeight,
+      padding,
+      minRoe,
+      maxRoe,
+      points: chartPoints,
+      ticks,
+    };
+  }, [benchmarkSortedData]);
+
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
 
@@ -1221,6 +1298,111 @@ export default function Home() {
                         No benchmark data is available right now.
                       </p>
                     )}
+                  </div>
+                )}
+
+                {!benchmarkLoading && !benchmarkError && benchmarkSortedData.length > 0 && (
+                  <div className={styles.benchmarkBubbleSection}>
+                    <div className={styles.benchmarkBubbleHeader}>
+                      <div>
+                        <h4 className={styles.benchmarkBubbleTitle}>ROE vs. Asset Size</h4>
+                        <p className={styles.benchmarkBubbleSubtitle}>
+                          Bubble size reflects total assets (in thousands).
+                        </p>
+                      </div>
+                    </div>
+                    <div className={styles.benchmarkBubbleChart}>
+                      <svg
+                        viewBox={`0 0 ${benchmarkBubbleChart.chartWidth} ${benchmarkBubbleChart.chartHeight}`}
+                        role="img"
+                        aria-label="Bubble chart comparing return on equity and total assets"
+                      >
+                        <rect
+                          x="0"
+                          y="0"
+                          width={benchmarkBubbleChart.chartWidth}
+                          height={benchmarkBubbleChart.chartHeight}
+                          rx="12"
+                          fill="#f8fafc"
+                        />
+                        <line
+                          x1={benchmarkBubbleChart.padding}
+                          y1={benchmarkBubbleChart.padding}
+                          x2={benchmarkBubbleChart.padding}
+                          y2={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          stroke="#cbd5f5"
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1={benchmarkBubbleChart.padding}
+                          y1={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          x2={benchmarkBubbleChart.chartWidth - benchmarkBubbleChart.padding}
+                          y2={benchmarkBubbleChart.chartHeight - benchmarkBubbleChart.padding}
+                          stroke="#cbd5f5"
+                          strokeWidth="1"
+                        />
+                        {benchmarkBubbleChart.ticks.map((tick) => (
+                          <g key={`roe-tick-${tick.value}`}>
+                            <line
+                              x1={benchmarkBubbleChart.padding - 6}
+                              y1={tick.y}
+                              x2={benchmarkBubbleChart.padding}
+                              y2={tick.y}
+                              stroke="#94a3b8"
+                              strokeWidth="1"
+                            />
+                            <text
+                              x={benchmarkBubbleChart.padding - 10}
+                              y={tick.y + 4}
+                              textAnchor="end"
+                              fontSize="10"
+                              fill="#64748b"
+                            >
+                              {tick.value.toFixed(2)}%
+                            </text>
+                          </g>
+                        ))}
+                        <text
+                          x="14"
+                          y={benchmarkBubbleChart.chartHeight / 2}
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#475569"
+                          transform={`rotate(-90 14 ${benchmarkBubbleChart.chartHeight / 2})`}
+                        >
+                          ROE (%)
+                        </text>
+                        <text
+                          x={benchmarkBubbleChart.chartWidth / 2}
+                          y={benchmarkBubbleChart.chartHeight - 12}
+                          textAnchor="middle"
+                          fontSize="11"
+                          fill="#475569"
+                        >
+                          Banks (sorted by assets)
+                        </text>
+                        {benchmarkBubbleChart.points.map((point) => (
+                          <g
+                            key={`${point.bank.nameFull}-${point.bank.city}-${point.bank.stateName}`}
+                          >
+                            <circle
+                              cx={point.x}
+                              cy={point.y}
+                              r={point.r}
+                              fill="rgba(79, 70, 229, 0.25)"
+                              stroke="#4f46e5"
+                              strokeWidth="1.5"
+                            >
+                              <title>
+                                {`${point.bank.nameFull} • Assets: ${formatNumber(
+                                  point.asset,
+                                )} • ROE: ${formatPercentage(point.roe)}`}
+                              </title>
+                            </circle>
+                          </g>
+                        ))}
+                      </svg>
+                    </div>
                   </div>
                 )}
               </section>
