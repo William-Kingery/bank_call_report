@@ -665,9 +665,6 @@ export default function Home() {
                           {quarterlySeries.map((point) => (
                             <div key={point.label} className={styles.barColumn}>
                               <div className={styles.barWrapper}>
-                                <span className={styles.barHoverValue}>
-                                  {formatNumber(point.asset)}
-                                </span>
                                 <div
                                   className={`${styles.bar} ${styles.assetBar}`}
                                   style={{ height: `${point.assetPercentage}%` }}
@@ -715,9 +712,6 @@ export default function Home() {
                                   style={{ height: `${point.equityPercentage}%` }}
                                   aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
                                 />
-                                <span className={styles.barHoverValue}>
-                                  {formatNumber(point.equity)}
-                                </span>
                               </div>
                               <span className={styles.barLabel}>{point.label}</span>
                             </div>

@@ -953,11 +953,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.bar:hover,
-.bar:focus {
-  transform: translateY(-4px);
-  box-shadow: var(--bar-hover-shadow, 0 12px 24px rgba(16, 185, 129, 0.4));
-}
 
 .assetBar {
   --bar-bg: linear-gradient(180deg, #34d399, #059669);
@@ -988,28 +983,6 @@
   text-align: center;
 }
 
-.barHoverValue {
-  position: absolute;
-  top: 0.5rem;
-  left: 50%;
-  transform: translate(-50%, -4px);
-  padding: 0.2rem 0.55rem;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
-  color: #0f172a;
-  font-weight: 700;
-  font-size: 0.85rem;
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  pointer-events: none;
-}
-
-.barWrapper:hover .barHoverValue,
-.barWrapper:focus-within .barHoverValue {
-  opacity: 1;
-  transform: translate(-50%, -10px);
-}
 
 .equityValue {
   color: #1d4ed8;
