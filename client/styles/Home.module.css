@@ -773,6 +773,42 @@
   padding-left: 2.5rem;
 }
 
+.columnChartGrid {
+  display: grid;
+  align-items: end;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 0.75rem 0.75rem 0.6rem 0;
+  box-sizing: border-box;
+}
+
+.columnChartBarWrapper {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.columnChartBar {
+  width: 100%;
+  min-height: 6px;
+  border-radius: 8px 8px 4px 4px;
+  background: var(--column-bar-bg, linear-gradient(180deg, #60a5fa, #2563eb));
+  box-shadow: var(--column-bar-shadow, 0 10px 18px rgba(37, 99, 235, 0.28));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.columnChartBar:hover,
+.columnChartBar:focus {
+  transform: translateY(-4px);
+  box-shadow: var(--column-bar-hover-shadow, 0 14px 24px rgba(37, 99, 235, 0.35));
+}
+
+.columnChartBarEmpty {
+  background: #e2e8f0;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.35rem;
@@ -802,6 +838,30 @@
   display: grid;
   gap: 0.5rem;
   text-align: center;
+}
+
+.nimColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #4ade80, #16a34a);
+  --column-bar-shadow: 0 10px 18px rgba(22, 163, 74, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(22, 163, 74, 0.38);
+}
+
+.roaColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #f472b6, #db2777);
+  --column-bar-shadow: 0 10px 18px rgba(219, 39, 119, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(219, 39, 119, 0.38);
+}
+
+.roeColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #38bdf8, #0284c7);
+  --column-bar-shadow: 0 10px 18px rgba(2, 132, 199, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(2, 132, 199, 0.38);
+}
+
+.efficiencyColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #fb923c, #ea580c);
+  --column-bar-shadow: 0 10px 18px rgba(234, 88, 12, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(234, 88, 12, 0.38);
 }
 
 .roaLinePath {
