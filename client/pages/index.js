@@ -244,6 +244,67 @@ export default function Home() {
   const latestCreLoans = latestPoint?.LNCOMRE;
   const latestReLoans = latestPoint?.LNRE;
   const latestConsumerLoans = latestPoint?.LNCON;
+  const latestQuarterLabel = formatQuarterLabel(latestPoint?.callym);
+
+  const loanMixData = useMemo(() => {
+    const items = [
+      {
+        label: 'Consumer Loans',
+        value: latestConsumerLoans,
+        color: '#6366f1',
+      },
+      {
+        label: 'Real Estate Loans',
+        value: latestReLoans,
+        color: '#0ea5e9',
+      },
+      {
+        label: 'Ag Loans',
+        value: latestAgLoans,
+        color: '#22c55e',
+      },
+      {
+        label: 'C&I Loans',
+        value: latestCILoans,
+        color: '#f97316',
+      },
+    ];
+
+    const total = items.reduce((sum, item) => {
+      const numericValue = Number(item.value);
+      if (!Number.isFinite(numericValue)) return sum;
+      return sum + numericValue;
+    }, 0);
+
+    const itemsWithPercentages = items.map((item) => {
+      const numericValue = Number(item.value);
+      const safeValue = Number.isFinite(numericValue) ? numericValue : 0;
+      const percentage = total > 0 ? (safeValue / total) * 100 : null;
+      return {
+        ...item,
+        numericValue: safeValue,
+        percentage,
+      };
+    });
+
+    let cumulative = 0;
+    const gradientStops =
+      total > 0
+        ? itemsWithPercentages
+            .map((item) => {
+              const start = cumulative;
+              cumulative += item.percentage ?? 0;
+              return `${item.color} ${start}% ${cumulative}%`;
+            })
+            .join(', ')
+        : '#e2e8f0 0% 100%';
+
+    return {
+      total: total > 0 ? total : null,
+      items: itemsWithPercentages,
+      gradient: `conic-gradient(${gradientStops})`,
+    };
+  }, [latestAgLoans, latestCILoans, latestConsumerLoans, latestReLoans]);
 
   useEffect(() => {
     if (activeTab !== 'benchmark' || benchmarkLoading) {
@@ -711,6 +772,50 @@ export default function Home() {
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Consumer Loans</p>
                     <p className={styles.metricValue}>{formatNumber(latestConsumerLoans)}</p>
+                  </div>
+                </div>
+                <div className={styles.loanMixSection}>
+                  <div className={styles.loanMixHeader}>
+                    <div>
+                      <h4 className={styles.loanMixTitle}>Latest quarterly loan mix</h4>
+                      <p className={styles.loanMixSubtitle}>
+                        {latestQuarterLabel !== 'N/A'
+                          ? `As of ${latestQuarterLabel}`
+                          : 'As of latest quarter'}
+                      </p>
+                    </div>
+                    <p className={styles.loanMixTotal}>
+                      Total: {formatNumber(loanMixData.total)}
+                    </p>
+                  </div>
+                  <div className={styles.loanMixContent}>
+                    <div
+                      className={styles.loanMixChart}
+                      role="img"
+                      aria-label="Loan mix pie chart for consumer, real estate, ag, and C&I loans"
+                      style={{ backgroundImage: loanMixData.gradient }}
+                    />
+                    <div className={styles.loanMixLegend}>
+                      {loanMixData.items.map((item) => (
+                        <div key={item.label} className={styles.loanMixLegendItem}>
+                          <span
+                            className={styles.loanMixSwatch}
+                            style={{ backgroundColor: item.color }}
+                          />
+                          <div className={styles.loanMixLegendText}>
+                            <p className={styles.loanMixLabel}>{item.label}</p>
+                            <div className={styles.loanMixValues}>
+                              <span className={styles.loanMixValue}>
+                                {formatNumber(item.value)}
+                              </span>
+                              <span className={styles.loanMixPercent}>
+                                {formatPercentage(item.percentage)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </section>
