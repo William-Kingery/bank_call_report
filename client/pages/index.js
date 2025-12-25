@@ -40,6 +40,22 @@ export default function Home() {
     return reportData.points[reportData.points.length - 1];
   }, [reportData]);
 
+  const assetQualitySeries = useMemo(() => {
+    if (!reportData?.points?.length) return [];
+    return reportData.points.map((point) => ({
+      callym: point.callym,
+      value: point.ccidoubt,
+    }));
+  }, [reportData]);
+
+  const maxCriticizedValue = useMemo(() => {
+    if (!assetQualitySeries.length) return 0;
+    return assetQualitySeries.reduce((maxValue, point) => {
+      if (point.value === null || point.value === undefined) return maxValue;
+      return point.value > maxValue ? point.value : maxValue;
+    }, 0);
+  }, [assetQualitySeries]);
+
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
 
@@ -50,6 +66,12 @@ export default function Home() {
   const latestLiabilities =
     latestPoint?.asset != null && latestPoint?.eq != null
       ? latestPoint.asset - latestPoint.eq
+      : null;
+  const latestCriticized = latestPoint?.ccidoubt ?? null;
+  const latestAssets = latestPoint?.asset ?? null;
+  const criticizedShare =
+    latestCriticized != null && latestAssets
+      ? Math.min(100, Math.max(0, (latestCriticized / latestAssets) * 100))
       : null;
 
   useEffect(() => {
@@ -260,6 +282,72 @@ export default function Home() {
                     <p className={styles.latestQuarter}>Trend by quarter</p>
                   </div>
                   <p className={styles.latestHint}>Values shown are in thousands</p>
+                </div>
+                <div className={styles.assetQualityCharts}>
+                  <div className={styles.assetQualityCard}>
+                    <p className={styles.chartTitle}>Latest criticized &amp; classified mix</p>
+                    {criticizedShare === null ? (
+                      <p className={styles.emptyState}>No data available.</p>
+                    ) : (
+                      <div className={styles.pieChartWrapper}>
+                        <div
+                          className={styles.pieChart}
+                          style={{ '--criticized-percent': `${criticizedShare}%` }}
+                        >
+                          <div className={styles.pieCenter}>
+                            <span className={styles.pieValue}>
+                              {formatNumber(latestCriticized)}
+                            </span>
+                            <span className={styles.pieLabel}>
+                              {formatPercentage(criticizedShare)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className={styles.pieLegend}>
+                          <div className={styles.legendRow}>
+                            <span className={`${styles.legendSwatch} ${styles.legendCriticized}`} />
+                            <span>Criticized &amp; Classified</span>
+                          </div>
+                          <div className={styles.legendRow}>
+                            <span className={`${styles.legendSwatch} ${styles.legendOther}`} />
+                            <span>All other assets</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.assetQualityCard}>
+                  <p className={styles.chartTitle}>Criticized &amp; Classified assets by quarter</p>
+                  <div className={styles.columnChart}>
+                    {assetQualitySeries.length === 0 ? (
+                      <p className={styles.emptyState}>No quarterly data available.</p>
+                    ) : (
+                      <div className={styles.columnChartBars}>
+                        {assetQualitySeries.map((point) => {
+                          const value =
+                            point.value === null || point.value === undefined ? 0 : point.value;
+                          const height =
+                            maxCriticizedValue > 0 ? `${(value / maxCriticizedValue) * 100}%` : '0%';
+
+                          return (
+                            <div key={point.callym} className={styles.columnChartBarWrapper}>
+                              <div
+                                className={styles.columnChartBar}
+                                style={{ height }}
+                                title={`${formatQuarterLabel(point.callym)}: ${formatNumber(
+                                  point.value
+                                )}`}
+                              />
+                              <span className={styles.columnChartLabel}>
+                                {formatQuarterLabel(point.callym)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.trendTable}>
