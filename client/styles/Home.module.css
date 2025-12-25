@@ -196,6 +196,137 @@
   gap: 1rem;
 }
 
+.assetQualityCharts {
+  display: grid;
+  gap: 1rem;
+}
+
+.assetQualityCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.chartTitle {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.emptyState {
+  margin: 0;
+  color: #64748b;
+}
+
+.pieChartWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.pieChart {
+  --criticized-percent: 0%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #6366f1 0% var(--criticized-percent),
+    #e2e8f0 var(--criticized-percent) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.pieCenter {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px #e2e8f0;
+}
+
+.pieValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pieLabel {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.pieLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.legendSwatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legendCriticized {
+  background: #6366f1;
+}
+
+.legendOther {
+  background: #e2e8f0;
+}
+
+.columnChart {
+  min-height: 260px;
+}
+
+.columnChartBars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  min-height: 220px;
+}
+
+.columnChartBarWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.columnChartBar {
+  width: 100%;
+  background: linear-gradient(180deg, #6366f1, #818cf8);
+  border-radius: 10px 10px 4px 4px;
+  min-height: 8px;
+  transition: height 0.3s ease;
+}
+
+.columnChartLabel {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 .latestLabel {
   margin: 0;
   text-transform: uppercase;
