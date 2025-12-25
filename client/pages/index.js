@@ -12,6 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
+  const [activeTab, setActiveTab] = useState('performance');
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -189,36 +190,97 @@ export default function Home() {
 
       {reportData?.points?.length > 0 && (
         <>
-          <section className={styles.latestMetrics}>
-            <div className={styles.latestHeader}>
-              <div>
-                <p className={styles.latestLabel}>Latest quarter</p>
-                <p className={styles.latestQuarter}>{formatQuarterLabel(latestPoint?.callym)}</p>
-              </div>
-              <p className={styles.latestHint}>Values shown are in thousands</p>
+          <section className={styles.tabSection}>
+            <div className={styles.tabs} role="tablist" aria-label="Report tabs">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'performance'}
+                className={`${styles.tabButton} ${
+                  activeTab === 'performance' ? styles.tabButtonActive : ''
+                }`}
+                onClick={() => setActiveTab('performance')}
+              >
+                Performance
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'asset-quality'}
+                className={`${styles.tabButton} ${
+                  activeTab === 'asset-quality' ? styles.tabButtonActive : ''
+                }`}
+                onClick={() => setActiveTab('asset-quality')}
+              >
+                Asset Quality
+              </button>
             </div>
-            <div className={styles.metricsGrid}>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Assets</p>
-                <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+
+            {activeTab === 'performance' && (
+              <div className={styles.tabPanel} role="tabpanel">
+                <div className={styles.latestHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Latest quarter</p>
+                    <p className={styles.latestQuarter}>
+                      {formatQuarterLabel(latestPoint?.callym)}
+                    </p>
+                  </div>
+                  <p className={styles.latestHint}>Values shown are in thousands</p>
+                </div>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Assets</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Liabilities</p>
+                    <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Equity</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>ROE</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>ROA</p>
+                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+                  </div>
+                </div>
               </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Liabilities</p>
-                <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+            )}
+
+            {activeTab === 'asset-quality' && (
+              <div className={styles.tabPanel} role="tabpanel">
+                <div className={styles.assetQualityHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Criticized &amp; Classified assets</p>
+                    <p className={styles.latestQuarter}>Trend by quarter</p>
+                  </div>
+                  <p className={styles.latestHint}>Values shown are in thousands</p>
+                </div>
+                <div className={styles.tableWrapper}>
+                  <table className={styles.trendTable}>
+                    <thead>
+                      <tr>
+                        <th scope="col">Quarter</th>
+                        <th scope="col">CCIDOUBT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.points.map((point) => (
+                        <tr key={point.callym}>
+                          <td>{formatQuarterLabel(point.callym)}</td>
+                          <td>{formatNumber(point.ccidoubt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>Equity</p>
-                <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>ROE</p>
-                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
-              </div>
-              <div className={styles.metricCard}>
-                <p className={styles.metricName}>ROA</p>
-                <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
-              </div>
-            </div>
+            )}
           </section>
         </>
       )}
