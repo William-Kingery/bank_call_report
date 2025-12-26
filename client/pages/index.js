@@ -1192,7 +1192,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>Efficiency ratio</h4>
+                        <h4 className={styles.lineChartTitle}>EEFFQR</h4>
                         <p className={styles.lineChartSubhead}>Operating expense control</p>
                       </div>
                       <div className={styles.lineChartBody}>
@@ -1211,7 +1211,7 @@ export default function Home() {
                           <div
                             className={styles.columnChartGrid}
                             role="img"
-                            aria-label="Efficiency ratio column chart"
+                            aria-label="EEFFQR column chart"
                             style={{
                               gridTemplateColumns: `repeat(${efficiencySeries.length}, minmax(0, 1fr))`,
                             }}
