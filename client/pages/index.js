@@ -226,6 +226,7 @@ export default function Home() {
     return buildQuarterSeries(sortedPoints, (point) => {
       const tangibleEquityValue = Number(point.eqtanqta);
       const ciLoansValue = Number(point.lncit1r);
+      const reLoansValue = Number(point.lnrert1r);
       const consumerLoansValue = Number(point.lncont1r);
       const highRiskLoansValue = Number(point.lnhrskr);
       const constructionLoansValue = Number(point.lncdt1r);
@@ -234,6 +235,7 @@ export default function Home() {
         label: formatQuarterLabel(point.callym),
         tangibleEquityRatio: Number.isFinite(tangibleEquityValue) ? tangibleEquityValue : null,
         ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
+        reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
         consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
         highRiskLoansRatio: Number.isFinite(highRiskLoansValue) ? highRiskLoansValue : null,
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
@@ -257,6 +259,7 @@ export default function Home() {
     () => ({
       tangibleEquity: buildColumnData(capitalSeries, 'tangibleEquityRatio'),
       ciLoans: buildColumnData(capitalSeries, 'ciLoansRatio'),
+      reLoans: buildColumnData(capitalSeries, 'reLoansRatio'),
       consumerLoans: buildColumnData(capitalSeries, 'consumerLoansRatio'),
       highRiskLoans: buildColumnData(capitalSeries, 'highRiskLoansRatio'),
       constructionLoans: buildColumnData(capitalSeries, 'constructionLoansRatio'),
@@ -1431,6 +1434,69 @@ export default function Home() {
                       >
                         {capitalSeries.map((point) => (
                           <span key={`ci-loans-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>RE loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Real estate exposure</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.reLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.reLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.reLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.reLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.reLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Real estate loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.reLoans.values.map((point) => (
+                              <div
+                                key={`re-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.reLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No real estate loan data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`re-loans-label-${point.label}`}>{point.label}</span>
                         ))}
                       </div>
                     </div>
