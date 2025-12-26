@@ -1364,7 +1364,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1427,7 +1427,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1490,7 +1490,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1553,7 +1553,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1616,7 +1616,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1683,7 +1683,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
                         }}
