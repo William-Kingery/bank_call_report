@@ -71,7 +71,7 @@ router.get('/charts', async (req, res) => {
          f.LNLSGR AS lnlsgr,
          c.RWA AS rwa,
          r.ROA AS roa,
-         r.ROE AS roe,
+         r.ROEQ AS roe,
          r.NIMY AS nimy,
          r.EQTANQTA AS eqtanqta,
          r.EEFFR AS efficiencyRatio,
