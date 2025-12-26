@@ -1250,8 +1250,17 @@ export default function Home() {
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Capital</h3>
                 <p className={styles.assetQualityText}>
-                  Capital ratios and buffers will be summarized here when the data is ready.
+                  Latest capital ratios from the call report as of{' '}
+                  {formatQuarterLabel(latestRatPoint?.callym)}.
                 </p>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Tangible equity capital</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestRatPoint?.eqtanqta)}
+                    </p>
+                  </div>
+                </div>
               </section>
             </div>
           )}
