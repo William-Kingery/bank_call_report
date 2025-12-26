@@ -878,6 +878,10 @@
   text-align: center;
 }
 
+.profitabilityChartLabels {
+  font-size: 0.7rem;
+}
+
 .nimColumnBar {
   --column-bar-bg: linear-gradient(180deg, #4ade80, #16a34a);
   --column-bar-shadow: 0 10px 18px rgba(22, 163, 74, 0.3);

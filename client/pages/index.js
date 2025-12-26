@@ -1051,7 +1051,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1114,7 +1114,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1177,7 +1177,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
                         }}
@@ -1240,7 +1240,7 @@ export default function Home() {
                         )}
                       </div>
                       <div
-                        className={styles.lineChartLabels}
+                        className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
                           gridTemplateColumns: `repeat(${efficiencySeries.length}, minmax(0, 1fr))`,
                         }}
