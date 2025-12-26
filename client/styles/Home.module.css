@@ -918,6 +918,12 @@
   --column-bar-hover-shadow: 0 14px 24px rgba(14, 116, 144, 0.4);
 }
 
+.reLoansColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #fda4af, #e11d48);
+  --column-bar-shadow: 0 10px 18px rgba(225, 29, 72, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(225, 29, 72, 0.4);
+}
+
 .consumerLoansColumnBar {
   --column-bar-bg: linear-gradient(180deg, #facc15, #ca8a04);
   --column-bar-shadow: 0 10px 18px rgba(202, 138, 4, 0.3);
