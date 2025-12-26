@@ -208,6 +208,19 @@
   background: #f8fafc;
 }
 
+.capitalCharts {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.capitalCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
 .chartTitle {
   margin: 0 0 0.75rem;
   font-weight: 600;
