@@ -220,6 +220,29 @@ export default function Home() {
     });
   }, [sortedPoints]);
 
+  const capitalSeries = useMemo(() => {
+    if (!sortedPoints.length) return [];
+
+    return buildQuarterSeries(sortedPoints, (point) => {
+      const tangibleEquityValue = Number(point.eqtanqta);
+      const ciLoansValue = Number(point.lncit1r);
+      const consumerLoansValue = Number(point.lncont1r);
+      const highRiskLoansValue = Number(point.lnhrskr);
+      const constructionLoansValue = Number(point.lncdt1r);
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        tangibleEquityRatio: Number.isFinite(tangibleEquityValue) ? tangibleEquityValue : null,
+        ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
+        consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
+        highRiskLoansRatio: Number.isFinite(highRiskLoansValue) ? highRiskLoansValue : null,
+        constructionLoansRatio: Number.isFinite(constructionLoansValue)
+          ? constructionLoansValue
+          : null,
+      };
+    });
+  }, [sortedPoints]);
+
   const profitabilityColumnData = useMemo(
     () => ({
       nim: buildColumnData(profitabilitySeries, 'nim'),
@@ -228,6 +251,17 @@ export default function Home() {
       efficiencyRatio: buildColumnData(efficiencySeries, 'efficiencyRatio'),
     }),
     [efficiencySeries, profitabilitySeries],
+  );
+
+  const capitalColumnData = useMemo(
+    () => ({
+      tangibleEquity: buildColumnData(capitalSeries, 'tangibleEquityRatio'),
+      ciLoans: buildColumnData(capitalSeries, 'ciLoansRatio'),
+      consumerLoans: buildColumnData(capitalSeries, 'consumerLoansRatio'),
+      highRiskLoans: buildColumnData(capitalSeries, 'highRiskLoansRatio'),
+      constructionLoans: buildColumnData(capitalSeries, 'constructionLoansRatio'),
+    }),
+    [capitalSeries],
   );
 
   const latestPoint = useMemo(() => {
@@ -1259,6 +1293,342 @@ export default function Home() {
                     <p className={styles.metricValue}>
                       {formatPercentage(latestRatPoint?.eqtanqta)}
                     </p>
+                  </div>
+                </div>
+              </section>
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Trend lines</p>
+                    <h3 className={styles.sectionTitle}>Capital ratio trends</h3>
+                  </div>
+                  <div className={styles.sectionHeaderMeta}>
+                    <p className={styles.chartHint}>Values shown are percentages</p>
+                  </div>
+                </div>
+
+                <div className={styles.chartGrid}>
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>
+                          Tangible equity capital ratio
+                        </h4>
+                        <p className={styles.lineChartSubhead}>Equity strength</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.tangibleEquity.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.tangibleEquity.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.tangibleEquity.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.tangibleEquity.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.tangibleEquity.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Tangible equity capital ratio column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.tangibleEquity.values.map((point) => (
+                              <div
+                                key={`tangible-equity-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.tangibleEquityColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No tangible equity data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`tangible-equity-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>C&amp;I loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Commercial exposure</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.ciLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.ciLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.ciLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.ciLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.ciLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="C&I loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.ciLoans.values.map((point) => (
+                              <div
+                                key={`ci-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.ciLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No C&amp;I loan data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`ci-loans-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Consumer loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Household credit share</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.consumerLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.consumerLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.consumerLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.consumerLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.consumerLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Consumer loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.consumerLoans.values.map((point) => (
+                              <div
+                                key={`consumer-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.consumerLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No consumer loan data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`consumer-loans-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>High risk loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Risk-weighted exposure</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.highRiskLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.highRiskLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.highRiskLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.highRiskLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.highRiskLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="High risk loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.highRiskLoans.values.map((point) => (
+                              <div
+                                key={`high-risk-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.highRiskLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No high risk loan data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`high-risk-loans-label-${point.label}`}>{point.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>
+                          Construction &amp; land development to Tier 1
+                        </h4>
+                        <p className={styles.lineChartSubhead}>Construction exposure</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.constructionLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.constructionLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.constructionLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.constructionLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.constructionLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Construction and land development loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {capitalColumnData.constructionLoans.values.map((point) => (
+                              <div
+                                key={`construction-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.constructionLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>
+                            No construction loan data available.
+                          </p>
+                        )}
+                      </div>
+                      <div
+                        className={styles.lineChartLabels}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {capitalSeries.map((point) => (
+                          <span key={`construction-loans-label-${point.label}`}>
+                            {point.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
