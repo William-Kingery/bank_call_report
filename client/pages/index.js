@@ -3,6 +3,38 @@ import styles from '../styles/Home.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
+const ColumnChart = ({ series, maxValue, formatLabel, formatValue }) => (
+  <div className={styles.columnChart}>
+    {series.length === 0 ? (
+      <p className={styles.emptyState}>No quarterly data available.</p>
+    ) : (
+      <div className={styles.columnChartBars}>
+        {series.map((point) => {
+          const value = point.value === null || point.value === undefined ? 0 : point.value;
+          const height = maxValue > 0 ? `${(value / maxValue) * 100}%` : '0%';
+
+          return (
+            <div key={point.callym} className={styles.columnChartBarWrapper}>
+              <div
+                className={styles.columnChartBar}
+                style={{ height }}
+                title={`${formatLabel(point.callym)}: ${formatValue(point.value)}`}
+              />
+              <span className={styles.columnChartLabel}>{formatLabel(point.callym)}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
+
+const getMaxValue = (series) =>
+  series.reduce((maxValue, point) => {
+    if (point.value === null || point.value === undefined) return maxValue;
+    return point.value > maxValue ? point.value : maxValue;
+  }, 0);
+
 export default function Home() {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -50,11 +82,52 @@ export default function Home() {
 
   const maxCriticizedValue = useMemo(() => {
     if (!assetQualitySeries.length) return 0;
-    return assetQualitySeries.reduce((maxValue, point) => {
-      if (point.value === null || point.value === undefined) return maxValue;
-      return point.value > maxValue ? point.value : maxValue;
-    }, 0);
+    return getMaxValue(assetQualitySeries);
   }, [assetQualitySeries]);
+
+  const capitalSeries = useMemo(() => {
+    if (!reportData?.points?.length) {
+      return {
+        tangibleEquity: [],
+        ciLoans: [],
+        consumerLoans: [],
+        highRiskLoans: [],
+        constructionLoans: [],
+      };
+    }
+
+    const buildSeries = (field) =>
+      reportData.points.map((point) => ({
+        callym: point.callym,
+        value: point[field],
+      }));
+
+    return {
+      tangibleEquity: buildSeries('eqtanqta'),
+      ciLoans: buildSeries('lncit1r'),
+      consumerLoans: buildSeries('lncont1r'),
+      highRiskLoans: buildSeries('lnhrskr'),
+      constructionLoans: buildSeries('lncdt1r'),
+    };
+  }, [reportData]);
+
+  const maxTangibleEquity = useMemo(
+    () => getMaxValue(capitalSeries.tangibleEquity),
+    [capitalSeries]
+  );
+  const maxCiLoans = useMemo(() => getMaxValue(capitalSeries.ciLoans), [capitalSeries]);
+  const maxConsumerLoans = useMemo(
+    () => getMaxValue(capitalSeries.consumerLoans),
+    [capitalSeries]
+  );
+  const maxHighRiskLoans = useMemo(
+    () => getMaxValue(capitalSeries.highRiskLoans),
+    [capitalSeries]
+  );
+  const maxConstructionLoans = useMemo(
+    () => getMaxValue(capitalSeries.constructionLoans),
+    [capitalSeries]
+  );
 
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
@@ -236,6 +309,17 @@ export default function Home() {
               >
                 Asset Quality
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'capital'}
+                className={`${styles.tabButton} ${
+                  activeTab === 'capital' ? styles.tabButtonActive : ''
+                }`}
+                onClick={() => setActiveTab('capital')}
+              >
+                Capital
+              </button>
             </div>
 
             {activeTab === 'performance' && (
@@ -366,6 +450,81 @@ export default function Home() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'capital' && (
+              <div className={styles.tabPanel} role="tabpanel">
+                <div className={styles.latestHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Latest quarter</p>
+                    <p className={styles.latestQuarter}>
+                      {formatQuarterLabel(latestPoint?.callym)}
+                    </p>
+                  </div>
+                  <p className={styles.latestHint}>Ratios shown are percentages</p>
+                </div>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Tangible Equity Capital</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestPoint?.eqtanqta)}
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.capitalCharts}>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>Tangible Equity Capital Ratio trend</p>
+                    <ColumnChart
+                      series={capitalSeries.tangibleEquity}
+                      maxValue={maxTangibleEquity}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>C&amp;I Loans to Tier 1 Capital trend</p>
+                    <ColumnChart
+                      series={capitalSeries.ciLoans}
+                      maxValue={maxCiLoans}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>
+                      Consumer Loans to Tier 1 Capital trend
+                    </p>
+                    <ColumnChart
+                      series={capitalSeries.consumerLoans}
+                      maxValue={maxConsumerLoans}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>
+                      High Risk Loans to Tier 1 Capital trend
+                    </p>
+                    <ColumnChart
+                      series={capitalSeries.highRiskLoans}
+                      maxValue={maxHighRiskLoans}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>
+                      Construction and Land Dev to Tier 1 Capital trend
+                    </p>
+                    <ColumnChart
+                      series={capitalSeries.constructionLoans}
+                      maxValue={maxConstructionLoans}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
                 </div>
               </div>
             )}
