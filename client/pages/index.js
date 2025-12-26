@@ -467,7 +467,7 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Tangible Equity Capital</p>
+                    <p className={styles.metricName}>Tangible Equity Capital (EQTANQTA)</p>
                     <p className={styles.metricValue}>
                       {formatPercentage(latestPoint?.eqtanqta)}
                     </p>
