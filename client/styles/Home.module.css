@@ -660,6 +660,40 @@
   color: #475569;
 }
 
+.chartViewToggle {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.chartViewButton {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.chartViewButtonActive {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: #f8fafc;
+}
+
+.chartScroll {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.chartScrollInner {
+  width: 100%;
+}
+
 .chartStatsRow {
   display: flex;
   gap: 0.5rem;
@@ -807,7 +841,8 @@
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: linear-gradient(180deg, #f8fafc, #ffffff);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding-left: 2.5rem;
 }
 
@@ -876,6 +911,18 @@
   display: grid;
   gap: 0.5rem;
   text-align: center;
+  overflow-x: auto;
+  padding-bottom: 0.6rem;
+  padding-left: 2.5rem;
+  align-items: start;
+  min-height: 2.6rem;
+}
+
+.lineChartLabels span {
+  display: inline-block;
+  transform: rotate(-45deg);
+  transform-origin: top left;
+  white-space: nowrap;
 }
 
 .profitabilityChartLabels {
@@ -1052,6 +1099,9 @@
   font-weight: 700;
   color: #064e3b;
   font-size: 0.85rem;
+  white-space: nowrap;
+  transform: rotate(-45deg);
+  transform-origin: top left;
 }
 
 .barValue {

@@ -113,6 +113,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio');
+  const [portfolioView, setPortfolioView] = useState('latest');
+  const [profitabilityView, setProfitabilityView] = useState('latest');
+  const [capitalView, setCapitalView] = useState('latest');
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -134,6 +137,18 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+  const formatQuarterShortLabel = (label) => {
+    if (!label) return 'N/A';
+    const [year, quarter] = label.split(' ');
+    if (!year || !quarter) return label;
+    return `${quarter} '${year.slice(-2)}`;
+  };
+
+  const sliceSeries = (series, view) =>
+    view === 'latest' ? series.slice(Math.max(series.length - 9, 0)) : series;
+
+  const getAxisMinWidth = (length, minColumnWidth = 64) =>
+    `${Math.max(length * minColumnWidth, 320)}px`;
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
@@ -245,26 +260,46 @@ export default function Home() {
     });
   }, [sortedPoints]);
 
+  const portfolioSeries = useMemo(
+    () => sliceSeries(quarterlySeries, portfolioView),
+    [portfolioView, quarterlySeries],
+  );
+
+  const profitabilityViewSeries = useMemo(
+    () => sliceSeries(profitabilitySeries, profitabilityView),
+    [profitabilitySeries, profitabilityView],
+  );
+
+  const efficiencyViewSeries = useMemo(
+    () => sliceSeries(efficiencySeries, profitabilityView),
+    [efficiencySeries, profitabilityView],
+  );
+
+  const capitalViewSeries = useMemo(
+    () => sliceSeries(capitalSeries, capitalView),
+    [capitalSeries, capitalView],
+  );
+
   const profitabilityColumnData = useMemo(
     () => ({
-      nim: buildColumnData(profitabilitySeries, 'nim'),
-      roa: buildColumnData(profitabilitySeries, 'roa'),
-      roe: buildColumnData(profitabilitySeries, 'roe'),
-      efficiencyRatio: buildColumnData(efficiencySeries, 'efficiencyRatio'),
+      nim: buildColumnData(profitabilityViewSeries, 'nim'),
+      roa: buildColumnData(profitabilityViewSeries, 'roa'),
+      roe: buildColumnData(profitabilityViewSeries, 'roe'),
+      efficiencyRatio: buildColumnData(efficiencyViewSeries, 'efficiencyRatio'),
     }),
-    [efficiencySeries, profitabilitySeries],
+    [efficiencyViewSeries, profitabilityViewSeries],
   );
 
   const capitalColumnData = useMemo(
     () => ({
-      tangibleEquity: buildColumnData(capitalSeries, 'tangibleEquityRatio'),
-      ciLoans: buildColumnData(capitalSeries, 'ciLoansRatio'),
-      reLoans: buildColumnData(capitalSeries, 'reLoansRatio'),
-      consumerLoans: buildColumnData(capitalSeries, 'consumerLoansRatio'),
-      highRiskLoans: buildColumnData(capitalSeries, 'highRiskLoansRatio'),
-      constructionLoans: buildColumnData(capitalSeries, 'constructionLoansRatio'),
+      tangibleEquity: buildColumnData(capitalViewSeries, 'tangibleEquityRatio'),
+      ciLoans: buildColumnData(capitalViewSeries, 'ciLoansRatio'),
+      reLoans: buildColumnData(capitalViewSeries, 'reLoansRatio'),
+      consumerLoans: buildColumnData(capitalViewSeries, 'consumerLoansRatio'),
+      highRiskLoans: buildColumnData(capitalViewSeries, 'highRiskLoansRatio'),
+      constructionLoans: buildColumnData(capitalViewSeries, 'constructionLoansRatio'),
     }),
-    [capitalSeries],
+    [capitalViewSeries],
   );
 
   const latestPoint = useMemo(() => {
@@ -796,6 +831,32 @@ export default function Home() {
                   </div>
                   <div className={styles.sectionHeaderMeta}>
                     <p className={styles.chartHint}>Values shown are in thousands</p>
+                    <div
+                      className={styles.chartViewToggle}
+                      role="group"
+                      aria-label="Portfolio quarter range"
+                    >
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          portfolioView === 'latest' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setPortfolioView('latest')}
+                        aria-pressed={portfolioView === 'latest'}
+                      >
+                        Latest 9
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          portfolioView === 'all' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setPortfolioView('all')}
+                        aria-pressed={portfolioView === 'all'}
+                      >
+                        All history
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -815,26 +876,35 @@ export default function Home() {
 
                     <div className={styles.combinedChart}>
                       <div className={styles.chartBody}>
-                        <div
-                          className={styles.barChart}
-                          role="figure"
-                          aria-label="Assets by quarter"
-                          style={{
-                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                          }}
-                        >
-                          {quarterlySeries.map((point) => (
-                            <div key={point.label} className={styles.barColumn}>
-                              <div className={styles.barWrapper}>
-                                <div
-                                  className={`${styles.bar} ${styles.assetBar}`}
-                                  style={{ height: `${point.assetPercentage}%` }}
-                                  aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
-                                />
-                              </div>
-                              <span className={styles.barLabel}>{point.label}</span>
+                        <div className={styles.chartScroll}>
+                          <div
+                            className={styles.chartScrollInner}
+                            style={{ minWidth: getAxisMinWidth(portfolioSeries.length) }}
+                          >
+                            <div
+                              className={styles.barChart}
+                              role="figure"
+                              aria-label="Assets by quarter"
+                              style={{
+                                gridTemplateColumns: `repeat(${portfolioSeries.length}, minmax(0, 1fr))`,
+                              }}
+                            >
+                              {portfolioSeries.map((point) => (
+                                <div key={point.label} className={styles.barColumn}>
+                                  <div className={styles.barWrapper}>
+                                    <div
+                                      className={`${styles.bar} ${styles.assetBar}`}
+                                      style={{ height: `${point.assetPercentage}%` }}
+                                      aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                                    />
+                                  </div>
+                                  <span className={styles.barLabel}>
+                                    {formatQuarterShortLabel(point.label)}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
 
                       </div>
@@ -857,26 +927,35 @@ export default function Home() {
 
                     <div className={styles.combinedChart}>
                       <div className={styles.chartBody}>
-                        <div
-                          className={styles.barChart}
-                          role="figure"
-                          aria-label="Equity by quarter"
-                          style={{
-                            gridTemplateColumns: `repeat(${quarterlySeries.length}, minmax(0, 1fr))`,
-                          }}
-                        >
-                          {quarterlySeries.map((point) => (
-                            <div key={point.label} className={styles.barColumn}>
-                              <div className={styles.barWrapper}>
-                                <div
-                                  className={`${styles.bar} ${styles.equityBar}`}
-                                  style={{ height: `${point.equityPercentage}%` }}
-                                  aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
-                                />
-                              </div>
-                              <span className={styles.barLabel}>{point.label}</span>
+                        <div className={styles.chartScroll}>
+                          <div
+                            className={styles.chartScrollInner}
+                            style={{ minWidth: getAxisMinWidth(portfolioSeries.length) }}
+                          >
+                            <div
+                              className={styles.barChart}
+                              role="figure"
+                              aria-label="Equity by quarter"
+                              style={{
+                                gridTemplateColumns: `repeat(${portfolioSeries.length}, minmax(0, 1fr))`,
+                              }}
+                            >
+                              {portfolioSeries.map((point) => (
+                                <div key={point.label} className={styles.barColumn}>
+                                  <div className={styles.barWrapper}>
+                                    <div
+                                      className={`${styles.bar} ${styles.equityBar}`}
+                                      style={{ height: `${point.equityPercentage}%` }}
+                                      aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
+                                    />
+                                  </div>
+                                  <span className={styles.barLabel}>
+                                    {formatQuarterShortLabel(point.label)}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
 
                       </div>
@@ -999,6 +1078,32 @@ export default function Home() {
                   </div>
                   <div className={styles.sectionHeaderMeta}>
                     <p className={styles.chartHint}>Values shown are percentages</p>
+                    <div
+                      className={styles.chartViewToggle}
+                      role="group"
+                      aria-label="Profitability quarter range"
+                    >
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          profitabilityView === 'latest' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setProfitabilityView('latest')}
+                        aria-pressed={profitabilityView === 'latest'}
+                      >
+                        Latest 9
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          profitabilityView === 'all' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setProfitabilityView('all')}
+                        aria-pressed={profitabilityView === 'all'}
+                      >
+                        All history
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1027,7 +1132,8 @@ export default function Home() {
                             role="img"
                             aria-label="Net interest margin column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                             }}
                           >
                             {profitabilityColumnData.nim.values.map((point) => (
@@ -1056,11 +1162,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                         }}
                       >
-                        {profitabilitySeries.map((point) => (
-                          <span key={`nim-label-${point.label}`}>{point.label}</span>
+                        {profitabilityViewSeries.map((point) => (
+                          <span key={`nim-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1090,7 +1199,8 @@ export default function Home() {
                             role="img"
                             aria-label="Return on assets column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                             }}
                           >
                             {profitabilityColumnData.roa.values.map((point) => (
@@ -1119,11 +1229,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                         }}
                       >
-                        {profitabilitySeries.map((point) => (
-                          <span key={`roa-label-${point.label}`}>{point.label}</span>
+                        {profitabilityViewSeries.map((point) => (
+                          <span key={`roa-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1153,7 +1266,8 @@ export default function Home() {
                             role="img"
                             aria-label="Return on equity column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                             }}
                           >
                             {profitabilityColumnData.roe.values.map((point) => (
@@ -1182,11 +1296,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilitySeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(profitabilityViewSeries.length),
                         }}
                       >
-                        {profitabilitySeries.map((point) => (
-                          <span key={`roe-label-${point.label}`}>{point.label}</span>
+                        {profitabilityViewSeries.map((point) => (
+                          <span key={`roe-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1216,7 +1333,8 @@ export default function Home() {
                             role="img"
                             aria-label="EEFFQR column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${efficiencySeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(efficiencyViewSeries.length),
                             }}
                           >
                             {profitabilityColumnData.efficiencyRatio.values.map((point) => (
@@ -1245,11 +1363,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${efficiencySeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(efficiencyViewSeries.length),
                         }}
                       >
-                        {efficiencySeries.map((point) => (
-                          <span key={`eff-label-${point.label}`}>{point.label}</span>
+                        {efficiencyViewSeries.map((point) => (
+                          <span key={`eff-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1307,6 +1428,32 @@ export default function Home() {
                   </div>
                   <div className={styles.sectionHeaderMeta}>
                     <p className={styles.chartHint}>Values shown are percentages</p>
+                    <div
+                      className={styles.chartViewToggle}
+                      role="group"
+                      aria-label="Capital quarter range"
+                    >
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          capitalView === 'latest' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setCapitalView('latest')}
+                        aria-pressed={capitalView === 'latest'}
+                      >
+                        Latest 9
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          capitalView === 'all' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setCapitalView('all')}
+                        aria-pressed={capitalView === 'all'}
+                      >
+                        All history
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1337,7 +1484,8 @@ export default function Home() {
                             role="img"
                             aria-label="Tangible equity capital ratio column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.tangibleEquity.values.map((point) => (
@@ -1366,11 +1514,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
-                          <span key={`tangible-equity-label-${point.label}`}>{point.label}</span>
+                        {capitalViewSeries.map((point) => (
+                          <span key={`tangible-equity-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1400,7 +1551,8 @@ export default function Home() {
                             role="img"
                             aria-label="C&I loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.ciLoans.values.map((point) => (
@@ -1429,11 +1581,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
-                          <span key={`ci-loans-label-${point.label}`}>{point.label}</span>
+                        {capitalViewSeries.map((point) => (
+                          <span key={`ci-loans-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1463,7 +1618,8 @@ export default function Home() {
                             role="img"
                             aria-label="Real estate loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.reLoans.values.map((point) => (
@@ -1492,11 +1648,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
-                          <span key={`re-loans-label-${point.label}`}>{point.label}</span>
+                        {capitalViewSeries.map((point) => (
+                          <span key={`re-loans-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1526,7 +1685,8 @@ export default function Home() {
                             role="img"
                             aria-label="Consumer loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.consumerLoans.values.map((point) => (
@@ -1555,11 +1715,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
-                          <span key={`consumer-loans-label-${point.label}`}>{point.label}</span>
+                        {capitalViewSeries.map((point) => (
+                          <span key={`consumer-loans-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1589,7 +1752,8 @@ export default function Home() {
                             role="img"
                             aria-label="High risk loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.highRiskLoans.values.map((point) => (
@@ -1618,11 +1782,14 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
-                          <span key={`high-risk-loans-label-${point.label}`}>{point.label}</span>
+                        {capitalViewSeries.map((point) => (
+                          <span key={`high-risk-loans-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
                         ))}
                       </div>
                     </div>
@@ -1654,7 +1821,8 @@ export default function Home() {
                             role="img"
                             aria-label="Construction and land development loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length),
                             }}
                           >
                             {capitalColumnData.constructionLoans.values.map((point) => (
@@ -1685,12 +1853,13 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalSeries.length}, minmax(0, 1fr))`,
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length),
                         }}
                       >
-                        {capitalSeries.map((point) => (
+                        {capitalViewSeries.map((point) => (
                           <span key={`construction-loans-label-${point.label}`}>
-                            {point.label}
+                            {formatQuarterShortLabel(point.label)}
                           </span>
                         ))}
                       </div>
