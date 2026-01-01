@@ -150,7 +150,7 @@ export default function Home() {
   const getAxisMinWidth = (length, minColumnWidth = 64) =>
     `${Math.max(length * minColumnWidth, 320)}px`;
   const getAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'all' ? 48 : 64);
+    getAxisMinWidth(length, view === 'all' ? 36 : 64);
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
