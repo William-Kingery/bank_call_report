@@ -945,12 +945,20 @@
   font-size: 0.55rem;
 }
 
+.profitabilityChartLabels span {
+  transform: none;
+}
+
 .capitalChartLabels {
   font-size: 0.6rem;
 }
 
 .assetQualityChartLabels {
   font-size: 0.7rem;
+}
+
+.assetQualityChartLabels span {
+  transform: none;
 }
 
 .nimColumnBar {
