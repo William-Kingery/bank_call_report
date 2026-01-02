@@ -976,15 +976,10 @@ export default function Home() {
                 <p className={styles.assetQualityText}>
                   Latest delinquency metrics from the call report. Values shown are in thousands.
                 </p>
-                <div className={styles.metricsGrid}>
+                <div className={`${styles.metricsGrid} ${styles.assetQualityMetricsGrid}`}>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>30-89 Delinquencies</p>
-                    <div className={styles.metricValueRow}>
-                      <p className={styles.metricValue}>{formatNumber(latestPoint?.P3Asset)}</p>
-                      <p className={styles.metricRatio}>
-                        {formatPercentage(latestPoint?.P3LNLSY1)}
-                      </p>
-                    </div>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.P3Asset)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>90+ Delinquencies</p>
@@ -993,6 +988,14 @@ export default function Home() {
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Non-Accrual</p>
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.NAAsset)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Non-Performing Assets</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.nperf)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Loans and Leases C/O&apos;s</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.DRLNLSQ)}</p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Ag Loans</p>
