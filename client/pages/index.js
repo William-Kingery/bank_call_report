@@ -151,6 +151,8 @@ export default function Home() {
     `${Math.max(length * minColumnWidth, 320)}px`;
   const getAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'all' ? 48 : 64);
+  const getProfitabilityAxisMinWidthForView = (length, view) =>
+    getAxisMinWidth(length, view === 'all' ? 36 : 44);
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
@@ -271,6 +273,7 @@ export default function Home() {
     () => sliceSeries(profitabilitySeries, profitabilityView),
     [profitabilitySeries, profitabilityView],
   );
+  const profitabilityColumnWidth = profitabilityView === 'all' ? 36 : 44;
 
   const efficiencyViewSeries = useMemo(
     () => sliceSeries(efficiencySeries, profitabilityView),
@@ -1137,8 +1140,11 @@ export default function Home() {
                             role="img"
                             aria-label="Net interest margin column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                              minWidth: getProfitabilityAxisMinWidthForView(
+                                profitabilityViewSeries.length,
+                                profitabilityView,
+                              ),
                             }}
                           >
                             {profitabilityColumnData.nim.values.map((point) => (
@@ -1167,8 +1173,11 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                          minWidth: getProfitabilityAxisMinWidthForView(
+                            profitabilityViewSeries.length,
+                            profitabilityView,
+                          ),
                         }}
                       >
                         {profitabilityViewSeries.map((point) => (
@@ -1204,8 +1213,11 @@ export default function Home() {
                             role="img"
                             aria-label="Return on assets column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                              minWidth: getProfitabilityAxisMinWidthForView(
+                                profitabilityViewSeries.length,
+                                profitabilityView,
+                              ),
                             }}
                           >
                             {profitabilityColumnData.roa.values.map((point) => (
@@ -1234,8 +1246,11 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                          minWidth: getProfitabilityAxisMinWidthForView(
+                            profitabilityViewSeries.length,
+                            profitabilityView,
+                          ),
                         }}
                       >
                         {profitabilityViewSeries.map((point) => (
@@ -1271,8 +1286,11 @@ export default function Home() {
                             role="img"
                             aria-label="Return on equity column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                              gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                              minWidth: getProfitabilityAxisMinWidthForView(
+                                profitabilityViewSeries.length,
+                                profitabilityView,
+                              ),
                             }}
                           >
                             {profitabilityColumnData.roe.values.map((point) => (
@@ -1301,8 +1319,11 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(profitabilityViewSeries.length, profitabilityView),
+                          gridTemplateColumns: `repeat(${profitabilityViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                          minWidth: getProfitabilityAxisMinWidthForView(
+                            profitabilityViewSeries.length,
+                            profitabilityView,
+                          ),
                         }}
                       >
                         {profitabilityViewSeries.map((point) => (
@@ -1338,8 +1359,11 @@ export default function Home() {
                             role="img"
                             aria-label="EEFFQR column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(efficiencyViewSeries.length, profitabilityView),
+                              gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                              minWidth: getProfitabilityAxisMinWidthForView(
+                                efficiencyViewSeries.length,
+                                profitabilityView,
+                              ),
                             }}
                           >
                             {profitabilityColumnData.efficiencyRatio.values.map((point) => (
@@ -1368,8 +1392,11 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.profitabilityChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(efficiencyViewSeries.length, profitabilityView),
+                          gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
+                          minWidth: getProfitabilityAxisMinWidthForView(
+                            efficiencyViewSeries.length,
+                            profitabilityView,
+                          ),
                         }}
                       >
                         {efficiencyViewSeries.map((point) => (
