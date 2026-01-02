@@ -490,6 +490,10 @@
   gap: 1rem;
 }
 
+.assetQualityChartSection {
+  margin-top: 1.5rem;
+}
+
 .loanMixHeader {
   display: flex;
   justify-content: space-between;
@@ -945,6 +949,10 @@
   font-size: 0.6rem;
 }
 
+.assetQualityChartLabels {
+  font-size: 0.7rem;
+}
+
 .nimColumnBar {
   --column-bar-bg: linear-gradient(180deg, #4ade80, #16a34a);
   --column-bar-shadow: 0 10px 18px rgba(22, 163, 74, 0.3);
@@ -1003,6 +1011,36 @@
   --column-bar-bg: linear-gradient(180deg, #60a5fa, #2563eb);
   --column-bar-shadow: 0 10px 18px rgba(37, 99, 235, 0.3);
   --column-bar-hover-shadow: 0 14px 24px rgba(37, 99, 235, 0.4);
+}
+
+.delinq3089ColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #fbbf24, #d97706);
+  --column-bar-shadow: 0 10px 18px rgba(217, 119, 6, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(217, 119, 6, 0.4);
+}
+
+.delinq90ColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #fb7185, #e11d48);
+  --column-bar-shadow: 0 10px 18px rgba(225, 29, 72, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(225, 29, 72, 0.4);
+}
+
+.nonAccrualsColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #a78bfa, #6d28d9);
+  --column-bar-shadow: 0 10px 18px rgba(109, 40, 217, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(109, 40, 217, 0.4);
+}
+
+.npaColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #22d3ee, #0e7490);
+  --column-bar-shadow: 0 10px 18px rgba(14, 116, 144, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(14, 116, 144, 0.4);
+}
+
+.loanLeaseCoColumnBar {
+  --column-bar-bg: linear-gradient(180deg, #4ade80, #15803d);
+  --column-bar-shadow: 0 10px 18px rgba(21, 128, 61, 0.3);
+  --column-bar-hover-shadow: 0 14px 24px rgba(21, 128, 61, 0.4);
 }
 
 .roaLinePath {
