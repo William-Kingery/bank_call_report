@@ -285,6 +285,33 @@ export default function Home() {
     [capitalSeries, capitalView],
   );
 
+  const assetQualitySeries = useMemo(() => {
+    if (!sortedPoints.length) return [];
+
+    return buildQuarterSeries(sortedPoints, (point) => {
+      const delinq3089Value = Number(point.P3Asset);
+      const delinq90Value = Number(point.P9Asset);
+      const nonAccrualValue = Number(point.NAAsset);
+      const npaValue = Number(point.nperf);
+      const loanLeaseCoValue = Number(point.DRLNLSQ);
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        delinq3089: Number.isFinite(delinq3089Value) ? delinq3089Value : null,
+        delinq90: Number.isFinite(delinq90Value) ? delinq90Value : null,
+        nonAccruals: Number.isFinite(nonAccrualValue) ? nonAccrualValue : null,
+        npa: Number.isFinite(npaValue) ? npaValue : null,
+        loanLeaseCO: Number.isFinite(loanLeaseCoValue) ? loanLeaseCoValue : null,
+      };
+    });
+  }, [sortedPoints]);
+
+  const assetQualityViewSeries = useMemo(
+    () => sliceSeries(assetQualitySeries, 'latest'),
+    [assetQualitySeries],
+  );
+  const assetQualityColumnWidth = 44;
+
   const profitabilityColumnData = useMemo(
     () => ({
       nim: buildColumnData(profitabilityViewSeries, 'nim'),
@@ -305,6 +332,17 @@ export default function Home() {
       constructionLoans: buildColumnData(capitalViewSeries, 'constructionLoansRatio'),
     }),
     [capitalViewSeries],
+  );
+
+  const assetQualityColumnData = useMemo(
+    () => ({
+      delinq3089: buildColumnData(assetQualityViewSeries, 'delinq3089'),
+      delinq90: buildColumnData(assetQualityViewSeries, 'delinq90'),
+      nonAccruals: buildColumnData(assetQualityViewSeries, 'nonAccruals'),
+      npa: buildColumnData(assetQualityViewSeries, 'npa'),
+      loanLeaseCO: buildColumnData(assetQualityViewSeries, 'loanLeaseCO'),
+    }),
+    [assetQualityViewSeries],
   );
 
   const latestPoint = useMemo(() => {
@@ -1065,6 +1103,385 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+
+                <section className={`${styles.chartSection} ${styles.assetQualityChartSection}`}>
+                  <div className={styles.sectionHeader}>
+                    <div>
+                      <p className={styles.chartKicker}>Quarterly trends</p>
+                      <h3 className={styles.sectionTitle}>Asset quality delinquencies</h3>
+                    </div>
+                    <div className={styles.sectionHeaderMeta}>
+                      <p className={styles.chartHint}>Values shown are in thousands</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartGrid}>
+                    <div className={styles.chartCard}>
+                      <div className={styles.lineChartBlock}>
+                        <div className={styles.lineChartHeader}>
+                          <h4 className={styles.lineChartTitle}>30-89 day delinquencies</h4>
+                          <p className={styles.lineChartSubhead}>Early-stage past due</p>
+                        </div>
+                        <div className={styles.lineChartBody}>
+                          <span className={styles.lineChartYAxis}>Thousands</span>
+                          {assetQualityColumnData.delinq3089.max != null && (
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(assetQualityColumnData.delinq3089.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.delinq3089.min != null && (
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              {formatNumber(assetQualityColumnData.delinq3089.min)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.delinq3089.hasData ? (
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="30-89 day delinquencies column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  assetQualityViewSeries.length,
+                                  assetQualityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {assetQualityColumnData.delinq3089.values.map((point) => (
+                                <div
+                                  key={`delinq3089-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.value == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.value)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.columnChartBar} ${styles.delinq3089ColumnBar} ${
+                                      point.value == null ? styles.columnChartBarEmpty : ''
+                                    }`}
+                                    style={{ height: `${point.percentage}%` }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={styles.status}>No 30-89 day delinquency data.</p>
+                          )}
+                        </div>
+                        <div
+                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
+                          style={{
+                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                            minWidth: getAxisMinWidth(
+                              assetQualityViewSeries.length,
+                              assetQualityColumnWidth,
+                            ),
+                          }}
+                        >
+                          {assetQualityViewSeries.map((point) => (
+                            <span key={`delinq3089-label-${point.label}`}>
+                              {formatQuarterShortLabel(point.label)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.chartCard}>
+                      <div className={styles.lineChartBlock}>
+                        <div className={styles.lineChartHeader}>
+                          <h4 className={styles.lineChartTitle}>90+ day delinquencies</h4>
+                          <p className={styles.lineChartSubhead}>Later-stage past due</p>
+                        </div>
+                        <div className={styles.lineChartBody}>
+                          <span className={styles.lineChartYAxis}>Thousands</span>
+                          {assetQualityColumnData.delinq90.max != null && (
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(assetQualityColumnData.delinq90.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.delinq90.min != null && (
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              {formatNumber(assetQualityColumnData.delinq90.min)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.delinq90.hasData ? (
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="90+ day delinquencies column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  assetQualityViewSeries.length,
+                                  assetQualityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {assetQualityColumnData.delinq90.values.map((point) => (
+                                <div
+                                  key={`delinq90-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.value == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.value)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.columnChartBar} ${styles.delinq90ColumnBar} ${
+                                      point.value == null ? styles.columnChartBarEmpty : ''
+                                    }`}
+                                    style={{ height: `${point.percentage}%` }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={styles.status}>No 90+ day delinquency data.</p>
+                          )}
+                        </div>
+                        <div
+                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
+                          style={{
+                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                            minWidth: getAxisMinWidth(
+                              assetQualityViewSeries.length,
+                              assetQualityColumnWidth,
+                            ),
+                          }}
+                        >
+                          {assetQualityViewSeries.map((point) => (
+                            <span key={`delinq90-label-${point.label}`}>
+                              {formatQuarterShortLabel(point.label)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.chartCard}>
+                      <div className={styles.lineChartBlock}>
+                        <div className={styles.lineChartHeader}>
+                          <h4 className={styles.lineChartTitle}>Non-accruals</h4>
+                          <p className={styles.lineChartSubhead}>Loans not accruing interest</p>
+                        </div>
+                        <div className={styles.lineChartBody}>
+                          <span className={styles.lineChartYAxis}>Thousands</span>
+                          {assetQualityColumnData.nonAccruals.max != null && (
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(assetQualityColumnData.nonAccruals.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.nonAccruals.min != null && (
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              {formatNumber(assetQualityColumnData.nonAccruals.min)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.nonAccruals.hasData ? (
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Non-accruals column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  assetQualityViewSeries.length,
+                                  assetQualityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {assetQualityColumnData.nonAccruals.values.map((point) => (
+                                <div
+                                  key={`nonAccruals-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.value == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.value)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.columnChartBar} ${styles.nonAccrualsColumnBar} ${
+                                      point.value == null ? styles.columnChartBarEmpty : ''
+                                    }`}
+                                    style={{ height: `${point.percentage}%` }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={styles.status}>No non-accrual data available.</p>
+                          )}
+                        </div>
+                        <div
+                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
+                          style={{
+                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                            minWidth: getAxisMinWidth(
+                              assetQualityViewSeries.length,
+                              assetQualityColumnWidth,
+                            ),
+                          }}
+                        >
+                          {assetQualityViewSeries.map((point) => (
+                            <span key={`nonAccruals-label-${point.label}`}>
+                              {formatQuarterShortLabel(point.label)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.chartCard}>
+                      <div className={styles.lineChartBlock}>
+                        <div className={styles.lineChartHeader}>
+                          <h4 className={styles.lineChartTitle}>Non-performing assets (NPA)</h4>
+                          <p className={styles.lineChartSubhead}>Delinquencies plus non-accruals</p>
+                        </div>
+                        <div className={styles.lineChartBody}>
+                          <span className={styles.lineChartYAxis}>Thousands</span>
+                          {assetQualityColumnData.npa.max != null && (
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(assetQualityColumnData.npa.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.npa.min != null && (
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              {formatNumber(assetQualityColumnData.npa.min)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.npa.hasData ? (
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Non-performing assets column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  assetQualityViewSeries.length,
+                                  assetQualityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {assetQualityColumnData.npa.values.map((point) => (
+                                <div
+                                  key={`npa-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.value == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.value)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.columnChartBar} ${styles.npaColumnBar} ${
+                                      point.value == null ? styles.columnChartBarEmpty : ''
+                                    }`}
+                                    style={{ height: `${point.percentage}%` }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={styles.status}>No NPA data available.</p>
+                          )}
+                        </div>
+                        <div
+                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
+                          style={{
+                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                            minWidth: getAxisMinWidth(
+                              assetQualityViewSeries.length,
+                              assetQualityColumnWidth,
+                            ),
+                          }}
+                        >
+                          {assetQualityViewSeries.map((point) => (
+                            <span key={`npa-label-${point.label}`}>
+                              {formatQuarterShortLabel(point.label)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.chartCard}>
+                      <div className={styles.lineChartBlock}>
+                        <div className={styles.lineChartHeader}>
+                          <h4 className={styles.lineChartTitle}>Loans &amp; leases C/O</h4>
+                          <p className={styles.lineChartSubhead}>Charge-offs over time</p>
+                        </div>
+                        <div className={styles.lineChartBody}>
+                          <span className={styles.lineChartYAxis}>Thousands</span>
+                          {assetQualityColumnData.loanLeaseCO.max != null && (
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(assetQualityColumnData.loanLeaseCO.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.loanLeaseCO.min != null && (
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              {formatNumber(assetQualityColumnData.loanLeaseCO.min)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.loanLeaseCO.hasData ? (
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Loans and leases charge-offs column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  assetQualityViewSeries.length,
+                                  assetQualityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {assetQualityColumnData.loanLeaseCO.values.map((point) => (
+                                <div
+                                  key={`loanLeaseCO-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.value == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.value)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.columnChartBar} ${styles.loanLeaseCoColumnBar} ${
+                                      point.value == null ? styles.columnChartBarEmpty : ''
+                                    }`}
+                                    style={{ height: `${point.percentage}%` }}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className={styles.status}>No charge-off data available.</p>
+                          )}
+                        </div>
+                        <div
+                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
+                          style={{
+                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                            minWidth: getAxisMinWidth(
+                              assetQualityViewSeries.length,
+                              assetQualityColumnWidth,
+                            ),
+                          }}
+                        >
+                          {assetQualityViewSeries.map((point) => (
+                            <span key={`loanLeaseCO-label-${point.label}`}>
+                              {formatQuarterShortLabel(point.label)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </section>
             </div>
           )}
