@@ -942,7 +942,7 @@
 }
 
 .profitabilityChartLabels {
-  font-size: 0.7rem;
+  font-size: 0.55rem;
 }
 
 .capitalChartLabels {
@@ -1148,7 +1148,7 @@
 .barLabel {
   font-weight: 700;
   color: #064e3b;
-  font-size: 0.85rem;
+  font-size: 0.64rem;
   white-space: nowrap;
   transform: rotate(-45deg);
   transform-origin: top left;
