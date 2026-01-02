@@ -1150,8 +1150,7 @@
   color: #064e3b;
   font-size: 0.64rem;
   white-space: nowrap;
-  transform: rotate(-45deg);
-  transform-origin: top left;
+  transform: none;
 }
 
 .barValue {
