@@ -114,6 +114,7 @@ export default function Home() {
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio');
   const [portfolioView, setPortfolioView] = useState('latest');
+  const [assetQualityView, setAssetQualityView] = useState('latest');
   const [profitabilityView, setProfitabilityView] = useState('latest');
   const [capitalView, setCapitalView] = useState('latest');
 
@@ -151,8 +152,10 @@ export default function Home() {
     `${Math.max(length * minColumnWidth, 320)}px`;
   const getAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'all' ? 48 : 64);
+  const getPortfolioAxisMinWidthForView = (length, view) =>
+    getAxisMinWidth(length, view === 'all' ? 36 : 48);
   const getProfitabilityAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'all' ? 36 : 44);
+    getAxisMinWidth(length, view === 'all' ? 27 : 33);
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
@@ -273,7 +276,7 @@ export default function Home() {
     () => sliceSeries(profitabilitySeries, profitabilityView),
     [profitabilitySeries, profitabilityView],
   );
-  const profitabilityColumnWidth = profitabilityView === 'all' ? 36 : 44;
+  const profitabilityColumnWidth = profitabilityView === 'all' ? 27 : 33;
 
   const efficiencyViewSeries = useMemo(
     () => sliceSeries(efficiencySeries, profitabilityView),
@@ -307,10 +310,10 @@ export default function Home() {
   }, [sortedPoints]);
 
   const assetQualityViewSeries = useMemo(
-    () => sliceSeries(assetQualitySeries, 'latest'),
-    [assetQualitySeries],
+    () => sliceSeries(assetQualitySeries, assetQualityView),
+    [assetQualitySeries, assetQualityView],
   );
-  const assetQualityColumnWidth = 44;
+  const assetQualityColumnWidth = assetQualityView === 'all' ? 36 : 44;
 
   const profitabilityColumnData = useMemo(
     () => ({
@@ -922,7 +925,12 @@ export default function Home() {
                         <div className={styles.chartScroll}>
                           <div
                             className={styles.chartScrollInner}
-                            style={{ minWidth: getAxisMinWidthForView(portfolioSeries.length, portfolioView) }}
+                            style={{
+                              minWidth: getPortfolioAxisMinWidthForView(
+                                portfolioSeries.length,
+                                portfolioView,
+                              ),
+                            }}
                           >
                             <div
                               className={styles.barChart}
@@ -973,7 +981,12 @@ export default function Home() {
                         <div className={styles.chartScroll}>
                           <div
                             className={styles.chartScrollInner}
-                            style={{ minWidth: getAxisMinWidthForView(portfolioSeries.length, portfolioView) }}
+                            style={{
+                              minWidth: getPortfolioAxisMinWidthForView(
+                                portfolioSeries.length,
+                                portfolioView,
+                              ),
+                            }}
                           >
                             <div
                               className={styles.barChart}
@@ -1112,6 +1125,32 @@ export default function Home() {
                     </div>
                     <div className={styles.sectionHeaderMeta}>
                       <p className={styles.chartHint}>Values shown are in thousands</p>
+                      <div
+                        className={styles.chartViewToggle}
+                        role="group"
+                        aria-label="Asset quality quarter range"
+                      >
+                        <button
+                          type="button"
+                          className={`${styles.chartViewButton} ${
+                            assetQualityView === 'latest' ? styles.chartViewButtonActive : ''
+                          }`}
+                          onClick={() => setAssetQualityView('latest')}
+                          aria-pressed={assetQualityView === 'latest'}
+                        >
+                          Latest 9
+                        </button>
+                        <button
+                          type="button"
+                          className={`${styles.chartViewButton} ${
+                            assetQualityView === 'all' ? styles.chartViewButtonActive : ''
+                          }`}
+                          onClick={() => setAssetQualityView('all')}
+                          aria-pressed={assetQualityView === 'all'}
+                        >
+                          All history
+                        </button>
+                      </div>
                     </div>
                   </div>
 
