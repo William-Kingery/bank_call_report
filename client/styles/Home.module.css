@@ -471,6 +471,18 @@
   white-space: nowrap;
 }
 
+.assetQualityMetricsGrid .metricName {
+  font-size: 0.85rem;
+}
+
+.assetQualityMetricsGrid .metricValue {
+  font-size: 1.1rem;
+}
+
+.assetQualityMetricsGrid .metricRatio {
+  font-size: 0.85rem;
+}
+
 .loanMixSection {
   margin-top: 1.5rem;
   display: flex;

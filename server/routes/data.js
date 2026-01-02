@@ -69,6 +69,8 @@ router.get('/charts', async (req, res) => {
          f.EQ AS eq,
          f.DEP AS dep,
          f.LNLSGR AS lnlsgr,
+         c.NPERF AS nperf,
+         c.DRLNLSQ AS DRLNLSQ,
          c.RWA AS rwa,
          r.ROAQ AS roa,
          r.ROEQ AS roe,
