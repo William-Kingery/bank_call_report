@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
+import { stateNameToAbbr, stateNameToCoords } from '../utils/stateGeo.js';
 
 const router = Router();
 
@@ -31,7 +32,17 @@ router.get('/search', async (req, res) => {
       [query]
     );
 
-    res.json({ results: rows });
+    const results = rows.map((row) => {
+      const coords = stateNameToCoords[row.stateName];
+      return {
+        ...row,
+        stateAbbr: stateNameToAbbr[row.stateName] ?? null,
+        latitude: coords ? coords[0] : null,
+        longitude: coords ? coords[1] : null,
+      };
+    });
+
+    res.json({ results });
   } catch (error) {
     console.error('Error performing search:', error);
     res.status(500).json({ message: 'Search failed' });
