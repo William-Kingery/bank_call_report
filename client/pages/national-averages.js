@@ -15,6 +15,15 @@ const BENCHMARK_PORTFOLIOS = [
   'Less than 1 B',
 ];
 
+const formatQuarter = (callym) => {
+  const numeric = Number(callym);
+  if (!Number.isFinite(numeric)) return 'Unknown';
+  const year = Math.floor(numeric / 100);
+  const month = numeric % 100;
+  const quarter = Math.ceil(month / 3);
+  return `Q${quarter} ${year}`;
+};
+
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
   return new Intl.NumberFormat('en-US', {
@@ -44,22 +53,69 @@ const getTileFill = (value, min, max) => {
 
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
+  const [quarters, setQuarters] = useState([]);
+  const [selectedQuarter, setSelectedQuarter] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
+  const [loadingQuarters, setLoadingQuarters] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [quarterError, setQuarterError] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchQuarters = async () => {
+      setLoadingQuarters(true);
+      setQuarterError(null);
+      try {
+        const response = await fetch(`${API_BASE}/state-assets/quarters`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to load quarters');
+        }
+        const data = await response.json();
+        const availableQuarters = (data.results ?? [])
+          .map((item) => String(item.callym))
+          .filter((value) => value);
+        setQuarters(availableQuarters);
+        if (availableQuarters.length) {
+          setSelectedQuarter((current) => current || availableQuarters[0]);
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setQuarterError(err.message);
+        }
+      } finally {
+        setLoadingQuarters(false);
+      }
+    };
+
+    fetchQuarters();
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedQuarter) {
+      return undefined;
+    }
+
     const controller = new AbortController();
 
     const fetchStateAssets = async () => {
       setLoading(true);
       setError(null);
       try {
-        const segmentParam =
-          selectedPortfolio && selectedPortfolio !== 'National Average'
-            ? `?segment=${encodeURIComponent(selectedPortfolio)}`
-            : '';
-        const response = await fetch(`${API_BASE}/state-assets${segmentParam}`, {
+        const queryParams = new URLSearchParams();
+        if (selectedPortfolio && selectedPortfolio !== 'National Average') {
+          queryParams.set('segment', selectedPortfolio);
+        }
+        if (selectedQuarter) {
+          queryParams.set('quarter', selectedQuarter);
+        }
+        const queryString = queryParams.toString();
+        const response = await fetch(`${API_BASE}/state-assets${queryString ? `?${queryString}` : ''}`, {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -79,7 +135,7 @@ const NationalAverages = () => {
     fetchStateAssets();
 
     return () => controller.abort();
-  }, [selectedPortfolio]);
+  }, [selectedPortfolio, selectedQuarter]);
 
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
@@ -121,24 +177,43 @@ const NationalAverages = () => {
             <p className={styles.sectionKicker}>Total assets by state</p>
             <h2 className={styles.sectionTitle}>Banking assets mapped across the U.S.</h2>
           </div>
-          <label className={styles.selectLabel}>
-            Portfolio view
-            <select
-              className={styles.select}
-              value={selectedPortfolio}
-              onChange={(event) => setSelectedPortfolio(event.target.value)}
-            >
-              {BENCHMARK_PORTFOLIOS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className={styles.filterControls}>
+            <label className={styles.selectLabel}>
+              Portfolio view
+              <select
+                className={styles.select}
+                value={selectedPortfolio}
+                onChange={(event) => setSelectedPortfolio(event.target.value)}
+              >
+                {BENCHMARK_PORTFOLIOS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.selectLabel}>
+              Quarter
+              <select
+                className={styles.select}
+                value={selectedQuarter}
+                onChange={(event) => setSelectedQuarter(event.target.value)}
+                disabled={loadingQuarters || !quarters.length}
+              >
+                {quarters.map((quarter) => (
+                  <option key={quarter} value={quarter}>
+                    {formatQuarter(quarter)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
 
         {error ? <p className={styles.error}>{error}</p> : null}
+        {quarterError ? <p className={styles.error}>{quarterError}</p> : null}
         {loading ? <p className={styles.status}>Loading state assets...</p> : null}
+        {loadingQuarters ? <p className={styles.status}>Loading available quarters...</p> : null}
 
         <div className={styles.mapWrapper}>
           <svg

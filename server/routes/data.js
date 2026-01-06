@@ -221,9 +221,21 @@ router.get('/benchmark', async (_req, res) => {
 router.get('/state-assets', async (req, res) => {
   try {
     const segment = req.query.segment;
+    const quarter = req.query.quarter;
     const range = getSegmentRange(segment);
     const conditions = ['s.STNAME IS NOT NULL', 'f.ASSET IS NOT NULL'];
     const params = [];
+
+    let targetQuarter = quarter;
+    if (!targetQuarter) {
+      const [latestRows] = await pool.query(`SELECT MAX(CALLYM) AS callym FROM fdic_fts`);
+      targetQuarter = latestRows?.[0]?.callym ?? null;
+    }
+
+    if (targetQuarter) {
+      conditions.push('f.CALLYM = ?');
+      params.push(targetQuarter);
+    }
 
     if (range) {
       if (range.min != null) {
@@ -240,23 +252,10 @@ router.get('/state-assets', async (req, res) => {
       `SELECT
          s.STNAME AS stateName,
          SUM(f.ASSET) AS totalAssets
-       FROM (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         GROUP BY CERT
-       ) latest_fts
-       JOIN fdic_fts f
-         ON f.CERT = latest_fts.CERT
-         AND f.CALLYM = latest_fts.callym
-       JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_structure
-         GROUP BY CERT
-       ) latest_structure
-         ON latest_structure.CERT = f.CERT
+       FROM fdic_fts f
        JOIN fdic_structure s
-         ON s.CERT = latest_structure.CERT
-         AND s.CALLYM = latest_structure.callym
+         ON s.CERT = f.CERT
+         AND s.CALLYM = f.CALLYM
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY s.STNAME
        ORDER BY totalAssets DESC`,
@@ -267,6 +266,22 @@ router.get('/state-assets', async (req, res) => {
   } catch (error) {
     console.error('Error fetching state assets:', error);
     res.status(500).json({ message: 'Failed to fetch state assets' });
+  }
+});
+
+router.get('/state-assets/quarters', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DISTINCT CALLYM AS callym
+       FROM fdic_fts
+       WHERE CALLYM IS NOT NULL
+       ORDER BY CALLYM DESC`
+    );
+
+    res.json({ results: rows });
+  } catch (error) {
+    console.error('Error fetching state asset quarters:', error);
+    res.status(500).json({ message: 'Failed to fetch state asset quarters' });
   }
 });
 
