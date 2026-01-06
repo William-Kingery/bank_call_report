@@ -675,6 +675,7 @@ export default function Home() {
         <div>
           <p className={styles.kicker}>FDIC Call Report explorer</p>
           <h1 className={styles.title}>Search by Bank and view performance metrics</h1>
+          <h2 className={styles.secondaryTitle}>National Averages and Peer Group Trends</h2>
           <p className={styles.subtitle}>
             Start typing a bank name to view assets, equity, and ROA over time.
           </p>
