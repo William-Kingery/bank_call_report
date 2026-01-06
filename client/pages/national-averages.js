@@ -15,6 +15,62 @@ const BENCHMARK_PORTFOLIOS = [
   'Less than 1 B',
 ];
 
+const REGION_OPTIONS = ['All Regions', 'Northeast', 'Midwest', 'South', 'West'];
+
+const REGION_BY_STATE = {
+  Alabama: 'South',
+  Alaska: 'West',
+  Arizona: 'West',
+  Arkansas: 'South',
+  California: 'West',
+  Colorado: 'West',
+  Connecticut: 'Northeast',
+  Delaware: 'South',
+  'District of Columbia': 'South',
+  Florida: 'South',
+  Georgia: 'South',
+  Hawaii: 'West',
+  Idaho: 'West',
+  Illinois: 'Midwest',
+  Indiana: 'Midwest',
+  Iowa: 'Midwest',
+  Kansas: 'Midwest',
+  Kentucky: 'South',
+  Louisiana: 'South',
+  Maine: 'Northeast',
+  Maryland: 'South',
+  Massachusetts: 'Northeast',
+  Michigan: 'Midwest',
+  Minnesota: 'Midwest',
+  Mississippi: 'South',
+  Missouri: 'Midwest',
+  Montana: 'West',
+  Nebraska: 'Midwest',
+  Nevada: 'West',
+  'New Hampshire': 'Northeast',
+  'New Jersey': 'Northeast',
+  'New Mexico': 'West',
+  'New York': 'Northeast',
+  'North Carolina': 'South',
+  'North Dakota': 'Midwest',
+  Ohio: 'Midwest',
+  Oklahoma: 'South',
+  Oregon: 'West',
+  Pennsylvania: 'Northeast',
+  'Rhode Island': 'Northeast',
+  'South Carolina': 'South',
+  'South Dakota': 'Midwest',
+  Tennessee: 'South',
+  Texas: 'South',
+  Utah: 'West',
+  Vermont: 'Northeast',
+  Virginia: 'South',
+  Washington: 'West',
+  'West Virginia': 'South',
+  Wisconsin: 'Midwest',
+  Wyoming: 'West',
+};
+
 const formatQuarter = (callym) => {
   const numeric = Number(callym);
   if (!Number.isFinite(numeric)) return 'Unknown';
@@ -53,6 +109,7 @@ const getTileFill = (value, min, max) => {
 
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
+  const [selectedRegion, setSelectedRegion] = useState('All Regions');
   const [quarters, setQuarters] = useState([]);
   const [selectedQuarter, setSelectedQuarter] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
@@ -77,10 +134,13 @@ const NationalAverages = () => {
         const data = await response.json();
         const availableQuarters = (data.results ?? [])
           .map((item) => String(item.callym))
-          .filter((value) => value);
+          .filter((value) => value)
+          .sort((a, b) => Number(b) - Number(a));
         setQuarters(availableQuarters);
         if (availableQuarters.length) {
-          setSelectedQuarter((current) => current || availableQuarters[0]);
+          setSelectedQuarter((current) =>
+            current && availableQuarters.includes(current) ? current : availableQuarters[0]
+          );
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
@@ -146,7 +206,15 @@ const NationalAverages = () => {
     }, {});
   }, [stateAssets]);
 
-  const assetValues = Object.values(stateAssetMap).filter(Number.isFinite);
+  const isStateInRegion =
+    selectedRegion === 'All Regions'
+      ? () => true
+      : (stateName) => REGION_BY_STATE[stateName] === selectedRegion;
+
+  const assetValues = usStateTiles
+    .filter((tile) => isStateInRegion(tile.name))
+    .map((tile) => stateAssetMap[tile.name])
+    .filter(Number.isFinite);
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
 
@@ -193,6 +261,20 @@ const NationalAverages = () => {
               </select>
             </label>
             <label className={styles.selectLabel}>
+              Region
+              <select
+                className={styles.select}
+                value={selectedRegion}
+                onChange={(event) => setSelectedRegion(event.target.value)}
+              >
+                {REGION_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.selectLabel}>
               Quarter
               <select
                 className={styles.select}
@@ -224,9 +306,11 @@ const NationalAverages = () => {
           >
             {usStateTiles.map((tile) => {
               const value = stateAssetMap[tile.name];
-              const fill = getTileFill(value, minAsset, maxAsset);
+              const inRegion = isStateInRegion(tile.name);
+              const fill = inRegion ? getTileFill(value, minAsset, maxAsset) : '#f1f5f9';
               const x = tile.x * (tileSize + tileGap);
               const y = tile.y * (tileSize + tileGap);
+              const labelClass = inRegion ? styles.tileLabel : styles.tileLabelMuted;
               return (
                 <g key={tile.name}>
                   <rect
@@ -238,14 +322,18 @@ const NationalAverages = () => {
                     fill={fill}
                     className={styles.tile}
                   >
-                    <title>{`${tile.name}: ${formatCurrency(value)}`}</title>
+                    <title>
+                      {inRegion
+                        ? `${tile.name}: ${formatCurrency(value)}`
+                        : `${tile.name}: not in selected region`}
+                    </title>
                   </rect>
                   <text
                     x={x + tileSize / 2}
                     y={y + tileSize / 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className={styles.tileLabel}
+                    className={labelClass}
                   >
                     {tile.abbr}
                   </text>
@@ -260,7 +348,11 @@ const NationalAverages = () => {
               <span>{formatCurrency(minAsset)}</span>
               <span>{formatCurrency(maxAsset)}</span>
             </div>
-            <p className={styles.legendNote}>Darker shades represent higher total assets.</p>
+            <p className={styles.legendNote}>
+              {selectedRegion === 'All Regions'
+                ? 'Darker shades represent higher total assets.'
+                : `${selectedRegion} states are highlighted by asset level.`}
+            </p>
           </div>
         </div>
       </section>
