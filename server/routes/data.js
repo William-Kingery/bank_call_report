@@ -3,6 +3,17 @@ import pool from '../db.js';
 
 const router = Router();
 
+const segmentRanges = {
+  'Over 1 Trillion': { min: 1000000000 },
+  'Between $250 B and 1 Trillion': { min: 250000000, max: 1000000000 },
+  'Between $100 B and 250 B': { min: 100000000, max: 250000000 },
+  'Between $10 B and 100 B': { min: 10000000, max: 100000000 },
+  'Between $1 B and 10 B': { min: 1000000, max: 10000000 },
+  'Less than 1 B': { max: 1000000 },
+};
+
+const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+
 router.get('/search', async (req, res) => {
   const { query } = req.query;
 
@@ -133,15 +144,7 @@ router.get('/charts', async (req, res) => {
 router.get('/benchmark', async (_req, res) => {
   try {
     const segment = _req.query.segment;
-    const segmentRanges = {
-      'Over 1 Trillion': { min: 1000000000 },
-      'Between $250 B and 1 Trillion': { min: 250000000, max: 1000000000 },
-      'Between $100 B and 250 B': { min: 100000000, max: 250000000 },
-      'Between $10 B and 100 B': { min: 10000000, max: 100000000 },
-      'Between $1 B and 10 B': { min: 1000000, max: 10000000 },
-      'Less than 1 B': { max: 1000000 },
-    };
-    const range = segmentRanges[segment] ?? null;
+    const range = getSegmentRange(segment);
     const conditions = [];
     const params = [];
 
@@ -212,6 +215,58 @@ router.get('/benchmark', async (_req, res) => {
   } catch (error) {
     console.error('Error fetching benchmark data:', error);
     res.status(500).json({ message: 'Failed to fetch benchmark data' });
+  }
+});
+
+router.get('/state-assets', async (req, res) => {
+  try {
+    const segment = req.query.segment;
+    const range = getSegmentRange(segment);
+    const conditions = ['s.STNAME IS NOT NULL', 'f.ASSET IS NOT NULL'];
+    const params = [];
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
+    const [rows] = await pool.query(
+      `SELECT
+         s.STNAME AS stateName,
+         SUM(f.ASSET) AS totalAssets
+       FROM (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ) latest_fts
+       JOIN fdic_fts f
+         ON f.CERT = latest_fts.CERT
+         AND f.CALLYM = latest_fts.callym
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       GROUP BY s.STNAME
+       ORDER BY totalAssets DESC`,
+      params
+    );
+
+    res.json({ results: rows });
+  } catch (error) {
+    console.error('Error fetching state assets:', error);
+    res.status(500).json({ message: 'Failed to fetch state assets' });
   }
 });
 

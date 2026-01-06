@@ -1,7 +1,7 @@
 .main {
   padding: 2.5rem;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
   color: #0f172a;
 }
@@ -51,4 +51,114 @@
 .backButton:focus {
   background: #3730a3;
   outline: none;
+}
+
+.mapSection {
+  margin-top: 3rem;
+  background: #f8fafc;
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+.mapHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sectionKicker {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0 0 0.4rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.selectLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.select {
+  padding: 0.6rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid #cbd5f5;
+  background: #ffffff;
+  font-size: 0.95rem;
+  min-width: 240px;
+}
+
+.mapWrapper {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.tileMap {
+  width: 100%;
+  max-width: 760px;
+}
+
+.tile {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.tileLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  fill: #0f172a;
+}
+
+.legend {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.legendBar {
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e2e8f0, #4338ca);
+}
+
+.legendLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.legendNote {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.status {
+  margin-top: 1rem;
+  color: #475569;
+}
+
+.error {
+  margin-top: 1rem;
+  color: #b91c1c;
+  font-weight: 600;
 }
