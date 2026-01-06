@@ -55,10 +55,25 @@
 
 .mapSection {
   margin-top: 3rem;
-  background: #f8fafc;
+  background: linear-gradient(135deg, rgba(246, 217, 206, 0.7), rgba(216, 205, 255, 0.9));
   border-radius: 24px;
   padding: 2rem;
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.mapSection::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.6), transparent 55%);
+  pointer-events: none;
+}
+
+.mapSection > * {
+  position: relative;
+  z-index: 1;
 }
 
 .mapHeader {
@@ -83,6 +98,13 @@
   color: #0f172a;
 }
 
+.sectionSubtitle {
+  margin: 0.35rem 0 0;
+  color: #5b5272;
+  font-size: 0.95rem;
+  max-width: 520px;
+}
+
 .filterControls {
   display: flex;
   align-items: flex-end;
@@ -103,7 +125,7 @@
   padding: 0.6rem 0.9rem;
   border-radius: 12px;
   border: 1px solid #cbd5f5;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   font-size: 0.95rem;
   min-width: 240px;
 }
@@ -122,20 +144,33 @@
 }
 
 .tile {
-  stroke: #ffffff;
+  stroke: rgba(255, 255, 255, 0.8);
   stroke-width: 2;
+  filter: drop-shadow(0 6px 10px rgba(66, 56, 88, 0.12));
 }
 
 .tileLabel {
   font-size: 0.7rem;
   font-weight: 700;
-  fill: #0f172a;
+  fill: #2f2540;
 }
 
 .tileLabelMuted {
   font-size: 0.7rem;
   font-weight: 700;
-  fill: #94a3b8;
+  fill: rgba(47, 37, 64, 0.4);
+}
+
+.tileValue {
+  font-size: 0.72rem;
+  font-weight: 700;
+  fill: #2f2540;
+}
+
+.tileValueMuted {
+  font-size: 0.72rem;
+  font-weight: 700;
+  fill: rgba(47, 37, 64, 0.4);
 }
 
 .legend {
@@ -149,20 +184,26 @@
 .legendBar {
   height: 12px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #e2e8f0, #4338ca);
+  background: linear-gradient(90deg, #dcf4ff, #9c5bd6);
 }
 
 .legendLabels {
   display: flex;
   justify-content: space-between;
   font-size: 0.85rem;
-  color: #475569;
+  color: #5b5272;
+}
+
+.legendDate {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6e5b8e;
 }
 
 .legendNote {
   margin: 0;
   font-size: 0.8rem;
-  color: #64748b;
+  color: #6e5b8e;
 }
 
 .status {
