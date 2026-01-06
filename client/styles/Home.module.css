@@ -26,6 +26,12 @@
   margin: 0 0 0.5rem;
 }
 
+.secondaryTitle {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+  color: #1e293b;
+}
+
 .subtitle {
   margin: 0;
   color: #475569;
