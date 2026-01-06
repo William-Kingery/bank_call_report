@@ -83,6 +83,13 @@
   color: #0f172a;
 }
 
+.filterControls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .selectLabel {
   display: flex;
   flex-direction: column;
