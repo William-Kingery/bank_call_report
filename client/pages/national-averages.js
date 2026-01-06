@@ -92,15 +92,15 @@ const formatCurrency = (value) => {
 
 const getTileFill = (value, min, max) => {
   if (!Number.isFinite(value)) {
-    return '#e2e8f0';
+    return '#e5e7eb';
   }
   if (min === max) {
-    return '#4338ca';
+    return '#9c5bd6';
   }
   const ratio = (value - min) / (max - min);
   const clamp = Math.max(0, Math.min(1, ratio));
-  const start = [226, 232, 240];
-  const end = [67, 56, 202];
+  const start = [220, 240, 255];
+  const end = [156, 70, 203];
   const channels = start.map((channel, index) =>
     Math.round(channel + (end[index] - channel) * clamp)
   );
@@ -110,20 +110,15 @@ const getTileFill = (value, min, max) => {
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
-  const [quarters, setQuarters] = useState([]);
-  const [selectedQuarter, setSelectedQuarter] = useState('');
+  const [latestQuarter, setLatestQuarter] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
-  const [loadingQuarters, setLoadingQuarters] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [quarterError, setQuarterError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchQuarters = async () => {
-      setLoadingQuarters(true);
-      setQuarterError(null);
       try {
         const response = await fetch(`${API_BASE}/state-assets/quarters`, {
           signal: controller.signal,
@@ -136,18 +131,14 @@ const NationalAverages = () => {
           .map((item) => String(item.callym))
           .filter((value) => value)
           .sort((a, b) => Number(b) - Number(a));
-        setQuarters(availableQuarters);
         if (availableQuarters.length) {
-          setSelectedQuarter((current) =>
-            current && availableQuarters.includes(current) ? current : availableQuarters[0]
-          );
+          setLatestQuarter(availableQuarters[0]);
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
-          setQuarterError(err.message);
+          setLatestQuarter('');
         }
       } finally {
-        setLoadingQuarters(false);
       }
     };
 
@@ -157,10 +148,6 @@ const NationalAverages = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedQuarter) {
-      return undefined;
-    }
-
     const controller = new AbortController();
 
     const fetchStateAssets = async () => {
@@ -170,9 +157,6 @@ const NationalAverages = () => {
         const queryParams = new URLSearchParams();
         if (selectedPortfolio && selectedPortfolio !== 'National Average') {
           queryParams.set('segment', selectedPortfolio);
-        }
-        if (selectedQuarter) {
-          queryParams.set('quarter', selectedQuarter);
         }
         const queryString = queryParams.toString();
         const response = await fetch(`${API_BASE}/state-assets${queryString ? `?${queryString}` : ''}`, {
@@ -195,7 +179,7 @@ const NationalAverages = () => {
     fetchStateAssets();
 
     return () => controller.abort();
-  }, [selectedPortfolio, selectedQuarter]);
+  }, [selectedPortfolio]);
 
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
@@ -242,8 +226,11 @@ const NationalAverages = () => {
       <section className={styles.mapSection}>
         <div className={styles.mapHeader}>
           <div>
-            <p className={styles.sectionKicker}>Total assets by state</p>
-            <h2 className={styles.sectionTitle}>Banking assets mapped across the U.S.</h2>
+            <p className={styles.sectionKicker}>Latest assets by state</p>
+            <h2 className={styles.sectionTitle}>Where banking assets are concentrated nationwide</h2>
+            <p className={styles.sectionSubtitle}>
+              Each tile shows total assets for the latest quarter in the FDIC FTS table.
+            </p>
           </div>
           <div className={styles.filterControls}>
             <label className={styles.selectLabel}>
@@ -274,28 +261,11 @@ const NationalAverages = () => {
                 ))}
               </select>
             </label>
-            <label className={styles.selectLabel}>
-              Quarter
-              <select
-                className={styles.select}
-                value={selectedQuarter}
-                onChange={(event) => setSelectedQuarter(event.target.value)}
-                disabled={loadingQuarters || !quarters.length}
-              >
-                {quarters.map((quarter) => (
-                  <option key={quarter} value={quarter}>
-                    {formatQuarter(quarter)}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
         </div>
 
         {error ? <p className={styles.error}>{error}</p> : null}
-        {quarterError ? <p className={styles.error}>{quarterError}</p> : null}
         {loading ? <p className={styles.status}>Loading state assets...</p> : null}
-        {loadingQuarters ? <p className={styles.status}>Loading available quarters...</p> : null}
 
         <div className={styles.mapWrapper}>
           <svg
@@ -311,6 +281,7 @@ const NationalAverages = () => {
               const x = tile.x * (tileSize + tileGap);
               const y = tile.y * (tileSize + tileGap);
               const labelClass = inRegion ? styles.tileLabel : styles.tileLabelMuted;
+              const valueClass = inRegion ? styles.tileValue : styles.tileValueMuted;
               return (
                 <g key={tile.name}>
                   <rect
@@ -329,13 +300,22 @@ const NationalAverages = () => {
                     </title>
                   </rect>
                   <text
-                    x={x + tileSize / 2}
-                    y={y + tileSize / 2}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
+                    x={x + 10}
+                    y={y + 14}
+                    textAnchor="start"
+                    dominantBaseline="hanging"
                     className={labelClass}
                   >
                     {tile.abbr}
+                  </text>
+                  <text
+                    x={x + tileSize / 2}
+                    y={y + tileSize / 2 + 6}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className={valueClass}
+                  >
+                    {formatCurrency(value)}
                   </text>
                 </g>
               );
@@ -348,6 +328,9 @@ const NationalAverages = () => {
               <span>{formatCurrency(minAsset)}</span>
               <span>{formatCurrency(maxAsset)}</span>
             </div>
+            {latestQuarter ? (
+              <p className={styles.legendDate}>As of {formatQuarter(latestQuarter)}</p>
+            ) : null}
             <p className={styles.legendNote}>
               {selectedRegion === 'All Regions'
                 ? 'Darker shades represent higher total assets.'
