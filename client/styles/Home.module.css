@@ -37,6 +37,20 @@
   color: #475569;
 }
 
+.headerLink {
+  display: inline-flex;
+  margin-top: 1rem;
+  color: #4338ca;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.headerLink:hover,
+.headerLink:focus {
+  text-decoration: underline;
+  outline: none;
+}
+
 .searchSection {
   position: relative;
   margin-bottom: 1.5rem;
