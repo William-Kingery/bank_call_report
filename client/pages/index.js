@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import styles from '../styles/Home.module.css';
+import Link from 'next/link';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
@@ -679,6 +680,9 @@ export default function Home() {
           <p className={styles.subtitle}>
             Start typing a bank name to view assets, equity, and ROA over time.
           </p>
+          <Link className={styles.headerLink} href="/national-averages">
+            View national averages overview
+          </Link>
         </div>
       </div>
 
