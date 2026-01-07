@@ -233,17 +233,24 @@ router.get('/state-assets', async (req, res) => {
   try {
     const segment = req.query.segment;
     const quarter = req.query.quarter;
+    const year = req.query.year ? Number(req.query.year) : null;
     const range = getSegmentRange(segment);
     const conditions = ['s.STNAME IS NOT NULL', 'f.ASSET IS NOT NULL'];
     const params = [];
 
-    let targetQuarter = quarter;
-    if (!targetQuarter) {
-      const [latestRows] = await pool.query(`SELECT MAX(CALLYM) AS callym FROM fdic_fts`);
-      targetQuarter = latestRows?.[0]?.callym ?? null;
+    let targetQuarter = null;
+    if (!year) {
+      targetQuarter = quarter;
+      if (!targetQuarter) {
+        const [latestRows] = await pool.query(`SELECT MAX(CALLYM) AS callym FROM fdic_fts`);
+        targetQuarter = latestRows?.[0]?.callym ?? null;
+      }
     }
 
-    if (targetQuarter) {
+    if (year) {
+      conditions.push('FLOOR(f.CALLYM / 100) = ?');
+      params.push(year);
+    } else if (targetQuarter) {
       conditions.push('f.CALLYM = ?');
       params.push(targetQuarter);
     }

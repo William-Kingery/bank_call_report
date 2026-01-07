@@ -110,7 +110,8 @@ const getTileFill = (value, min, max) => {
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
-  const [latestQuarter, setLatestQuarter] = useState('');
+  const [availableQuarters, setAvailableQuarters] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -131,12 +132,16 @@ const NationalAverages = () => {
           .map((item) => String(item.callym))
           .filter((value) => value)
           .sort((a, b) => Number(b) - Number(a));
+        setAvailableQuarters(availableQuarters);
         if (availableQuarters.length) {
-          setLatestQuarter(availableQuarters[0]);
+          setSelectedPeriod(`quarter:${availableQuarters[0]}`);
+        } else {
+          setSelectedPeriod('');
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
-          setLatestQuarter('');
+          setAvailableQuarters([]);
+          setSelectedPeriod('');
         }
       } finally {
       }
@@ -157,6 +162,14 @@ const NationalAverages = () => {
         const queryParams = new URLSearchParams();
         if (selectedPortfolio && selectedPortfolio !== 'National Average') {
           queryParams.set('segment', selectedPortfolio);
+        }
+        if (selectedPeriod) {
+          const [periodType, periodValue] = selectedPeriod.split(':');
+          if (periodType === 'year') {
+            queryParams.set('year', periodValue);
+          } else if (periodType === 'quarter') {
+            queryParams.set('quarter', periodValue);
+          }
         }
         const queryString = queryParams.toString();
         const response = await fetch(`${API_BASE}/state-assets${queryString ? `?${queryString}` : ''}`, {
@@ -179,7 +192,30 @@ const NationalAverages = () => {
     fetchStateAssets();
 
     return () => controller.abort();
-  }, [selectedPortfolio]);
+  }, [selectedPortfolio, selectedPeriod]);
+
+  const yearOptions = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        availableQuarters
+          .map((quarter) => Math.floor(Number(quarter) / 100))
+          .filter((year) => Number.isFinite(year))
+      )
+    );
+    years.sort((a, b) => b - a);
+    return years;
+  }, [availableQuarters]);
+
+  const selectedPeriodLabel = useMemo(() => {
+    if (!selectedPeriod) {
+      return '';
+    }
+    const [periodType, periodValue] = selectedPeriod.split(':');
+    if (periodType === 'year') {
+      return `Year ${periodValue}`;
+    }
+    return formatQuarter(periodValue);
+  }, [selectedPeriod]);
 
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
@@ -229,10 +265,34 @@ const NationalAverages = () => {
             <p className={styles.sectionKicker}>Latest assets by state</p>
             <h2 className={styles.sectionTitle}>Where banking assets are concentrated nationwide</h2>
             <p className={styles.sectionSubtitle}>
-              Each tile shows total assets for the latest quarter in the FDIC FTS table.
+              Each tile shows total assets for the selected period in the FDIC FTS table.
             </p>
           </div>
           <div className={styles.filterControls}>
+            <label className={styles.selectLabel}>
+              Assets display
+              <select
+                className={styles.select}
+                value={selectedPeriod}
+                onChange={(event) => setSelectedPeriod(event.target.value)}
+                disabled={!availableQuarters.length}
+              >
+                <optgroup label="Quarterly">
+                  {availableQuarters.map((option) => (
+                    <option key={option} value={`quarter:${option}`}>
+                      {formatQuarter(option)}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Yearly">
+                  {yearOptions.map((option) => (
+                    <option key={option} value={`year:${option}`}>
+                      {option}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+            </label>
             <label className={styles.selectLabel}>
               Portfolio view
               <select
@@ -328,8 +388,8 @@ const NationalAverages = () => {
               <span>{formatCurrency(minAsset)}</span>
               <span>{formatCurrency(maxAsset)}</span>
             </div>
-            {latestQuarter ? (
-              <p className={styles.legendDate}>As of {formatQuarter(latestQuarter)}</p>
+            {selectedPeriodLabel ? (
+              <p className={styles.legendDate}>As of {selectedPeriodLabel}</p>
             ) : null}
             <p className={styles.legendNote}>
               {selectedRegion === 'All Regions'
