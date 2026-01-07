@@ -138,39 +138,45 @@
   align-items: center;
 }
 
-.tileMap {
+.mapContainer {
+  position: relative;
   width: 100%;
   max-width: 760px;
 }
 
-.tile {
-  stroke: rgba(255, 255, 255, 0.8);
-  stroke-width: 2;
+.usMap {
+  width: 100%;
+}
+
+.usMap path {
+  cursor: pointer;
+  transition: fill 0.2s ease;
   filter: drop-shadow(0 6px 10px rgba(66, 56, 88, 0.12));
 }
 
-.tileLabel {
-  font-size: 0.7rem;
-  font-weight: 700;
-  fill: #2f2540;
+.mapTooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 0.5rem 0.65rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  min-width: 140px;
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+  z-index: 2;
 }
 
-.tileLabelMuted {
-  font-size: 0.7rem;
+.mapTooltipTitle {
+  margin: 0;
   font-weight: 700;
-  fill: rgba(47, 37, 64, 0.4);
 }
 
-.tileValue {
-  font-size: 0.72rem;
-  font-weight: 700;
-  fill: #2f2540;
-}
-
-.tileValueMuted {
-  font-size: 0.72rem;
-  font-weight: 700;
-  fill: rgba(47, 37, 64, 0.4);
+.mapTooltipValue {
+  margin: 0.15rem 0 0;
+  color: #e2e8f0;
+  font-weight: 600;
 }
 
 .legend {

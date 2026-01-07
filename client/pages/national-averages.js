@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import USAMap from 'react-us-map';
 import styles from '../styles/NationalAverages.module.css';
 import usStateTiles from '../data/usStateTiles';
 
@@ -116,6 +117,9 @@ const NationalAverages = () => {
   const [stateAssets, setStateAssets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hoveredState, setHoveredState] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const mapContainerRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -227,6 +231,13 @@ const NationalAverages = () => {
     }, {});
   }, [stateAssets]);
 
+  const stateNameByAbbr = useMemo(() => {
+    return usStateTiles.reduce((acc, tile) => {
+      acc[tile.abbr] = tile.name;
+      return acc;
+    }, {});
+  }, []);
+
   const isStateInRegion =
     selectedRegion === 'All Regions'
       ? () => true
@@ -239,12 +250,44 @@ const NationalAverages = () => {
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
 
-  const tileSize = 48;
-  const tileGap = 6;
-  const columns = 13;
-  const rows = 6;
-  const svgWidth = columns * (tileSize + tileGap) - tileGap;
-  const svgHeight = rows * (tileSize + tileGap) - tileGap;
+  const mapCustomization = useMemo(() => {
+    return usStateTiles.reduce((acc, tile) => {
+      const value = stateAssetMap[tile.name];
+      const inRegion = isStateInRegion(tile.name);
+      acc[tile.abbr] = {
+        fill: inRegion ? getTileFill(value, minAsset, maxAsset) : '#f1f5f9',
+        stroke: 'rgba(255, 255, 255, 0.8)',
+        strokeWidth: 2,
+      };
+      return acc;
+    }, {});
+  }, [isStateInRegion, maxAsset, minAsset, stateAssetMap]);
+
+  const handleMapHover = (event) => {
+    const target = event.target;
+    const stateAbbr =
+      target?.dataset?.name || target?.getAttribute?.('data-name') || target?.id || '';
+    if (!stateNameByAbbr[stateAbbr]) {
+      setHoveredState(null);
+      return;
+    }
+    const containerRect = mapContainerRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      setTooltipPosition({
+        x: event.clientX - containerRect.left + 12,
+        y: event.clientY - containerRect.top + 12,
+      });
+    }
+    setHoveredState(stateAbbr);
+  };
+
+  const handleMapLeave = () => {
+    setHoveredState(null);
+  };
+
+  const hoveredStateName = hoveredState ? stateNameByAbbr[hoveredState] : null;
+  const hoveredValue = hoveredStateName ? stateAssetMap[hoveredStateName] : null;
+  const hoveredInRegion = hoveredStateName ? isStateInRegion(hoveredStateName) : false;
 
   return (
     <main className={styles.main}>
@@ -266,7 +309,7 @@ const NationalAverages = () => {
             <p className={styles.sectionKicker}>Latest assets by state</p>
             <h2 className={styles.sectionTitle}>Where banking assets are concentrated nationwide</h2>
             <p className={styles.sectionSubtitle}>
-              Each tile shows total assets for the selected period in the FDIC FTS table.
+              Each state shows total assets for the selected period in the FDIC FTS table.
             </p>
           </div>
           <div className={styles.filterControls}>
@@ -329,59 +372,27 @@ const NationalAverages = () => {
         {loading ? <p className={styles.status}>Loading state assets...</p> : null}
 
         <div className={styles.mapWrapper}>
-          <svg
-            className={styles.tileMap}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          <div
+            className={styles.mapContainer}
+            ref={mapContainerRef}
+            onMouseMove={handleMapHover}
+            onMouseLeave={handleMapLeave}
             role="img"
-            aria-label="US tile map showing total assets by state"
+            aria-label="US map showing total assets by state"
           >
-            {usStateTiles.map((tile) => {
-              const value = stateAssetMap[tile.name];
-              const inRegion = isStateInRegion(tile.name);
-              const fill = inRegion ? getTileFill(value, minAsset, maxAsset) : '#f1f5f9';
-              const x = tile.x * (tileSize + tileGap);
-              const y = tile.y * (tileSize + tileGap);
-              const labelClass = inRegion ? styles.tileLabel : styles.tileLabelMuted;
-              const valueClass = inRegion ? styles.tileValue : styles.tileValueMuted;
-              return (
-                <g key={tile.name}>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={tileSize}
-                    height={tileSize}
-                    rx={10}
-                    fill={fill}
-                    className={styles.tile}
-                  >
-                    <title>
-                      {inRegion
-                        ? `${tile.name}: ${formatCurrency(value)}`
-                        : `${tile.name}: not in selected region`}
-                    </title>
-                  </rect>
-                  <text
-                    x={x + 10}
-                    y={y + 14}
-                    textAnchor="start"
-                    dominantBaseline="hanging"
-                    className={labelClass}
-                  >
-                    {tile.abbr}
-                  </text>
-                  <text
-                    x={x + tileSize / 2}
-                    y={y + tileSize / 2 + 6}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={valueClass}
-                  >
-                    {formatCurrency(value)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+            <USAMap className={styles.usMap} customize={mapCustomization} />
+            {hoveredStateName ? (
+              <div
+                className={styles.mapTooltip}
+                style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
+              >
+                <p className={styles.mapTooltipTitle}>{hoveredStateName}</p>
+                <p className={styles.mapTooltipValue}>
+                  {hoveredInRegion ? formatCurrency(hoveredValue) : 'Not in selected region'}
+                </p>
+              </div>
+            ) : null}
+          </div>
 
           <div className={styles.legend}>
             <div className={styles.legendBar} />
