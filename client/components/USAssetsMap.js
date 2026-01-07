@@ -1,17 +1,17 @@
 import { useRef, useState } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { geoCentroid } from 'd3-geo';
-import { STATE_ABBR_TO_NAME } from '../data/usStates';
+import { STATE_ABBR_TO_NAME, STATE_NAME_TO_ABBR } from '../data/usStates';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 
 const tooltipStyles = {
   position: 'absolute',
-  padding: '8px 10px',
+  padding: '10px 12px',
   background: 'rgba(15, 23, 42, 0.9)',
   color: '#f8fafc',
   borderRadius: '8px',
-  fontSize: '12px',
+  fontSize: '13px',
   pointerEvents: 'none',
   transform: 'translate(-50%, -120%)',
   whiteSpace: 'nowrap',
@@ -42,7 +42,8 @@ const USAssetsMap = ({
 
   const handleMouseEnter = (event, geo) => {
     const abbr = geo.properties?.postal;
-    const stateName = STATE_ABBR_TO_NAME[abbr];
+    const nameFromGeo = geo.properties?.name;
+    const stateName = STATE_ABBR_TO_NAME[abbr] ?? nameFromGeo;
     if (!stateName) {
       return;
     }
@@ -76,15 +77,17 @@ const USAssetsMap = ({
     <div ref={containerRef} style={{ position: 'relative' }}>
       <ComposableMap
         projection="geoAlbersUsa"
-        width={800}
-        height={500}
-        style={{ width: '100%', height: 'auto' }}
+        width={980}
+        height={620}
+        style={{ width: '100%', height: 'auto', maxWidth: '980px', margin: '0 auto' }}
       >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
             geographies.map((geo) => {
               const abbr = geo.properties?.postal;
-              const stateName = STATE_ABBR_TO_NAME[abbr];
+              const nameFromGeo = geo.properties?.name;
+              const stateName = STATE_ABBR_TO_NAME[abbr] ?? nameFromGeo;
+              const labelAbbr = abbr || (stateName ? STATE_NAME_TO_ABBR[stateName] : undefined);
               const value = stateName ? stateAssetMap[stateName] : undefined;
               const inRegion = stateName ? isStateInRegion(stateName) : false;
               const fill = !inRegion
@@ -108,20 +111,20 @@ const USAssetsMap = ({
                       pressed: { outline: 'none' },
                     }}
                   />
-                  {abbr ? (
+                  {labelAbbr ? (
                     <text
                       x={x}
                       y={y}
                       textAnchor="middle"
                       dominantBaseline="middle"
                       style={{
-                        fontSize: 8,
+                        fontSize: 9,
                         fontWeight: 600,
                         fill: inRegion ? '#1f2937' : '#94a3b8',
                         pointerEvents: 'none',
                       }}
                     >
-                      {abbr}
+                      {labelAbbr}
                     </text>
                   ) : null}
                 </g>
