@@ -271,9 +271,15 @@ router.get('/state-assets', async (req, res) => {
          s.STNAME AS stateName,
          SUM(f.ASSET) AS totalAssets
        FROM fdic_fts f
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
        JOIN fdic_structure s
-         ON s.CERT = f.CERT
-         AND s.CALLYM = f.CALLYM
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY s.STNAME
        ORDER BY totalAssets DESC`,
