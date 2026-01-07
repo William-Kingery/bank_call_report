@@ -1,0 +1,47 @@
+.mapWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.map {
+  width: 100%;
+  height: auto;
+  /* max-width: 1800px; */
+  margin: 0 auto;
+  display: block;
+}
+
+.tooltip {
+  position: absolute;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  border-radius: 10px;
+  font-size: 14px;
+  pointer-events: none;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.tooltipTitle {
+  font-weight: 600;
+}
+
+.tooltipValue {
+  margin-top: 2px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: #1f2937;
+  pointer-events: none;
+}
+
+.labelMuted {
+  font-size: 10px;
+  font-weight: 600;
+  fill: #94a3b8;
+  pointer-events: none;
+}

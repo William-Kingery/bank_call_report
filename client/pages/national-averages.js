@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import styles from '../styles/NationalAverages.module.css';
-import usStateTiles from '../data/usStateTiles';
+import USAssetsMap from '../components/USAssetsMap';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
@@ -232,19 +232,12 @@ const NationalAverages = () => {
       ? () => true
       : (stateName) => REGION_BY_STATE[stateName] === selectedRegion;
 
-  const assetValues = usStateTiles
-    .filter((tile) => isStateInRegion(tile.name))
-    .map((tile) => stateAssetMap[tile.name])
+  const assetValues = stateAssets
+    .filter((item) => isStateInRegion(item.stateName))
+    .map((item) => Number(item.totalAssets))
     .filter(Number.isFinite);
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
-
-  const tileSize = 48;
-  const tileGap = 6;
-  const columns = 13;
-  const rows = 6;
-  const svgWidth = columns * (tileSize + tileGap) - tileGap;
-  const svgHeight = rows * (tileSize + tileGap) - tileGap;
 
   return (
     <main className={styles.main}>
@@ -329,59 +322,14 @@ const NationalAverages = () => {
         {loading ? <p className={styles.status}>Loading state assets...</p> : null}
 
         <div className={styles.mapWrapper}>
-          <svg
-            className={styles.tileMap}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            role="img"
-            aria-label="US tile map showing total assets by state"
-          >
-            {usStateTiles.map((tile) => {
-              const value = stateAssetMap[tile.name];
-              const inRegion = isStateInRegion(tile.name);
-              const fill = inRegion ? getTileFill(value, minAsset, maxAsset) : '#f1f5f9';
-              const x = tile.x * (tileSize + tileGap);
-              const y = tile.y * (tileSize + tileGap);
-              const labelClass = inRegion ? styles.tileLabel : styles.tileLabelMuted;
-              const valueClass = inRegion ? styles.tileValue : styles.tileValueMuted;
-              return (
-                <g key={tile.name}>
-                  <rect
-                    x={x}
-                    y={y}
-                    width={tileSize}
-                    height={tileSize}
-                    rx={10}
-                    fill={fill}
-                    className={styles.tile}
-                  >
-                    <title>
-                      {inRegion
-                        ? `${tile.name}: ${formatCurrency(value)}`
-                        : `${tile.name}: not in selected region`}
-                    </title>
-                  </rect>
-                  <text
-                    x={x + 10}
-                    y={y + 14}
-                    textAnchor="start"
-                    dominantBaseline="hanging"
-                    className={labelClass}
-                  >
-                    {tile.abbr}
-                  </text>
-                  <text
-                    x={x + tileSize / 2}
-                    y={y + tileSize / 2 + 6}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={valueClass}
-                  >
-                    {formatCurrency(value)}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+          <USAssetsMap
+            stateAssetMap={stateAssetMap}
+            minAsset={minAsset}
+            maxAsset={maxAsset}
+            isStateInRegion={isStateInRegion}
+            formatCurrency={formatCurrency}
+            getTileFill={getTileFill}
+          />
 
           <div className={styles.legend}>
             <div className={styles.legendBar} />
