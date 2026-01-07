@@ -1,11 +1,12 @@
 .mapWrapper {
   position: relative;
+  width: 100%;
 }
 
 .map {
   width: 100%;
   height: auto;
-  max-width: 1400px;
+  /* max-width: 1800px; */
   margin: 0 auto;
   display: block;
 }
