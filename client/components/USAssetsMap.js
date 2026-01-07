@@ -2,21 +2,9 @@ import { useRef, useState } from 'react';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { geoCentroid } from 'd3-geo';
 import { STATE_ABBR_TO_NAME, STATE_NAME_TO_ABBR } from '../data/usStates';
+import styles from '../styles/USAssetsMap.module.css';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
-
-const tooltipStyles = {
-  position: 'absolute',
-  padding: '10px 12px',
-  background: 'rgba(15, 23, 42, 0.9)',
-  color: '#f8fafc',
-  borderRadius: '8px',
-  fontSize: '13px',
-  pointerEvents: 'none',
-  transform: 'translate(-50%, -120%)',
-  whiteSpace: 'nowrap',
-  zIndex: 2,
-};
 
 const USAssetsMap = ({
   stateAssetMap,
@@ -74,12 +62,12 @@ const USAssetsMap = ({
   const handleMouseLeave = () => setTooltip(null);
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} className={styles.mapWrapper}>
       <ComposableMap
         projection="geoAlbersUsa"
-        width={1200}
-        height={760}
-        style={{ width: '100%', height: 'auto', maxWidth: '1200px', margin: '0 auto' }}
+        width={1400}
+        height={880}
+        className={styles.map}
       >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
@@ -117,12 +105,7 @@ const USAssetsMap = ({
                       y={y}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      style={{
-                        fontSize: 9,
-                        fontWeight: 600,
-                        fill: inRegion ? '#1f2937' : '#94a3b8',
-                        pointerEvents: 'none',
-                      }}
+                      className={inRegion ? styles.label : styles.labelMuted}
                     >
                       {labelAbbr}
                     </text>
@@ -134,9 +117,9 @@ const USAssetsMap = ({
         </Geographies>
       </ComposableMap>
       {tooltip ? (
-        <div style={{ ...tooltipStyles, left: tooltip.x, top: tooltip.y }}>
-          <div style={{ fontWeight: 600 }}>{tooltip.stateName}</div>
-          <div>
+        <div className={styles.tooltip} style={{ left: tooltip.x, top: tooltip.y }}>
+          <div className={styles.tooltipTitle}>{tooltip.stateName}</div>
+          <div className={styles.tooltipValue}>
             {Number.isFinite(tooltip.value)
               ? formatCurrency(tooltip.value)
               : 'No data'}
