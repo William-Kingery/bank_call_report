@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import { stateNameToAbbr, stateNameToCoords } from '../utils/stateGeo.js';
+import { stateNameToAbbr, stateNameToCoords, stateNames } from '../utils/stateGeo.js';
 
 const router = Router();
 
@@ -14,6 +14,10 @@ const segmentRanges = {
 };
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
+  acc.set(name.toLowerCase(), name);
+  return acc;
+}, new Map());
 
 router.get('/search', async (req, res) => {
   const { query } = req.query;
@@ -271,16 +275,43 @@ router.get('/state-assets', async (req, res) => {
          s.STNAME AS stateName,
          SUM(f.ASSET) AS totalAssets
        FROM fdic_fts f
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
        JOIN fdic_structure s
-         ON s.CERT = f.CERT
-         AND s.CALLYM = f.CALLYM
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY s.STNAME
        ORDER BY totalAssets DESC`,
       params
     );
 
-    res.json({ results: rows });
+    const results = rows.map((row) => {
+      const rawState = row.stateName;
+      const trimmedState = typeof rawState === 'string' ? rawState.trim() : rawState;
+      let normalizedState = trimmedState;
+
+      if (typeof trimmedState === 'string') {
+        const upperState = trimmedState.toUpperCase();
+        const lowerState = trimmedState.toLowerCase();
+        if (stateNames[upperState]) {
+          normalizedState = stateNames[upperState];
+        } else if (canonicalStateNames.has(lowerState)) {
+          normalizedState = canonicalStateNames.get(lowerState);
+        }
+      }
+
+      return {
+        ...row,
+        stateName: normalizedState,
+      };
+    });
+
+    res.json({ results });
   } catch (error) {
     console.error('Error fetching state assets:', error);
     res.status(500).json({ message: 'Failed to fetch state assets' });
