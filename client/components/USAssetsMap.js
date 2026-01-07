@@ -74,7 +74,12 @@ const USAssetsMap = ({
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
-      <ComposableMap projection="geoAlbersUsa">
+      <ComposableMap
+        projection="geoAlbersUsa"
+        width={800}
+        height={500}
+        style={{ width: '100%', height: 'auto' }}
+      >
         <Geographies geography={GEO_URL}>
           {({ geographies }) =>
             geographies.map((geo) => {
