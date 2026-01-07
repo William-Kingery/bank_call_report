@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import USAMap from 'react-us-map';
+import USAMap from 'react-usa-map';
 import styles from '../styles/NationalAverages.module.css';
 import usStateTiles from '../data/usStateTiles';
 
