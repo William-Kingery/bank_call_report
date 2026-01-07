@@ -82,6 +82,7 @@ const formatQuarter = (callym) => {
 
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
+  if (value === 0) return '$0';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',

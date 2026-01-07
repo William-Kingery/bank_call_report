@@ -14,6 +14,10 @@ const segmentRanges = {
 };
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
+  acc.set(name.toLowerCase(), name);
+  return acc;
+}, new Map());
 
 router.get('/search', async (req, res) => {
   const { query } = req.query;
@@ -288,10 +292,19 @@ router.get('/state-assets', async (req, res) => {
 
     const results = rows.map((row) => {
       const rawState = row.stateName;
-      const normalizedState =
-        typeof rawState === 'string' && stateNames[rawState.toUpperCase()]
-          ? stateNames[rawState.toUpperCase()]
-          : rawState;
+      const trimmedState = typeof rawState === 'string' ? rawState.trim() : rawState;
+      let normalizedState = trimmedState;
+
+      if (typeof trimmedState === 'string') {
+        const upperState = trimmedState.toUpperCase();
+        const lowerState = trimmedState.toLowerCase();
+        if (stateNames[upperState]) {
+          normalizedState = stateNames[upperState];
+        } else if (canonicalStateNames.has(lowerState)) {
+          normalizedState = canonicalStateNames.get(lowerState);
+        }
+      }
+
       return {
         ...row,
         stateName: normalizedState,
