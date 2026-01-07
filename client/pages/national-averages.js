@@ -326,8 +326,6 @@ const NationalAverages = () => {
             stateAssetMap={stateAssetMap}
             minAsset={minAsset}
             maxAsset={maxAsset}
-            selectedPeriodLabel={selectedPeriodLabel}
-            selectedRegion={selectedRegion}
             isStateInRegion={isStateInRegion}
             formatCurrency={formatCurrency}
             getTileFill={getTileFill}

@@ -22,8 +22,6 @@ const USAssetsMap = ({
   stateAssetMap,
   minAsset,
   maxAsset,
-  selectedPeriodLabel,
-  selectedRegion,
   isStateInRegion,
   formatCurrency,
   getTileFill,
