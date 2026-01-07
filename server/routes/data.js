@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import pool from '../db.js';
-import { stateNameToAbbr, stateNameToCoords } from '../utils/stateGeo.js';
+import { stateNameToAbbr, stateNameToCoords, stateNames } from '../utils/stateGeo.js';
 
 const router = Router();
 
@@ -286,7 +286,19 @@ router.get('/state-assets', async (req, res) => {
       params
     );
 
-    res.json({ results: rows });
+    const results = rows.map((row) => {
+      const rawState = row.stateName;
+      const normalizedState =
+        typeof rawState === 'string' && stateNames[rawState.toUpperCase()]
+          ? stateNames[rawState.toUpperCase()]
+          : rawState;
+      return {
+        ...row,
+        stateName: normalizedState,
+      };
+    });
+
+    res.json({ results });
   } catch (error) {
     console.error('Error fetching state assets:', error);
     res.status(500).json({ message: 'Failed to fetch state assets' });
