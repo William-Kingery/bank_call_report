@@ -1,6 +1,7 @@
 .mapWrapper {
   position: relative;
   width: 100%;
+  background: #e5e7eb;
 }
 
 .map {
