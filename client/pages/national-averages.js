@@ -259,7 +259,8 @@ const NationalAverages = () => {
             <p className={styles.sectionKicker}>Latest assets by state</p>
             <h2 className={styles.sectionTitle}>Where banking assets are concentrated nationwide</h2>
             <p className={styles.sectionSubtitle}>
-              Each tile shows total assets for the selected period in the FDIC FTS table.
+              Each tile shows total assets (in thousands) for the selected period in the FDIC FTS
+              table.
             </p>
           </div>
           <div className={styles.filterControls}>
