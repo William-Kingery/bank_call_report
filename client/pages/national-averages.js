@@ -82,13 +82,13 @@ const formatQuarter = (callym) => {
 
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
-  if (value === 0) return '$0';
-  return new Intl.NumberFormat('en-US', {
+  if (value === 0) return '$0K';
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
+  return `${formatted}K`;
 };
 
 const getTileFill = (value, min, max) => {
@@ -96,12 +96,12 @@ const getTileFill = (value, min, max) => {
     return '#e5e7eb';
   }
   if (min === max) {
-    return '#9c5bd6';
+    return '#15803d';
   }
   const ratio = (value - min) / (max - min);
   const clamp = Math.max(0, Math.min(1, ratio));
-  const start = [220, 240, 255];
-  const end = [156, 70, 203];
+  const start = [220, 252, 231];
+  const end = [22, 101, 52];
   const channels = start.map((channel, index) =>
     Math.round(channel + (end[index] - channel) * clamp)
   );
@@ -257,10 +257,9 @@ const NationalAverages = () => {
         <div className={styles.mapHeader}>
           <div>
             <p className={styles.sectionKicker}>Latest assets by state</p>
-            <h2 className={styles.sectionTitle}>Where banking assets are concentrated nationwide</h2>
+            <h2 className={styles.sectionTitle}>US Nation-wide Banking</h2>
             <p className={styles.sectionSubtitle}>
-              Each tile shows total assets (in thousands) for the selected period in the FDIC FTS
-              table.
+              Total Summary for each State for the selected period
             </p>
           </div>
           <div className={styles.filterControls}>
