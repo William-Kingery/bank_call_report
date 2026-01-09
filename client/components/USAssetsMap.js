@@ -7,15 +7,15 @@ import styles from '../styles/USAssetsMap.module.css';
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 const SMALL_STATE_ABBRS = new Set(['CT', 'DE', 'DC', 'MA', 'MD', 'NH', 'NJ', 'RI', 'VT']);
 const SMALL_STATE_LABEL_OFFSETS = {
-  VT: [36, -32],
-  NH: [56, -10],
-  MA: [68, 10],
-  RI: [82, 34],
-  CT: [58, 44],
-  NJ: [62, 70],
-  DE: [80, 92],
-  MD: [50, 112],
-  DC: [66, 134],
+  VT: [28, -24],
+  NH: [44, -4],
+  MA: [52, 6],
+  RI: [64, 26],
+  CT: [46, 34],
+  NJ: [48, 58],
+  DE: [62, 76],
+  MD: [36, 86],
+  DC: [56, 102],
 };
 
 const USAssetsMap = ({
