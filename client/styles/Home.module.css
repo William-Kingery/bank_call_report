@@ -10,6 +10,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  gap: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -49,6 +50,31 @@
 .headerLink:focus {
   text-decoration: underline;
   outline: none;
+}
+
+.headerSummary {
+  text-align: right;
+  min-width: 220px;
+}
+
+.headerSummaryLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0 0 0.25rem;
+}
+
+.headerSummaryValue {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.headerSummaryContext {
+  margin: 0;
+  color: #475569;
+  font-size: 0.9rem;
 }
 
 .searchSection {
