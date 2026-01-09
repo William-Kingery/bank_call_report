@@ -89,7 +89,8 @@ const USAssetsMap = ({
                   <Geography
                     geography={geo}
                     fill={fill}
-                    stroke="#ffffff"
+                    stroke="#000000"
+                    strokeWidth={0.75}
                     onMouseEnter={(event) => handleMouseEnter(event, geo)}
                     onMouseMove={handleMouseMove}
                     onMouseLeave={handleMouseLeave}
