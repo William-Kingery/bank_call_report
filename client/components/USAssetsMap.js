@@ -82,7 +82,7 @@ const USAssetsMap = ({
         className={styles.map}
       >
         <Geographies geography={GEO_URL}>
-          {({ geographies }) =>
+          {({ geographies, projection }) =>
             geographies.map((geo) => {
               const abbr = geo.properties?.postal;
               const nameFromGeo = geo.properties?.name;
@@ -95,7 +95,8 @@ const USAssetsMap = ({
                 : Number.isFinite(value)
                   ? getTileFill(value, minAsset, maxAsset)
                   : '#e5e7eb';
-              const [x, y] = geoCentroid(geo);
+              const projectedCentroid = projection?.(geoCentroid(geo));
+              const [x, y] = projectedCentroid ?? geoCentroid(geo);
               const isSmallState = labelAbbr ? SMALL_STATE_ABBRS.has(labelAbbr) : false;
               const [offsetX, offsetY] = labelAbbr
                 ? SMALL_STATE_LABEL_OFFSETS[labelAbbr] ?? [0, 0]

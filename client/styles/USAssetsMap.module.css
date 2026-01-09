@@ -58,28 +58,43 @@
   font-size: 9px;
   font-weight: 700;
   fill: #1f2937;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 1.5;
 }
 
 .labelAbbr {
   font-size: 10px;
   font-weight: 700;
   fill: #1f2937;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 1.8;
 }
 
 .labelAbbrMuted {
   font-size: 10px;
   font-weight: 700;
   fill: #94a3b8;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 1.8;
 }
 
 .labelValue {
   font-size: 9px;
   font-weight: 600;
   fill: #1f2937;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 1.6;
 }
 
 .labelValueMuted {
   font-size: 9px;
   font-weight: 600;
   fill: #94a3b8;
+  paint-order: stroke;
+  stroke: #f8fafc;
+  stroke-width: 1.6;
 }
