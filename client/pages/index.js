@@ -493,6 +493,11 @@ export default function Home() {
   const latestReLoans = latestPoint?.LNRE;
   const latestConsumerLoans = latestPoint?.LNCON;
   const latestQuarterLabel = formatQuarterLabel(latestPoint?.callym);
+  const totalAssetsSummary =
+    latestPoint?.asset != null ? formatNumber(latestPoint.asset) : 'N/A';
+  const totalAssetsContext = latestPoint?.callym
+    ? `As of ${latestQuarterLabel}`
+    : 'Select a bank to see totals.';
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -683,6 +688,11 @@ export default function Home() {
           <Link className={styles.headerLink} href="/national-averages">
             View national averages overview
           </Link>
+        </div>
+        <div className={styles.headerSummary}>
+          <p className={styles.headerSummaryLabel}>Total assets</p>
+          <p className={styles.headerSummaryValue}>{totalAssetsSummary}</p>
+          <p className={styles.headerSummaryContext}>{totalAssetsContext}</p>
         </div>
       </div>
 
