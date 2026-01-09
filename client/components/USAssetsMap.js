@@ -5,6 +5,18 @@ import { STATE_ABBR_TO_NAME, STATE_NAME_TO_ABBR } from '../data/usStates';
 import styles from '../styles/USAssetsMap.module.css';
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
+const SMALL_STATE_ABBRS = new Set(['CT', 'DE', 'DC', 'MA', 'MD', 'NH', 'NJ', 'RI', 'VT']);
+const SMALL_STATE_LABEL_OFFSETS = {
+  CT: [20, 6],
+  DE: [22, 16],
+  DC: [24, 20],
+  MA: [24, -8],
+  MD: [24, 26],
+  NH: [18, -18],
+  NJ: [26, 8],
+  RI: [32, 0],
+  VT: [14, -22],
+};
 
 const USAssetsMap = ({
   stateAssetMap,
@@ -84,6 +96,12 @@ const USAssetsMap = ({
                   ? getTileFill(value, minAsset, maxAsset)
                   : '#e5e7eb';
               const [x, y] = geoCentroid(geo);
+              const isSmallState = labelAbbr ? SMALL_STATE_ABBRS.has(labelAbbr) : false;
+              const [offsetX, offsetY] = labelAbbr
+                ? SMALL_STATE_LABEL_OFFSETS[labelAbbr] ?? [0, 0]
+                : [0, 0];
+              const labelX = x + offsetX;
+              const labelY = y + offsetY;
               return (
                 <g key={geo.rsmKey}>
                   <Geography
@@ -101,30 +119,60 @@ const USAssetsMap = ({
                     }}
                   />
                   {labelAbbr ? (
-                    <text
-                      x={x}
-                      y={y}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      className={styles.labelGroup}
-                    >
-                      <tspan
+                    isSmallState ? (
+                      <g className={styles.labelGroup}>
+                        <line
+                          x1={x}
+                          y1={y}
+                          x2={labelX}
+                          y2={labelY}
+                          className={styles.labelCalloutLine}
+                        />
+                        <circle cx={x} cy={y} r={2.4} className={styles.labelCalloutDot} />
+                        <rect
+                          x={labelX - 13}
+                          y={labelY - 9}
+                          width={26}
+                          height={18}
+                          rx={9}
+                          className={styles.labelPill}
+                        />
+                        <text
+                          x={labelX}
+                          y={labelY}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className={styles.labelPillText}
+                        >
+                          {labelAbbr}
+                        </text>
+                      </g>
+                    ) : (
+                      <text
                         x={x}
-                        dy={Number.isFinite(value) ? -4 : 0}
-                        className={inRegion ? styles.labelAbbr : styles.labelAbbrMuted}
+                        y={y}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        className={styles.labelGroup}
                       >
-                        {labelAbbr}
-                      </tspan>
-                      {Number.isFinite(value) ? (
                         <tspan
                           x={x}
-                          dy={12}
-                          className={inRegion ? styles.labelValue : styles.labelValueMuted}
+                          dy={Number.isFinite(value) ? -4 : 0}
+                          className={inRegion ? styles.labelAbbr : styles.labelAbbrMuted}
                         >
-                          {formatCurrency(value)}
+                          {labelAbbr}
                         </tspan>
-                      ) : null}
-                    </text>
+                        {Number.isFinite(value) ? (
+                          <tspan
+                            x={x}
+                            dy={12}
+                            className={inRegion ? styles.labelValue : styles.labelValueMuted}
+                          >
+                            {formatCurrency(value)}
+                          </tspan>
+                        ) : null}
+                      </text>
+                    )
                   ) : null}
                 </g>
               );

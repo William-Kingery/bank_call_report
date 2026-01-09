@@ -37,6 +37,29 @@
   pointer-events: none;
 }
 
+.labelCalloutLine {
+  stroke: #1f2937;
+  stroke-width: 0.8;
+}
+
+.labelCalloutDot {
+  fill: #1f2937;
+  stroke: #f8fafc;
+  stroke-width: 0.6;
+}
+
+.labelPill {
+  fill: #f8fafc;
+  stroke: #1f2937;
+  stroke-width: 0.8;
+}
+
+.labelPillText {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #1f2937;
+}
+
 .labelAbbr {
   font-size: 10px;
   font-weight: 700;
