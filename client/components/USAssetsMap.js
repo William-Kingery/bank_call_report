@@ -7,15 +7,15 @@ import styles from '../styles/USAssetsMap.module.css';
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 const SMALL_STATE_ABBRS = new Set(['CT', 'DE', 'DC', 'MA', 'MD', 'NH', 'NJ', 'RI', 'VT']);
 const SMALL_STATE_LABEL_OFFSETS = {
-  CT: [20, 6],
-  DE: [22, 16],
-  DC: [24, 20],
-  MA: [24, -8],
-  MD: [24, 26],
-  NH: [18, -18],
-  NJ: [26, 8],
-  RI: [32, 0],
-  VT: [14, -22],
+  VT: [36, -32],
+  NH: [56, -10],
+  MA: [68, 10],
+  RI: [82, 34],
+  CT: [58, 44],
+  NJ: [62, 70],
+  DE: [80, 92],
+  MD: [50, 112],
+  DC: [66, 134],
 };
 
 const USAssetsMap = ({
@@ -158,20 +158,11 @@ const USAssetsMap = ({
                       >
                         <tspan
                           x={x}
-                          dy={Number.isFinite(value) ? -4 : 0}
+                          dy={0}
                           className={inRegion ? styles.labelAbbr : styles.labelAbbrMuted}
                         >
                           {labelAbbr}
                         </tspan>
-                        {Number.isFinite(value) ? (
-                          <tspan
-                            x={x}
-                            dy={12}
-                            className={inRegion ? styles.labelValue : styles.labelValueMuted}
-                          >
-                            {formatCurrency(value)}
-                          </tspan>
-                        ) : null}
                       </text>
                     )
                   ) : null}
