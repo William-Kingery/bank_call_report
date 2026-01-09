@@ -83,7 +83,7 @@ const formatQuarter = (callym) => {
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
   if (value === 0) return '$0B';
-  const billions = value / 1_000_000_000;
+  const billions = value / 1_000_000;
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
