@@ -82,31 +82,28 @@ const formatQuarter = (callym) => {
 
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
-  if (value === 0) return '$0T';
-  const trillions = value / 1_000_000_000;
+  if (value === 0) return '$0B';
+  const billions = value / 1_000_000_000;
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 2,
-  }).format(trillions);
-  return `${formatted}T`;
+  }).format(billions);
+  return `${formatted}B`;
 };
 
 const getTileFill = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
   }
+  const shades = ['#dcfce7', '#4ade80', '#166534'];
   if (min === max) {
-    return '#15803d';
+    return shades[1];
   }
   const ratio = (value - min) / (max - min);
   const clamp = Math.max(0, Math.min(1, ratio));
-  const start = [220, 252, 231];
-  const end = [22, 101, 52];
-  const channels = start.map((channel, index) =>
-    Math.round(channel + (end[index] - channel) * clamp)
-  );
-  return `rgb(${channels.join(',')})`;
+  const index = clamp < 0.34 ? 0 : clamp < 0.67 ? 1 : 2;
+  return shades[index];
 };
 
 const NationalAverages = () => {

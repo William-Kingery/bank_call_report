@@ -184,7 +184,15 @@
 .legendBar {
   height: 12px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #dcfce7, #166534);
+  background: linear-gradient(
+    90deg,
+    #dcfce7 0%,
+    #dcfce7 33%,
+    #4ade80 33%,
+    #4ade80 66%,
+    #166534 66%,
+    #166534 100%
+  );
 }
 
 .legendLabels {
