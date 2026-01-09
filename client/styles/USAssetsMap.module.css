@@ -33,16 +33,30 @@
   margin-top: 2px;
 }
 
-.label {
-  font-size: 10px;
-  font-weight: 600;
-  fill: #1f2937;
+.labelGroup {
   pointer-events: none;
 }
 
-.labelMuted {
+.labelAbbr {
   font-size: 10px;
+  font-weight: 700;
+  fill: #1f2937;
+}
+
+.labelAbbrMuted {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #94a3b8;
+}
+
+.labelValue {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #1f2937;
+}
+
+.labelValueMuted {
+  font-size: 9px;
   font-weight: 600;
   fill: #94a3b8;
-  pointer-events: none;
 }

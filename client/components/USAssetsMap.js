@@ -106,9 +106,24 @@ const USAssetsMap = ({
                       y={y}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      className={inRegion ? styles.label : styles.labelMuted}
+                      className={styles.labelGroup}
                     >
-                      {labelAbbr}
+                      <tspan
+                        x={x}
+                        dy={Number.isFinite(value) ? -4 : 0}
+                        className={inRegion ? styles.labelAbbr : styles.labelAbbrMuted}
+                      >
+                        {labelAbbr}
+                      </tspan>
+                      {Number.isFinite(value) ? (
+                        <tspan
+                          x={x}
+                          dy={12}
+                          className={inRegion ? styles.labelValue : styles.labelValueMuted}
+                        >
+                          {formatCurrency(value)}
+                        </tspan>
+                      ) : null}
                     </text>
                   ) : null}
                 </g>

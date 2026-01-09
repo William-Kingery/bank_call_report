@@ -96,7 +96,7 @@ const getTileFill = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
   }
-  const shades = ['#dcfce7', '#4ade80', '#166534'];
+  const shades = ['#fb923c', '#22c55e', '#3b82f6'];
   if (min === max) {
     return shades[1];
   }
@@ -262,7 +262,7 @@ const NationalAverages = () => {
           </div>
           <div className={styles.filterControls}>
             <label className={styles.selectLabel}>
-              Assets display
+              Qtr by Year
               <select
                 className={styles.select}
                 value={selectedPeriod}
