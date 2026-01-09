@@ -82,13 +82,14 @@ const formatQuarter = (callym) => {
 
 const formatCurrency = (value) => {
   if (!Number.isFinite(value)) return 'N/A';
-  if (value === 0) return '$0K';
+  if (value === 0) return '$0T';
+  const trillions = value / 1_000_000_000;
   const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    maximumFractionDigits: 1,
-  }).format(value);
-  return `${formatted}K`;
+    maximumFractionDigits: 2,
+  }).format(trillions);
+  return `${formatted}T`;
 };
 
 const getTileFill = (value, min, max) => {
