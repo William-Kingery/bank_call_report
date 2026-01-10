@@ -154,7 +154,7 @@ export default function Home() {
   const getAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'all' ? 48 : 64);
   const getPortfolioAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'all' ? 36 : 48);
+    view === 'latest' ? '100%' : getAxisMinWidth(length, 36);
   const getProfitabilityAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'all' ? 27 : 33);
 
