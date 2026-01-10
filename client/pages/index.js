@@ -335,10 +335,6 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Assets</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
                     <p className={styles.metricName}>Liabilities</p>
                     <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
                   </div>
