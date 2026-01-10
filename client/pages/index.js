@@ -689,11 +689,6 @@ export default function Home() {
             View national averages overview
           </Link>
         </div>
-        <div className={styles.headerSummary}>
-          <p className={styles.headerSummaryLabel}>Total assets</p>
-          <p className={styles.headerSummaryValue}>{totalAssetsSummary}</p>
-          <p className={styles.headerSummaryContext}>{totalAssetsContext}</p>
-        </div>
       </div>
 
       <section className={styles.searchSection}>
