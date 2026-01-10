@@ -3,6 +3,7 @@ import styles from '../styles/Home.module.css';
 import Link from 'next/link';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+const LAST_SELECTED_BANK_KEY = 'bank-call-report:last-selected-bank';
 
 const buildColumnData = (series, key) => {
   if (!series?.length) {
@@ -659,6 +660,23 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedSelection = window.localStorage.getItem(LAST_SELECTED_BANK_KEY);
+    if (!savedSelection) return;
+    try {
+      const parsed = JSON.parse(savedSelection);
+      if (!parsed?.cert || !parsed?.nameFull) return;
+      setSelectedCert(parsed.cert);
+      setSelectedName(parsed.nameFull);
+      setHasSelectedBank(true);
+      setQuery(parsed.nameFull);
+      fetchReportData(parsed.cert);
+    } catch (parseError) {
+      window.localStorage.removeItem(LAST_SELECTED_BANK_KEY);
+    }
+  }, []);
+
   const handleSelect = (item) => {
     setSelectedCert(item.cert);
     setSelectedName(item.nameFull);
@@ -666,6 +684,12 @@ export default function Home() {
     setQuery(item.nameFull);
     setSuggestions([]);
     fetchReportData(item.cert);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        LAST_SELECTED_BANK_KEY,
+        JSON.stringify({ cert: item.cert, nameFull: item.nameFull }),
+      );
+    }
   };
 
   const handleSubmit = (event) => {
