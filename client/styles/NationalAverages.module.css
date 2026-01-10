@@ -246,11 +246,3 @@
   color: #b91c1c;
   font-weight: 600;
 }
-
-@media (min-width: 960px) {
-  .mapWrapper {
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: space-between;
-  }
-}
