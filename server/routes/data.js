@@ -321,9 +321,10 @@ router.get('/state-assets', async (req, res) => {
 router.get('/state-assets/quarters', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      `SELECT DISTINCT CALLYM AS callym
+      `SELECT CALLYM AS callym
        FROM fdic_fts
        WHERE CALLYM IS NOT NULL
+       GROUP BY CALLYM
        ORDER BY CALLYM DESC`
     );
 

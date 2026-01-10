@@ -181,6 +181,28 @@
   gap: 0.4rem;
 }
 
+.legendSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+
+.legendSummaryLabel {
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.legendSummaryValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
 .legendBar {
   height: 12px;
   border-radius: 999px;
@@ -223,4 +245,12 @@
   margin-top: 1rem;
   color: #b91c1c;
   font-weight: 600;
+}
+
+@media (min-width: 960px) {
+  .mapWrapper {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
 }

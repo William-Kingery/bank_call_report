@@ -236,6 +236,14 @@ const NationalAverages = () => {
     .filter(Number.isFinite);
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
+  const totalAssets = stateAssets
+    .filter((item) => isStateInRegion(item.stateName))
+    .reduce((sum, item) => {
+      const value = Number(item.totalAssets);
+      return Number.isFinite(value) ? sum + value : sum;
+    }, 0);
+  const totalAssetsLabel =
+    selectedRegion === 'All Regions' ? 'All regions' : `${selectedRegion} region`;
 
   return (
     <main className={styles.main}>
@@ -330,6 +338,12 @@ const NationalAverages = () => {
           />
 
           <div className={styles.legend}>
+            <div className={styles.legendSummary}>
+              <span className={styles.legendSummaryLabel}>
+                Total assets ({totalAssetsLabel})
+              </span>
+              <span className={styles.legendSummaryValue}>{formatCurrency(totalAssets)}</span>
+            </div>
             <div className={styles.legendBar} />
             <div className={styles.legendLabels}>
               <span>{formatCurrency(minAsset)}</span>
