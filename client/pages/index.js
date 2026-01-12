@@ -981,11 +981,17 @@ export default function Home() {
                             >
                               {portfolioSeries.map((point) => (
                                 <div key={point.label} className={styles.barColumn}>
-                                  <div className={styles.barWrapper}>
+                                  <div
+                                    className={styles.barWrapper}
+                                    tabIndex={0}
+                                    aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
+                                  >
+                                    <span className={styles.barTooltip} role="tooltip">
+                                      {formatNumber(point.asset)}
+                                    </span>
                                     <div
                                       className={`${styles.bar} ${styles.assetBar}`}
                                       style={{ height: `${point.assetPercentage}%` }}
-                                      aria-label={`${point.label} assets ${formatNumber(point.asset)}`}
                                     />
                                   </div>
                                   <span className={styles.barLabel}>
@@ -1037,11 +1043,17 @@ export default function Home() {
                             >
                               {portfolioSeries.map((point) => (
                                 <div key={point.label} className={styles.barColumn}>
-                                  <div className={styles.barWrapper}>
+                                  <div
+                                    className={styles.barWrapper}
+                                    tabIndex={0}
+                                    aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
+                                  >
+                                    <span className={styles.barTooltip} role="tooltip">
+                                      {formatNumber(point.equity)}
+                                    </span>
                                     <div
                                       className={`${styles.bar} ${styles.equityBar}`}
                                       style={{ height: `${point.equityPercentage}%` }}
-                                      aria-label={`${point.label} equity ${formatNumber(point.equity)}`}
                                     />
                                   </div>
                                   <span className={styles.barLabel}>
