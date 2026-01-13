@@ -1175,13 +1175,14 @@
 
 .barWrapper {
   width: 100%;
-  height: 240px;
+  height: 260px;
   border-radius: 12px;
-  padding: 0.65rem 0.65rem 0.9rem;
+  padding: 1.6rem 0.65rem 0.9rem;
   display: flex;
   align-items: flex-end;
   position: relative;
   background: transparent;
+  outline: none;
 }
 
 .barGroup {
@@ -1199,6 +1200,36 @@
   background: var(--bar-bg, linear-gradient(180deg, #34d399, #059669));
   box-shadow: var(--bar-shadow, 0 8px 18px rgba(16, 185, 129, 0.35));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.barWrapper:hover .bar,
+.barWrapper:focus-visible .bar {
+  transform: translateY(-4px);
+  box-shadow: var(--bar-hover-shadow, var(--bar-shadow));
+}
+
+.barTooltip {
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  transform: translate(-50%, 0);
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.7rem;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.barWrapper:hover .barTooltip,
+.barWrapper:focus-visible .barTooltip {
+  opacity: 1;
+  transform: translate(-50%, -4px);
 }
 
 
