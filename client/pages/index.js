@@ -331,24 +331,21 @@ export default function Home() {
               </button>
             </div>
             <div className={styles.rangeControls} role="group" aria-label="Quarter range">
-              <button
-                type="button"
-                className={`${styles.rangeButton} ${
-                  quarterRange === 'latest-9' ? styles.rangeButtonActive : ''
-                }`}
-                onClick={() => setQuarterRange('latest-9')}
-              >
-                Latest 9 Qtrs
-              </button>
-              <button
-                type="button"
-                className={`${styles.rangeButton} ${
-                  quarterRange === 'latest-4' ? styles.rangeButtonActive : ''
-                }`}
-                onClick={() => setQuarterRange('latest-4')}
-              >
-                Latest 4 Qtrs
-              </button>
+              {[
+                { value: 'latest-9', label: 'Latest 9 Qtrs' },
+                { value: 'latest-4', label: 'Latest 4 Qtrs' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`${styles.rangeButton} ${
+                    quarterRange === option.value ? styles.rangeButtonActive : ''
+                  }`}
+                  onClick={() => setQuarterRange(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
 
             {activeTab === 'performance' && (
