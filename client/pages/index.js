@@ -45,6 +45,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
   const [activeTab, setActiveTab] = useState('performance');
+  const [quarterRange, setQuarterRange] = useState('latest-9');
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -72,13 +73,21 @@ export default function Home() {
     return reportData.points[reportData.points.length - 1];
   }, [reportData]);
 
-  const assetQualitySeries = useMemo(() => {
+  const filteredPoints = useMemo(() => {
     if (!reportData?.points?.length) return [];
-    return reportData.points.map((point) => ({
+    if (quarterRange === 'latest-4') {
+      return reportData.points.slice(-4);
+    }
+    return reportData.points.slice(-9);
+  }, [quarterRange, reportData]);
+
+  const assetQualitySeries = useMemo(() => {
+    if (!filteredPoints.length) return [];
+    return filteredPoints.map((point) => ({
       callym: point.callym,
       value: point.ccidoubt,
     }));
-  }, [reportData]);
+  }, [filteredPoints]);
 
   const maxCriticizedValue = useMemo(() => {
     if (!assetQualitySeries.length) return 0;
@@ -86,7 +95,7 @@ export default function Home() {
   }, [assetQualitySeries]);
 
   const capitalSeries = useMemo(() => {
-    if (!reportData?.points?.length) {
+    if (!filteredPoints.length) {
       return {
         tangibleEquity: [],
         ciLoans: [],
@@ -97,7 +106,7 @@ export default function Home() {
     }
 
     const buildSeries = (field) =>
-      reportData.points.map((point) => ({
+      filteredPoints.map((point) => ({
         callym: point.callym,
         value: point[field],
       }));
@@ -109,7 +118,7 @@ export default function Home() {
       highRiskLoans: buildSeries('lnhrskr'),
       constructionLoans: buildSeries('lncdt1r'),
     };
-  }, [reportData]);
+  }, [filteredPoints]);
 
   const maxTangibleEquity = useMemo(
     () => getMaxValue(capitalSeries.tangibleEquity),
@@ -321,6 +330,26 @@ export default function Home() {
                 Capital
               </button>
             </div>
+            <div className={styles.rangeControls} role="group" aria-label="Quarter range">
+              <button
+                type="button"
+                className={`${styles.rangeButton} ${
+                  quarterRange === 'latest-9' ? styles.rangeButtonActive : ''
+                }`}
+                onClick={() => setQuarterRange('latest-9')}
+              >
+                Latest 9 Qtrs
+              </button>
+              <button
+                type="button"
+                className={`${styles.rangeButton} ${
+                  quarterRange === 'latest-4' ? styles.rangeButtonActive : ''
+                }`}
+                onClick={() => setQuarterRange('latest-4')}
+              >
+                Latest 4 Qtrs
+              </button>
+            </div>
 
             {activeTab === 'performance' && (
               <div className={styles.tabPanel} role="tabpanel">
@@ -438,7 +467,7 @@ export default function Home() {
                       </tr>
                     </thead>
                     <tbody>
-                      {reportData.points.map((point) => (
+                      {filteredPoints.map((point) => (
                         <tr key={point.callym}>
                           <td>{formatQuarterLabel(point.callym)}</td>
                           <td>{formatNumber(point.ccidoubt)}</td>
