@@ -163,12 +163,8 @@ const NationalAverages = () => {
           queryParams.set('segment', selectedPortfolio);
         }
         if (selectedPeriod) {
-          const [periodType, periodValue] = selectedPeriod.split(':');
-          if (periodType === 'year') {
-            queryParams.set('year', periodValue);
-          } else if (periodType === 'quarter') {
-            queryParams.set('quarter', periodValue);
-          }
+          const [, periodValue] = selectedPeriod.split(':');
+          queryParams.set('quarter', periodValue);
         }
         const queryString = queryParams.toString();
         const response = await fetch(`${API_BASE}/state-assets${queryString ? `?${queryString}` : ''}`, {
@@ -193,26 +189,11 @@ const NationalAverages = () => {
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod]);
 
-  const yearOptions = useMemo(() => {
-    const years = Array.from(
-      new Set(
-        availableQuarters
-          .map((quarter) => Math.floor(Number(quarter) / 100))
-          .filter((year) => Number.isFinite(year))
-      )
-    );
-    years.sort((a, b) => b - a);
-    return years;
-  }, [availableQuarters]);
-
   const selectedPeriodLabel = useMemo(() => {
     if (!selectedPeriod) {
       return '';
     }
-    const [periodType, periodValue] = selectedPeriod.split(':');
-    if (periodType === 'year') {
-      return `Year ${periodValue}`;
-    }
+    const [, periodValue] = selectedPeriod.split(':');
     return formatQuarter(periodValue);
   }, [selectedPeriod]);
 
@@ -281,13 +262,6 @@ const NationalAverages = () => {
                   {availableQuarters.map((option) => (
                     <option key={option} value={`quarter:${option}`}>
                       {formatQuarter(option)}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Yearly">
-                  {yearOptions.map((option) => (
-                    <option key={option} value={`year:${option}`}>
-                      {option}
                     </option>
                   ))}
                 </optgroup>
