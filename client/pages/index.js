@@ -147,17 +147,18 @@ export default function Home() {
     return `${quarter} '${year.slice(-2)}`;
   };
 
-  const sliceSeries = (series, view) =>
-    view === 'latest' ? series.slice(Math.max(series.length - 9, 0)) : series;
+  const sliceSeries = (series, view) => {
+    const count = view === 'latest4' ? 4 : 9;
+    return series.slice(Math.max(series.length - count, 0));
+  };
 
   const getAxisMinWidth = (length, minColumnWidth = 64) =>
     `${Math.max(length * minColumnWidth, 320)}px`;
   const getAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'all' ? 48 : 64);
-  const getPortfolioAxisMinWidthForView = (length, view) =>
-    view === 'latest' ? '100%' : getAxisMinWidth(length, 36);
+    getAxisMinWidth(length, view === 'latest4' ? 72 : 64);
+  const getPortfolioAxisMinWidthForView = () => '100%';
   const getProfitabilityAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'all' ? 27 : 33);
+    getAxisMinWidth(length, view === 'latest4' ? 40 : 33);
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
@@ -278,7 +279,7 @@ export default function Home() {
     () => sliceSeries(profitabilitySeries, profitabilityView),
     [profitabilitySeries, profitabilityView],
   );
-  const profitabilityColumnWidth = profitabilityView === 'all' ? 27 : 33;
+  const profitabilityColumnWidth = profitabilityView === 'latest4' ? 40 : 33;
 
   const efficiencyViewSeries = useMemo(
     () => sliceSeries(efficiencySeries, profitabilityView),
@@ -315,7 +316,7 @@ export default function Home() {
     () => sliceSeries(assetQualitySeries, assetQualityView),
     [assetQualitySeries, assetQualityView],
   );
-  const assetQualityColumnWidth = assetQualityView === 'all' ? 36 : 44;
+  const assetQualityColumnWidth = assetQualityView === 'latest4' ? 52 : 44;
 
   const profitabilityColumnData = useMemo(
     () => ({
@@ -929,12 +930,12 @@ export default function Home() {
                       <button
                         type="button"
                         className={`${styles.chartViewButton} ${
-                          portfolioView === 'all' ? styles.chartViewButtonActive : ''
+                          portfolioView === 'latest4' ? styles.chartViewButtonActive : ''
                         }`}
-                        onClick={() => setPortfolioView('all')}
-                        aria-pressed={portfolioView === 'all'}
+                        onClick={() => setPortfolioView('latest4')}
+                        aria-pressed={portfolioView === 'latest4'}
                       >
-                        All history
+                        Latest 4 Qtrs
                       </button>
                     </div>
                   </div>
@@ -1164,26 +1165,26 @@ export default function Home() {
                         role="group"
                         aria-label="Asset quality quarter range"
                       >
-                        <button
-                          type="button"
-                          className={`${styles.chartViewButton} ${
-                            assetQualityView === 'latest' ? styles.chartViewButtonActive : ''
-                          }`}
-                          onClick={() => setAssetQualityView('latest')}
-                          aria-pressed={assetQualityView === 'latest'}
-                        >
-                          Latest 9
-                        </button>
-                        <button
-                          type="button"
-                          className={`${styles.chartViewButton} ${
-                            assetQualityView === 'all' ? styles.chartViewButtonActive : ''
-                          }`}
-                          onClick={() => setAssetQualityView('all')}
-                          aria-pressed={assetQualityView === 'all'}
-                        >
-                          All history
-                        </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          assetQualityView === 'latest' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setAssetQualityView('latest')}
+                        aria-pressed={assetQualityView === 'latest'}
+                      >
+                        Latest 9
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          assetQualityView === 'latest4' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setAssetQualityView('latest4')}
+                        aria-pressed={assetQualityView === 'latest4'}
+                      >
+                        Latest 4 Qtrs
+                      </button>
                       </div>
                     </div>
                   </div>
@@ -1594,12 +1595,12 @@ export default function Home() {
                       <button
                         type="button"
                         className={`${styles.chartViewButton} ${
-                          profitabilityView === 'all' ? styles.chartViewButtonActive : ''
+                          profitabilityView === 'latest4' ? styles.chartViewButtonActive : ''
                         }`}
-                        onClick={() => setProfitabilityView('all')}
-                        aria-pressed={profitabilityView === 'all'}
+                        onClick={() => setProfitabilityView('latest4')}
+                        aria-pressed={profitabilityView === 'latest4'}
                       >
-                        All history
+                        Latest 4 Qtrs
                       </button>
                     </div>
                   </div>
@@ -1968,12 +1969,12 @@ export default function Home() {
                       <button
                         type="button"
                         className={`${styles.chartViewButton} ${
-                          capitalView === 'all' ? styles.chartViewButtonActive : ''
+                          capitalView === 'latest4' ? styles.chartViewButtonActive : ''
                         }`}
-                        onClick={() => setCapitalView('all')}
-                        aria-pressed={capitalView === 'all'}
+                        onClick={() => setCapitalView('latest4')}
+                        aria-pressed={capitalView === 'latest4'}
                       >
-                        All history
+                        Latest 4 Qtrs
                       </button>
                     </div>
                   </div>
