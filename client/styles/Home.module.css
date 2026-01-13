@@ -130,6 +130,12 @@
   cursor: pointer;
 }
 
+.suggestionDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
 .suggestionButton:hover,
 .suggestionButton:focus {
   background: #f8fafc;
@@ -144,6 +150,11 @@
 .suggestionCert {
   font-size: 0.9rem;
   color: #475569;
+}
+
+.suggestionState {
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
 .status {

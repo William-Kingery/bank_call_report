@@ -743,7 +743,12 @@ export default function Home() {
                     className={styles.suggestionButton}
                     onClick={() => handleSelect(item)}
                   >
-                    <span className={styles.suggestionName}>{item.nameFull}</span>
+                    <span className={styles.suggestionDetails}>
+                      <span className={styles.suggestionName}>{item.nameFull}</span>
+                      {item.stateName && (
+                        <span className={styles.suggestionState}>{item.stateName}</span>
+                      )}
+                    </span>
                     <span className={styles.suggestionCert}>CERT: {item.cert}</span>
                   </button>
                 </li>

@@ -28,7 +28,10 @@ router.get('/search', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      `SELECT DISTINCT CERT AS cert, NAMEFULL AS nameFull
+      `SELECT DISTINCT
+         CERT AS cert,
+         NAMEFULL AS nameFull,
+         STNAME AS stateName
        FROM fdic_structure
        WHERE NAMEFULL LIKE CONCAT('%', ?, '%')
        ORDER BY NAMEFULL ASC
