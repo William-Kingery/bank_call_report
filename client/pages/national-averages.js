@@ -136,6 +136,7 @@ const NationalAverages = () => {
   const [error, setError] = useState(null);
   const [bankRows, setBankRows] = useState([]);
   const [bankSelections, setBankSelections] = useState({});
+  const [selectedBankCert, setSelectedBankCert] = useState('');
   const [bankLoading, setBankLoading] = useState(false);
   const [bankError, setBankError] = useState(null);
 
@@ -235,6 +236,9 @@ const NationalAverages = () => {
             return acc;
           }, {})
         );
+        if (!selectedBankCert && results.length) {
+          setSelectedBankCert(results[0].cert);
+        }
       } catch (err) {
         if (err.name !== 'AbortError') {
           setBankRows([]);
@@ -361,6 +365,41 @@ const NationalAverages = () => {
                     {option}
                   </option>
                 ))}
+              </select>
+            </label>
+            <label className={styles.selectLabel}>
+              Bank
+              <select
+                className={styles.select}
+                value={selectedBankCert}
+                onChange={(event) => setSelectedBankCert(event.target.value)}
+                disabled={!bankRows.length}
+              >
+                {bankRows.map((row) => (
+                  <option key={row.cert} value={row.cert}>
+                    {row.nameFull} (Cert {row.cert})
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={styles.selectLabel}>
+              FRB District
+              <select
+                className={styles.select}
+                value={bankSelections[selectedBankCert] || 'Unknown'}
+                onChange={(event) =>
+                  handleDistrictChange(selectedBankCert, event.target.value)
+                }
+                disabled={!selectedBankCert}
+              >
+                {FRB_DISTRICTS.map((district) => (
+                  <option key={district} value={district}>
+                    {district}
+                  </option>
+                ))}
+                {!FRB_DISTRICTS.includes(bankSelections[selectedBankCert]) ? (
+                  <option value="Unknown">Unknown</option>
+                ) : null}
               </select>
             </label>
           </div>
