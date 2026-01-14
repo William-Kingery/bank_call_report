@@ -12,8 +12,29 @@ const segmentRanges = {
   'Between $1 B and 10 B': { min: 1000000, max: 10000000 },
   'Less than 1 B': { max: 1000000 },
 };
+const FRB_DISTRICTS = {
+  1: 'Boston',
+  2: 'New York',
+  3: 'Philadelphia',
+  4: 'Cleveland',
+  5: 'Richmond',
+  6: 'Atlanta',
+  7: 'Chicago',
+  8: 'St. Louis',
+  9: 'Minneapolis',
+  10: 'Kansas City',
+  11: 'Dallas',
+  12: 'San Francisco',
+};
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+const getFrbDistrict = (fedValue) => {
+  const fedNumber = Number.parseInt(fedValue, 10);
+  if (!Number.isFinite(fedNumber)) {
+    return 'Unknown';
+  }
+  return FRB_DISTRICTS[fedNumber] ?? 'Unknown';
+};
 const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
   acc.set(name.toLowerCase(), name);
   return acc;
@@ -335,6 +356,47 @@ router.get('/state-assets/quarters', async (req, res) => {
   } catch (error) {
     console.error('Error fetching state asset quarters:', error);
     res.status(500).json({ message: 'Failed to fetch state asset quarters' });
+  }
+});
+
+router.get('/structure/banks', async (req, res) => {
+  try {
+    const limit = Number.parseInt(req.query.limit, 10);
+    const params = [];
+    const limitClause = Number.isFinite(limit) && limit > 0 ? 'LIMIT ?' : '';
+
+    if (limitClause) {
+      params.push(limit);
+    }
+
+    const [rows] = await pool.query(
+      `SELECT
+         s.CERT AS cert,
+         s.NAMEFULL AS nameFull,
+         s.STNAME AS stateName,
+         s.FED AS fed
+       FROM (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
+       ORDER BY s.NAMEFULL ASC
+       ${limitClause}`,
+      params
+    );
+
+    const results = rows.map((row) => ({
+      ...row,
+      frbDistrict: getFrbDistrict(row.fed),
+    }));
+
+    res.json({ results });
+  } catch (error) {
+    console.error('Error fetching structure data:', error);
+    res.status(500).json({ message: 'Failed to fetch structure data' });
   }
 });
 

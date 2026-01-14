@@ -236,6 +236,59 @@
   color: #6e5b8e;
 }
 
+.bankSection {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.bankTitle {
+  margin: 0.35rem 0 0;
+  font-size: 1.3rem;
+  color: #0f172a;
+}
+
+.tableWrapper {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  overflow: auto;
+  max-height: 420px;
+}
+
+.bankTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 620px;
+}
+
+.bankTable th,
+.bankTable td {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.bankTable th {
+  background: rgba(226, 232, 240, 0.6);
+  font-weight: 700;
+  color: #1e293b;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.bankTable td {
+  color: #334155;
+  vertical-align: middle;
+}
+
+.bankTable tr:last-child td {
+  border-bottom: none;
+}
+
 .status {
   margin-top: 1rem;
   color: #475569;
