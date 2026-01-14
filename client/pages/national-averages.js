@@ -32,6 +32,14 @@ const FRB_DISTRICTS = [
   'San Francisco',
 ];
 
+const getFrbDistrict = (fedValue) => {
+  const fedNumber = Number.parseInt(fedValue, 10);
+  if (!Number.isFinite(fedNumber)) {
+    return 'Unknown';
+  }
+  return FRB_DISTRICTS[fedNumber - 1] ?? 'Unknown';
+};
+
 const REGION_BY_STATE = {
   Alabama: 'South',
   Alaska: 'West',
@@ -228,7 +236,10 @@ const NationalAverages = () => {
           throw new Error('Failed to load structure data');
         }
         const data = await response.json();
-        const results = data.results ?? [];
+        const results = (data.results ?? []).map((row) => ({
+          ...row,
+          frbDistrict: getFrbDistrict(row.fed),
+        }));
         setBankRows(results);
         setBankSelections(
           results.reduce((acc, row) => {
