@@ -92,18 +92,23 @@ const formatCurrency = (value) => {
   return `${formatted}B`;
 };
 
-const getTileFill = (value, min, max) => {
+const getTileFill = (value) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
   }
   const shades = ['#facc15', '#fb923c', '#3b82f6', '#166534'];
-  if (min === max) {
+  const billions = value / 1_000_000;
+
+  if (billions < 500) {
+    return shades[0];
+  }
+  if (billions < 1000) {
+    return shades[1];
+  }
+  if (billions < 2500) {
     return shades[2];
   }
-  const ratio = (value - min) / (max - min);
-  const clamp = Math.max(0, Math.min(1, ratio));
-  const index = clamp < 0.25 ? 0 : clamp < 0.5 ? 1 : clamp < 0.75 ? 2 : 3;
-  return shades[index];
+  return shades[3];
 };
 
 const NationalAverages = () => {
