@@ -96,13 +96,13 @@ const getTileFill = (value, min, max) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
   }
-  const shades = ['#fb923c', '#22c55e', '#3b82f6'];
+  const shades = ['#facc15', '#fb923c', '#3b82f6', '#166534'];
   if (min === max) {
-    return shades[1];
+    return shades[2];
   }
   const ratio = (value - min) / (max - min);
   const clamp = Math.max(0, Math.min(1, ratio));
-  const index = clamp < 0.34 ? 0 : clamp < 0.67 ? 1 : 2;
+  const index = clamp < 0.25 ? 0 : clamp < 0.5 ? 1 : clamp < 0.75 ? 2 : 3;
   return shades[index];
 };
 
