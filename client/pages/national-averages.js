@@ -17,29 +17,6 @@ const BENCHMARK_PORTFOLIOS = [
 
 const REGION_OPTIONS = ['All Regions', 'Northeast', 'Midwest', 'South', 'West'];
 
-const FRB_DISTRICTS = [
-  'Boston',
-  'New York',
-  'Philadelphia',
-  'Cleveland',
-  'Richmond',
-  'Atlanta',
-  'Chicago',
-  'St. Louis',
-  'Minneapolis',
-  'Kansas City',
-  'Dallas',
-  'San Francisco',
-];
-
-const getFrbDistrict = (fedValue) => {
-  const fedNumber = Number.parseInt(fedValue, 10);
-  if (!Number.isFinite(fedNumber)) {
-    return 'Unknown';
-  }
-  return FRB_DISTRICTS[fedNumber - 1] ?? 'Unknown';
-};
-
 const REGION_BY_STATE = {
   Alabama: 'South',
   Alaska: 'West',
@@ -152,11 +129,6 @@ const NationalAverages = () => {
   const [stateAssets, setStateAssets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [bankRows, setBankRows] = useState([]);
-  const [bankSelections, setBankSelections] = useState({});
-  const [selectedBankCert, setSelectedBankCert] = useState('');
-  const [bankLoading, setBankLoading] = useState(false);
-  const [bankError, setBankError] = useState(null);
   const [summaryRows, setSummaryRows] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
@@ -265,64 +237,6 @@ const NationalAverages = () => {
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchBanks = async () => {
-      setBankLoading(true);
-      setBankError(null);
-      try {
-        const response = await fetch(`${API_BASE}/structure/banks`, {
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error('Failed to load structure data');
-        }
-        const data = await response.json();
-        const results = (data.results ?? []).map((row) => ({
-          ...row,
-          frbDistrict: getFrbDistrict(row.fed),
-        }));
-        setBankRows(results);
-        setBankSelections(
-          results.reduce((acc, row) => {
-            acc[row.cert] = row.frbDistrict || 'Unknown';
-            return acc;
-          }, {})
-        );
-        if (!selectedBankCert && results.length) {
-          setSelectedBankCert(results[0].cert);
-        }
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          setBankRows([]);
-          setBankError(err.message);
-        }
-      } finally {
-        setBankLoading(false);
-      }
-    };
-
-    fetchBanks();
-
-    return () => controller.abort();
-  }, []);
-
-  const handleDistrictChange = (cert, value) => {
-    setBankSelections((prev) => ({
-      ...prev,
-      [cert]: value,
-    }));
-  };
-
-  const selectedPeriodLabel = useMemo(() => {
-    if (!selectedPeriod) {
-      return '';
-    }
-    const [, periodValue] = selectedPeriod.split(':');
-    return formatQuarter(periodValue);
-  }, [selectedPeriod]);
-
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
       if (item.stateName) {
@@ -430,26 +344,6 @@ const NationalAverages = () => {
                 ))}
               </select>
             </label>
-            <label className={styles.selectLabel}>
-              FRB District
-              <select
-                className={styles.select}
-                value={bankSelections[selectedBankCert] || 'Unknown'}
-                onChange={(event) =>
-                  handleDistrictChange(selectedBankCert, event.target.value)
-                }
-                disabled={!selectedBankCert}
-              >
-                {FRB_DISTRICTS.map((district) => (
-                  <option key={district} value={district}>
-                    {district}
-                  </option>
-                ))}
-                {!FRB_DISTRICTS.includes(bankSelections[selectedBankCert]) ? (
-                  <option value="Unknown">Unknown</option>
-                ) : null}
-              </select>
-            </label>
           </div>
         </div>
 
@@ -535,58 +429,6 @@ const NationalAverages = () => {
           ) : null}
         </div>
 
-        <div className={styles.bankSection}>
-          <div>
-            <p className={styles.sectionKicker}>Structure data</p>
-            <h3 className={styles.bankTitle}>FRB District assignments</h3>
-            <p className={styles.sectionSubtitle}>
-              Assign the Federal Reserve Bank district for each bank using the structure FED code.
-            </p>
-          </div>
-          {bankError ? <p className={styles.error}>{bankError}</p> : null}
-          {bankLoading ? <p className={styles.status}>Loading bank structure data...</p> : null}
-          {!bankLoading && !bankError ? (
-            <div className={styles.tableWrapper}>
-              <table className={styles.bankTable}>
-                <thead>
-                  <tr>
-                    <th>Bank</th>
-                    <th>Cert</th>
-                    <th>State</th>
-                    <th>FRB District</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bankRows.map((row) => (
-                    <tr key={row.cert}>
-                      <td>{row.nameFull}</td>
-                      <td>{row.cert}</td>
-                      <td>{row.stateName || 'N/A'}</td>
-                      <td>
-                        <select
-                          className={styles.select}
-                          value={bankSelections[row.cert] || 'Unknown'}
-                          onChange={(event) =>
-                            handleDistrictChange(row.cert, event.target.value)
-                          }
-                        >
-                          {FRB_DISTRICTS.map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))}
-                          {!FRB_DISTRICTS.includes(bankSelections[row.cert]) ? (
-                            <option value="Unknown">Unknown</option>
-                          ) : null}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-        </div>
       </section>
     </main>
   );

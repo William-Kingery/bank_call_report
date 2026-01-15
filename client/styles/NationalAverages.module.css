@@ -219,13 +219,6 @@
   );
 }
 
-.bankSection {
-  margin-top: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
 .summarySection {
   margin-top: 2.5rem;
   display: flex;
@@ -247,14 +240,6 @@
   max-height: 420px;
 }
 
-.bankTable {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 620px;
-}
-
-.bankTable th,
-.bankTable td,
 .summaryTable th,
 .summaryTable td {
   text-align: left;
@@ -263,7 +248,6 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.35);
 }
 
-.bankTable th,
 .summaryTable th {
   background: rgba(226, 232, 240, 0.6);
   font-weight: 700;
@@ -273,13 +257,11 @@
   z-index: 1;
 }
 
-.bankTable td,
 .summaryTable td {
   color: #334155;
   vertical-align: middle;
 }
 
-.bankTable tr:last-child td,
 .summaryTable tr:last-child td {
   border-bottom: none;
 }
