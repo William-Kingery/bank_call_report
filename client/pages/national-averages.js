@@ -17,7 +17,8 @@ const BENCHMARK_PORTFOLIOS = [
 
 const REGION_OPTIONS = ['All Regions', 'Northeast', 'Midwest', 'South', 'West'];
 
-const FRB_DISTRICTS = [
+const FRB_DISTRICT_OPTIONS = [
+  'All Districts',
   'Boston',
   'New York',
   'Philadelphia',
@@ -31,14 +32,6 @@ const FRB_DISTRICTS = [
   'Dallas',
   'San Francisco',
 ];
-
-const getFrbDistrict = (fedValue) => {
-  const fedNumber = Number.parseInt(fedValue, 10);
-  if (!Number.isFinite(fedNumber)) {
-    return 'Unknown';
-  }
-  return FRB_DISTRICTS[fedNumber - 1] ?? 'Unknown';
-};
 
 const REGION_BY_STATE = {
   Alabama: 'South',
@@ -94,6 +87,60 @@ const REGION_BY_STATE = {
   Wyoming: 'West',
 };
 
+const FRB_DISTRICT_BY_STATE = {
+  Alabama: 'Atlanta',
+  Alaska: 'San Francisco',
+  Arizona: 'San Francisco',
+  Arkansas: 'St. Louis',
+  California: 'San Francisco',
+  Colorado: 'Kansas City',
+  Connecticut: 'Boston',
+  Delaware: 'Philadelphia',
+  'District of Columbia': 'Richmond',
+  Florida: 'Atlanta',
+  Georgia: 'Atlanta',
+  Hawaii: 'San Francisco',
+  Idaho: 'San Francisco',
+  Illinois: 'Chicago',
+  Indiana: 'Chicago',
+  Iowa: 'Chicago',
+  Kansas: 'Kansas City',
+  Kentucky: 'Cleveland',
+  Louisiana: 'Dallas',
+  Maine: 'Boston',
+  Maryland: 'Richmond',
+  Massachusetts: 'Boston',
+  Michigan: 'Chicago',
+  Minnesota: 'Minneapolis',
+  Mississippi: 'Atlanta',
+  Missouri: 'St. Louis',
+  Montana: 'Minneapolis',
+  Nebraska: 'Kansas City',
+  Nevada: 'San Francisco',
+  'New Hampshire': 'Boston',
+  'New Jersey': 'Philadelphia',
+  'New Mexico': 'Dallas',
+  'New York': 'New York',
+  'North Carolina': 'Richmond',
+  'North Dakota': 'Minneapolis',
+  Ohio: 'Cleveland',
+  Oklahoma: 'Kansas City',
+  Oregon: 'San Francisco',
+  Pennsylvania: 'Philadelphia',
+  'Rhode Island': 'Boston',
+  'South Carolina': 'Richmond',
+  'South Dakota': 'Minneapolis',
+  Tennessee: 'Atlanta',
+  Texas: 'Dallas',
+  Utah: 'San Francisco',
+  Vermont: 'Boston',
+  Virginia: 'Richmond',
+  Washington: 'San Francisco',
+  'West Virginia': 'Cleveland',
+  Wisconsin: 'Chicago',
+  Wyoming: 'Kansas City',
+};
+
 const formatQuarter = (callym) => {
   const numeric = Number(callym);
   if (!Number.isFinite(numeric)) return 'Unknown';
@@ -147,16 +194,12 @@ const getTileFill = (value) => {
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
+  const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [availableQuarters, setAvailableQuarters] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [bankRows, setBankRows] = useState([]);
-  const [bankSelections, setBankSelections] = useState({});
-  const [selectedBankCert, setSelectedBankCert] = useState('');
-  const [bankLoading, setBankLoading] = useState(false);
-  const [bankError, setBankError] = useState(null);
   const [summaryRows, setSummaryRows] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
@@ -265,64 +308,6 @@ const NationalAverages = () => {
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod]);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchBanks = async () => {
-      setBankLoading(true);
-      setBankError(null);
-      try {
-        const response = await fetch(`${API_BASE}/structure/banks`, {
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error('Failed to load structure data');
-        }
-        const data = await response.json();
-        const results = (data.results ?? []).map((row) => ({
-          ...row,
-          frbDistrict: getFrbDistrict(row.fed),
-        }));
-        setBankRows(results);
-        setBankSelections(
-          results.reduce((acc, row) => {
-            acc[row.cert] = row.frbDistrict || 'Unknown';
-            return acc;
-          }, {})
-        );
-        if (!selectedBankCert && results.length) {
-          setSelectedBankCert(results[0].cert);
-        }
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          setBankRows([]);
-          setBankError(err.message);
-        }
-      } finally {
-        setBankLoading(false);
-      }
-    };
-
-    fetchBanks();
-
-    return () => controller.abort();
-  }, []);
-
-  const handleDistrictChange = (cert, value) => {
-    setBankSelections((prev) => ({
-      ...prev,
-      [cert]: value,
-    }));
-  };
-
-  const selectedPeriodLabel = useMemo(() => {
-    if (!selectedPeriod) {
-      return '';
-    }
-    const [, periodValue] = selectedPeriod.split(':');
-    return formatQuarter(periodValue);
-  }, [selectedPeriod]);
-
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
       if (item.stateName) {
@@ -337,20 +322,36 @@ const NationalAverages = () => {
       ? () => true
       : (stateName) => REGION_BY_STATE[stateName] === selectedRegion;
 
+  const isStateInDistrict =
+    selectedDistrict === 'All Districts'
+      ? () => true
+      : (stateName) => FRB_DISTRICT_BY_STATE[stateName] === selectedDistrict;
+
+  const isStateVisible = (stateName) =>
+    isStateInRegion(stateName) && isStateInDistrict(stateName);
+
   const assetValues = stateAssets
-    .filter((item) => isStateInRegion(item.stateName))
+    .filter((item) => isStateVisible(item.stateName))
     .map((item) => Number(item.totalAssets))
     .filter(Number.isFinite);
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
   const totalAssets = stateAssets
-    .filter((item) => isStateInRegion(item.stateName))
+    .filter((item) => isStateVisible(item.stateName))
     .reduce((sum, item) => {
       const value = Number(item.totalAssets);
       return Number.isFinite(value) ? sum + value : sum;
     }, 0);
-  const totalAssetsLabel =
-    selectedRegion === 'All Regions' ? 'All regions' : `${selectedRegion} region`;
+  const totalAssetsLabelParts = [];
+  if (selectedRegion !== 'All Regions') {
+    totalAssetsLabelParts.push(`${selectedRegion} region`);
+  }
+  if (selectedDistrict !== 'All Districts') {
+    totalAssetsLabelParts.push(`${selectedDistrict} district`);
+  }
+  const totalAssetsLabel = totalAssetsLabelParts.length
+    ? totalAssetsLabelParts.join(', ')
+    : 'All regions';
 
   const selectedQuarterValue = selectedPeriod ? selectedPeriod.split(':')[1] : '';
 
@@ -434,20 +435,14 @@ const NationalAverages = () => {
               FRB District
               <select
                 className={styles.select}
-                value={bankSelections[selectedBankCert] || 'Unknown'}
-                onChange={(event) =>
-                  handleDistrictChange(selectedBankCert, event.target.value)
-                }
-                disabled={!selectedBankCert}
+                value={selectedDistrict}
+                onChange={(event) => setSelectedDistrict(event.target.value)}
               >
-                {FRB_DISTRICTS.map((district) => (
-                  <option key={district} value={district}>
-                    {district}
+                {FRB_DISTRICT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
                   </option>
                 ))}
-                {!FRB_DISTRICTS.includes(bankSelections[selectedBankCert]) ? (
-                  <option value="Unknown">Unknown</option>
-                ) : null}
               </select>
             </label>
           </div>
@@ -461,7 +456,7 @@ const NationalAverages = () => {
             stateAssetMap={stateAssetMap}
             minAsset={minAsset}
             maxAsset={maxAsset}
-            isStateInRegion={isStateInRegion}
+            isStateInRegion={isStateVisible}
             formatCurrency={formatCurrency}
             getTileFill={getTileFill}
           />
@@ -535,58 +530,6 @@ const NationalAverages = () => {
           ) : null}
         </div>
 
-        <div className={styles.bankSection}>
-          <div>
-            <p className={styles.sectionKicker}>Structure data</p>
-            <h3 className={styles.bankTitle}>FRB District assignments</h3>
-            <p className={styles.sectionSubtitle}>
-              Assign the Federal Reserve Bank district for each bank using the structure FED code.
-            </p>
-          </div>
-          {bankError ? <p className={styles.error}>{bankError}</p> : null}
-          {bankLoading ? <p className={styles.status}>Loading bank structure data...</p> : null}
-          {!bankLoading && !bankError ? (
-            <div className={styles.tableWrapper}>
-              <table className={styles.bankTable}>
-                <thead>
-                  <tr>
-                    <th>Bank</th>
-                    <th>Cert</th>
-                    <th>State</th>
-                    <th>FRB District</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bankRows.map((row) => (
-                    <tr key={row.cert}>
-                      <td>{row.nameFull}</td>
-                      <td>{row.cert}</td>
-                      <td>{row.stateName || 'N/A'}</td>
-                      <td>
-                        <select
-                          className={styles.select}
-                          value={bankSelections[row.cert] || 'Unknown'}
-                          onChange={(event) =>
-                            handleDistrictChange(row.cert, event.target.value)
-                          }
-                        >
-                          {FRB_DISTRICTS.map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))}
-                          {!FRB_DISTRICTS.includes(bankSelections[row.cert]) ? (
-                            <option value="Unknown">Unknown</option>
-                          ) : null}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-        </div>
       </section>
     </main>
   );
