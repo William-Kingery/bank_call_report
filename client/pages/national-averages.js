@@ -422,18 +422,6 @@ const NationalAverages = () => {
               <span className={styles.legendSummaryValue}>{formatCurrency(totalAssets)}</span>
             </div>
             <div className={styles.legendBar} />
-            <div className={styles.legendLabels}>
-              <span>{formatCurrency(minAsset)}</span>
-              <span>{formatCurrency(maxAsset)}</span>
-            </div>
-            {selectedPeriodLabel ? (
-              <p className={styles.legendDate}>As of {selectedPeriodLabel}</p>
-            ) : null}
-            <p className={styles.legendNote}>
-              {selectedRegion === 'All Regions'
-                ? 'Darker shades represent higher total assets.'
-                : `${selectedRegion} states are highlighted by asset level.`}
-            </p>
           </div>
         </div>
 

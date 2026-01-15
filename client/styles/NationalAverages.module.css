@@ -208,32 +208,15 @@
   border-radius: 999px;
   background: linear-gradient(
     90deg,
-    #fb923c 0%,
-    #fb923c 33%,
-    #22c55e 33%,
-    #22c55e 66%,
-    #3b82f6 66%,
-    #3b82f6 100%
+    #facc15 0%,
+    #facc15 25%,
+    #fb923c 25%,
+    #fb923c 50%,
+    #3b82f6 50%,
+    #3b82f6 75%,
+    #166534 75%,
+    #166534 100%
   );
-}
-
-.legendLabels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  color: #5b5272;
-}
-
-.legendDate {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #6e5b8e;
-}
-
-.legendNote {
-  margin: 0;
-  font-size: 0.8rem;
-  color: #6e5b8e;
 }
 
 .bankSection {
