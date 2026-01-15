@@ -354,6 +354,13 @@ const NationalAverages = () => {
 
   const selectedQuarterValue = selectedPeriod ? selectedPeriod.split(':')[1] : '';
 
+  const filteredSummaryRows = useMemo(() => {
+    if (!selectedQuarterValue) {
+      return summaryRows;
+    }
+    return summaryRows.filter((row) => String(row.callym) === selectedQuarterValue);
+  }, [selectedQuarterValue, summaryRows]);
+
   return (
     <main className={styles.main}>
       <div className={styles.header}>
@@ -498,7 +505,7 @@ const NationalAverages = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {summaryRows.map((row) => {
+                  {filteredSummaryRows.map((row) => {
                     const rowKey = String(row.callym);
                     const isSelected = selectedQuarterValue === rowKey;
                     return (
@@ -517,6 +524,11 @@ const NationalAverages = () => {
                       </tr>
                     );
                   })}
+                  {!filteredSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={8}>No summary data for the selected quarter.</td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
