@@ -26,6 +26,70 @@ const FRB_DISTRICTS = {
   11: 'Dallas',
   12: 'San Francisco',
 };
+const REGION_BY_STATE = {
+  Alabama: 'South',
+  Alaska: 'West',
+  Arizona: 'West',
+  Arkansas: 'South',
+  California: 'West',
+  Colorado: 'West',
+  Connecticut: 'Northeast',
+  Delaware: 'South',
+  'District of Columbia': 'South',
+  Florida: 'South',
+  Georgia: 'South',
+  Hawaii: 'West',
+  Idaho: 'West',
+  Illinois: 'Midwest',
+  Indiana: 'Midwest',
+  Iowa: 'Midwest',
+  Kansas: 'Midwest',
+  Kentucky: 'South',
+  Louisiana: 'South',
+  Maine: 'Northeast',
+  Maryland: 'South',
+  Massachusetts: 'Northeast',
+  Michigan: 'Midwest',
+  Minnesota: 'Midwest',
+  Mississippi: 'South',
+  Missouri: 'Midwest',
+  Montana: 'West',
+  Nebraska: 'Midwest',
+  Nevada: 'West',
+  'New Hampshire': 'Northeast',
+  'New Jersey': 'Northeast',
+  'New Mexico': 'West',
+  'New York': 'Northeast',
+  'North Carolina': 'South',
+  'North Dakota': 'Midwest',
+  Ohio: 'Midwest',
+  Oklahoma: 'South',
+  Oregon: 'West',
+  Pennsylvania: 'Northeast',
+  'Rhode Island': 'Northeast',
+  'South Carolina': 'South',
+  'South Dakota': 'Midwest',
+  Tennessee: 'South',
+  Texas: 'South',
+  Utah: 'West',
+  Vermont: 'Northeast',
+  Virginia: 'South',
+  Washington: 'West',
+  'West Virginia': 'South',
+  Wisconsin: 'Midwest',
+  Wyoming: 'West',
+};
+const REGION_STATES = Object.entries(REGION_BY_STATE).reduce((acc, [state, region]) => {
+  if (!acc[region]) {
+    acc[region] = [];
+  }
+  acc[region].push(state);
+  return acc;
+}, {});
+const FRB_DISTRICT_BY_NAME = Object.entries(FRB_DISTRICTS).reduce((acc, [key, value]) => {
+  acc[value] = Number.parseInt(key, 10);
+  return acc;
+}, {});
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
 const getFrbDistrict = (fedValue) => {
@@ -359,8 +423,50 @@ router.get('/state-assets/quarters', async (req, res) => {
   }
 });
 
-router.get('/national-averages/summary', async (_req, res) => {
+router.get('/national-averages/summary', async (req, res) => {
   try {
+    const segment = req.query.segment;
+    const quarter = req.query.quarter;
+    const region = req.query.region;
+    const district = req.query.district;
+    const range = getSegmentRange(segment);
+    const conditions = [];
+    const params = [];
+
+    if (quarter) {
+      conditions.push('f.CALLYM = ?');
+      params.push(quarter);
+    }
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
+    if (region && region !== 'All Regions') {
+      const states = REGION_STATES[region] ?? [];
+      if (!states.length) {
+        return res.json({ results: [] });
+      }
+      conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+      params.push(...states);
+    }
+
+    if (district && district !== 'All Districts') {
+      const fedCode = FRB_DISTRICT_BY_NAME[district];
+      if (!Number.isFinite(fedCode)) {
+        return res.json({ results: [] });
+      }
+      conditions.push('s.FED = ?');
+      params.push(fedCode);
+    }
+
     const [rows] = await pool.query(
       `SELECT
          f.CALLYM AS callym,
@@ -372,8 +478,19 @@ router.get('/national-averages/summary', async (_req, res) => {
          SUM(f.NETINC) AS netIncome,
          SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa
        FROM fdic_fts f
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY f.CALLYM
-       ORDER BY f.CALLYM DESC`
+       ORDER BY f.CALLYM DESC`,
+      params
     );
 
     res.json({ results: rows });

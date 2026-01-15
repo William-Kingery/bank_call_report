@@ -247,7 +247,22 @@ const NationalAverages = () => {
       setSummaryLoading(true);
       setSummaryError(null);
       try {
-        const response = await fetch(`${API_BASE}/national-averages/summary`, {
+        const queryParams = new URLSearchParams();
+        if (selectedPortfolio && selectedPortfolio !== 'National Average') {
+          queryParams.set('segment', selectedPortfolio);
+        }
+        if (selectedPeriod) {
+          const [, periodValue] = selectedPeriod.split(':');
+          queryParams.set('quarter', periodValue);
+        }
+        if (selectedRegion && selectedRegion !== 'All Regions') {
+          queryParams.set('region', selectedRegion);
+        }
+        if (selectedDistrict && selectedDistrict !== 'All Districts') {
+          queryParams.set('district', selectedDistrict);
+        }
+        const queryString = queryParams.toString();
+        const response = await fetch(`${API_BASE}/national-averages/summary${queryString ? `?${queryString}` : ''}`, {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -268,7 +283,7 @@ const NationalAverages = () => {
     fetchSummary();
 
     return () => controller.abort();
-  }, []);
+  }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
 
   useEffect(() => {
     const controller = new AbortController();
