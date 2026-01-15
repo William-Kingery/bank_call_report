@@ -368,21 +368,6 @@ const NationalAverages = () => {
               </select>
             </label>
             <label className={styles.selectLabel}>
-              Bank
-              <select
-                className={styles.select}
-                value={selectedBankCert}
-                onChange={(event) => setSelectedBankCert(event.target.value)}
-                disabled={!bankRows.length}
-              >
-                {bankRows.map((row) => (
-                  <option key={row.cert} value={row.cert}>
-                    {row.nameFull} (Cert {row.cert})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.selectLabel}>
               FRB District
               <select
                 className={styles.select}
