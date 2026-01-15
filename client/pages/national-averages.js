@@ -115,6 +115,16 @@ const formatCurrency = (value) => {
   return `${formatted}B`;
 };
 
+const formatCount = (value) => {
+  if (!Number.isFinite(value)) return 'N/A';
+  return new Intl.NumberFormat('en-US').format(value);
+};
+
+const formatPercentage = (value) => {
+  if (!Number.isFinite(value)) return 'N/A';
+  return `${value.toFixed(2)}%`;
+};
+
 const getTileFill = (value) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
@@ -147,6 +157,9 @@ const NationalAverages = () => {
   const [selectedBankCert, setSelectedBankCert] = useState('');
   const [bankLoading, setBankLoading] = useState(false);
   const [bankError, setBankError] = useState(null);
+  const [summaryRows, setSummaryRows] = useState([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -180,6 +193,36 @@ const NationalAverages = () => {
     };
 
     fetchQuarters();
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchSummary = async () => {
+      setSummaryLoading(true);
+      setSummaryError(null);
+      try {
+        const response = await fetch(`${API_BASE}/national-averages/summary`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to load national summary');
+        }
+        const data = await response.json();
+        setSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setSummaryRows([]);
+          setSummaryError(err.message);
+        }
+      } finally {
+        setSummaryLoading(false);
+      }
+    };
+
+    fetchSummary();
 
     return () => controller.abort();
   }, []);
@@ -309,6 +352,8 @@ const NationalAverages = () => {
   const totalAssetsLabel =
     selectedRegion === 'All Regions' ? 'All regions' : `${selectedRegion} region`;
 
+  const selectedQuarterValue = selectedPeriod ? selectedPeriod.split(':')[1] : '';
+
   return (
     <main className={styles.main}>
       <div className={styles.header}>
@@ -423,6 +468,59 @@ const NationalAverages = () => {
             </div>
             <div className={styles.legendBar} />
           </div>
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Nation-wide performance</p>
+            <h3 className={styles.bankTitle}>FDIC industry totals by quarter</h3>
+            <p className={styles.sectionSubtitle}>
+              Aggregated totals for assets, deposits, liabilities, equity, and profitability.
+            </p>
+          </div>
+          {summaryError ? <p className={styles.error}>{summaryError}</p> : null}
+          {summaryLoading ? (
+            <p className={styles.status}>Loading national summary...</p>
+          ) : null}
+          {!summaryLoading && !summaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Deposits</th>
+                    <th>Liabilities</th>
+                    <th>Equity</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {summaryRows.map((row) => {
+                    const rowKey = String(row.callym);
+                    const isSelected = selectedQuarterValue === rowKey;
+                    return (
+                      <tr
+                        key={rowKey}
+                        className={isSelected ? styles.highlightRow : undefined}
+                      >
+                        <td>{formatQuarter(row.callym)}</td>
+                        <td>{formatCount(Number(row.bankCount))}</td>
+                        <td>{formatCurrency(Number(row.assets))}</td>
+                        <td>{formatCurrency(Number(row.deposits))}</td>
+                        <td>{formatCurrency(Number(row.liabilities))}</td>
+                        <td>{formatCurrency(Number(row.equity))}</td>
+                        <td>{formatCurrency(Number(row.netIncome))}</td>
+                        <td>{formatPercentage(Number(row.roa))}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
         </div>
 
         <div className={styles.bankSection}>

@@ -359,6 +359,30 @@ router.get('/state-assets/quarters', async (req, res) => {
   }
 });
 
+router.get('/national-averages/summary', async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT
+         f.CALLYM AS callym,
+         COUNT(DISTINCT f.CERT) AS bankCount,
+         SUM(f.ASSET) AS assets,
+         SUM(f.DEP) AS deposits,
+         SUM(f.LIAB) AS liabilities,
+         SUM(f.EQ) AS equity,
+         SUM(f.NETINC) AS netIncome,
+         SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa
+       FROM fdic_fts f
+       GROUP BY f.CALLYM
+       ORDER BY f.CALLYM DESC`
+    );
+
+    res.json({ results: rows });
+  } catch (error) {
+    console.error('Error fetching national average summary:', error);
+    res.status(500).json({ message: 'Failed to fetch national average summary' });
+  }
+});
+
 router.get('/structure/banks', async (req, res) => {
   try {
     const limit = Number.parseInt(req.query.limit, 10);
