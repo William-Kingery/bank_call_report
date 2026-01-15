@@ -17,6 +17,22 @@ const BENCHMARK_PORTFOLIOS = [
 
 const REGION_OPTIONS = ['All Regions', 'Northeast', 'Midwest', 'South', 'West'];
 
+const FRB_DISTRICT_OPTIONS = [
+  'All Districts',
+  'Boston',
+  'New York',
+  'Philadelphia',
+  'Cleveland',
+  'Richmond',
+  'Atlanta',
+  'Chicago',
+  'St. Louis',
+  'Minneapolis',
+  'Kansas City',
+  'Dallas',
+  'San Francisco',
+];
+
 const REGION_BY_STATE = {
   Alabama: 'South',
   Alaska: 'West',
@@ -69,6 +85,60 @@ const REGION_BY_STATE = {
   'West Virginia': 'South',
   Wisconsin: 'Midwest',
   Wyoming: 'West',
+};
+
+const FRB_DISTRICT_BY_STATE = {
+  Alabama: 'Atlanta',
+  Alaska: 'San Francisco',
+  Arizona: 'San Francisco',
+  Arkansas: 'St. Louis',
+  California: 'San Francisco',
+  Colorado: 'Kansas City',
+  Connecticut: 'Boston',
+  Delaware: 'Philadelphia',
+  'District of Columbia': 'Richmond',
+  Florida: 'Atlanta',
+  Georgia: 'Atlanta',
+  Hawaii: 'San Francisco',
+  Idaho: 'San Francisco',
+  Illinois: 'Chicago',
+  Indiana: 'Chicago',
+  Iowa: 'Chicago',
+  Kansas: 'Kansas City',
+  Kentucky: 'Cleveland',
+  Louisiana: 'Dallas',
+  Maine: 'Boston',
+  Maryland: 'Richmond',
+  Massachusetts: 'Boston',
+  Michigan: 'Chicago',
+  Minnesota: 'Minneapolis',
+  Mississippi: 'Atlanta',
+  Missouri: 'St. Louis',
+  Montana: 'Minneapolis',
+  Nebraska: 'Kansas City',
+  Nevada: 'San Francisco',
+  'New Hampshire': 'Boston',
+  'New Jersey': 'Philadelphia',
+  'New Mexico': 'Dallas',
+  'New York': 'New York',
+  'North Carolina': 'Richmond',
+  'North Dakota': 'Minneapolis',
+  Ohio: 'Cleveland',
+  Oklahoma: 'Kansas City',
+  Oregon: 'San Francisco',
+  Pennsylvania: 'Philadelphia',
+  'Rhode Island': 'Boston',
+  'South Carolina': 'Richmond',
+  'South Dakota': 'Minneapolis',
+  Tennessee: 'Atlanta',
+  Texas: 'Dallas',
+  Utah: 'San Francisco',
+  Vermont: 'Boston',
+  Virginia: 'Richmond',
+  Washington: 'San Francisco',
+  'West Virginia': 'Cleveland',
+  Wisconsin: 'Chicago',
+  Wyoming: 'Kansas City',
 };
 
 const formatQuarter = (callym) => {
@@ -124,6 +194,7 @@ const getTileFill = (value) => {
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
+  const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [availableQuarters, setAvailableQuarters] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
@@ -251,20 +322,36 @@ const NationalAverages = () => {
       ? () => true
       : (stateName) => REGION_BY_STATE[stateName] === selectedRegion;
 
+  const isStateInDistrict =
+    selectedDistrict === 'All Districts'
+      ? () => true
+      : (stateName) => FRB_DISTRICT_BY_STATE[stateName] === selectedDistrict;
+
+  const isStateVisible = (stateName) =>
+    isStateInRegion(stateName) && isStateInDistrict(stateName);
+
   const assetValues = stateAssets
-    .filter((item) => isStateInRegion(item.stateName))
+    .filter((item) => isStateVisible(item.stateName))
     .map((item) => Number(item.totalAssets))
     .filter(Number.isFinite);
   const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
   const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
   const totalAssets = stateAssets
-    .filter((item) => isStateInRegion(item.stateName))
+    .filter((item) => isStateVisible(item.stateName))
     .reduce((sum, item) => {
       const value = Number(item.totalAssets);
       return Number.isFinite(value) ? sum + value : sum;
     }, 0);
-  const totalAssetsLabel =
-    selectedRegion === 'All Regions' ? 'All regions' : `${selectedRegion} region`;
+  const totalAssetsLabelParts = [];
+  if (selectedRegion !== 'All Regions') {
+    totalAssetsLabelParts.push(`${selectedRegion} region`);
+  }
+  if (selectedDistrict !== 'All Districts') {
+    totalAssetsLabelParts.push(`${selectedDistrict} district`);
+  }
+  const totalAssetsLabel = totalAssetsLabelParts.length
+    ? totalAssetsLabelParts.join(', ')
+    : 'All regions';
 
   const selectedQuarterValue = selectedPeriod ? selectedPeriod.split(':')[1] : '';
 
@@ -344,6 +431,20 @@ const NationalAverages = () => {
                 ))}
               </select>
             </label>
+            <label className={styles.selectLabel}>
+              FRB District
+              <select
+                className={styles.select}
+                value={selectedDistrict}
+                onChange={(event) => setSelectedDistrict(event.target.value)}
+              >
+                {FRB_DISTRICT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
         </div>
 
@@ -355,7 +456,7 @@ const NationalAverages = () => {
             stateAssetMap={stateAssetMap}
             minAsset={minAsset}
             maxAsset={maxAsset}
-            isStateInRegion={isStateInRegion}
+            isStateInRegion={isStateVisible}
             formatCurrency={formatCurrency}
             getTileFill={getTileFill}
           />
