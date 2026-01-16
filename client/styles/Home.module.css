@@ -521,6 +521,21 @@
   margin: 0;
 }
 
+.trendArrow {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.trendUp {
+  color: #16a34a;
+}
+
+.trendDown {
+  color: #dc2626;
+}
+
 .metricRatio {
   margin: 0;
   font-size: 0.95rem;

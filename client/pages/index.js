@@ -406,6 +406,10 @@ export default function Home() {
     if (!sortedPoints.length) return null;
     return sortedPoints[sortedPoints.length - 1];
   }, [sortedPoints]);
+  const priorPoint = useMemo(() => {
+    if (sortedPoints.length < 2) return null;
+    return sortedPoints[sortedPoints.length - 2];
+  }, [sortedPoints]);
   const latestRatPoint = reportData?.latestRat ?? null;
 
   const selectedAssetSegment = useMemo(
@@ -540,6 +544,9 @@ export default function Home() {
 
   const latestRwa = latestPoint?.rwa;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
+  const priorNim = priorPoint?.nimy;
+  const priorRoa = priorPoint?.roa;
+  const priorRoe = priorPoint?.roe;
   const latestAgLoans = latestPoint?.LNAG;
   const latestCILoans = latestPoint?.LNCI;
   const latestCreLoans = latestPoint?.LNCOMRE;
@@ -551,6 +558,28 @@ export default function Home() {
   const totalAssetsContext = latestPoint?.callym
     ? `As of ${latestQuarterLabel}`
     : 'Select a bank to see totals.';
+  const getMetricTrend = (latestValue, priorValue) => {
+    const latestNumber = Number(latestValue);
+    const priorNumber = Number(priorValue);
+
+    if (!Number.isFinite(latestNumber) || !Number.isFinite(priorNumber)) {
+      return null;
+    }
+
+    if (latestNumber > priorNumber) {
+      return { direction: 'up', label: 'Higher than prior quarter' };
+    }
+
+    if (latestNumber < priorNumber) {
+      return { direction: 'down', label: 'Lower than prior quarter' };
+    }
+
+    return null;
+  };
+
+  const nimTrend = getMetricTrend(latestNim, priorNim);
+  const roaTrend = getMetricTrend(latestPoint?.roa, priorRoa);
+  const roeTrend = getMetricTrend(latestPoint?.roe, priorRoe);
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -923,15 +952,58 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>NIM</p>
-                    <p className={styles.metricValue}>{formatPercentage(latestNim)}</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatPercentage(latestNim)}</p>
+                      {nimTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            nimTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={nimTrend.label}
+                          title={nimTrend.label}
+                        >
+                          {nimTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROA</p>
-                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roa)}</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestPoint?.roa)}
+                      </p>
+                      {roaTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            roaTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={roaTrend.label}
+                          title={roaTrend.label}
+                        >
+                          {roaTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>ROE</p>
-                    <p className={styles.metricValue}>{formatPercentage(latestPoint?.roe)}</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestPoint?.roe)}
+                      </p>
+                      {roeTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            roeTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={roeTrend.label}
+                          title={roeTrend.label}
+                        >
+                          {roeTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </section>
