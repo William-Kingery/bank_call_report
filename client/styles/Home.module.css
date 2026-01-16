@@ -961,6 +961,32 @@
   opacity: 0.6;
 }
 
+.ratioLineChartWrapper {
+  height: 100%;
+  padding: 0.75rem 0.75rem 0.6rem 0;
+  box-sizing: border-box;
+}
+
+.ratioLineChart {
+  width: 100%;
+  height: 100%;
+}
+
+.ratioLine {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.3));
+}
+
+.ratioLineDot {
+  fill: #fff;
+  stroke: #2563eb;
+  stroke-width: 2.5;
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.35rem;
