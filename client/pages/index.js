@@ -544,8 +544,8 @@ export default function Home() {
 
   const latestRwa = latestPoint?.rwa;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
-  const latestInterestIncome = latestRatPoint?.INTINCYQ;
-  const latestInterestExpense = latestRatPoint?.INTEXPYQ;
+  const latestInterestIncome = latestRatPoint?.INTINCY;
+  const latestInterestExpense = latestRatPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
   const priorRoa = priorPoint?.roa;
   const priorRoe = priorPoint?.roe;
@@ -950,7 +950,7 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>INTINCYQ / INTEXPYQ</p>
+                    <p className={styles.metricName}>INTINCY / INTEXPY</p>
                     <p className={styles.metricValue}>
                       {formatNumber(latestInterestIncome)}
                     </p>
