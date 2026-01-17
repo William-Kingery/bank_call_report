@@ -544,8 +544,10 @@ export default function Home() {
 
   const latestRwa = latestPoint?.rwa;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
-  const latestInterestIncome = latestRatPoint?.INTINCY;
-  const latestInterestExpense = latestRatPoint?.INTEXPY;
+  const latestInterestIncome = latestRatPoint?.INTINCY ?? latestPoint?.INTINCY;
+  const latestInterestExpense = latestRatPoint?.INTEXPY ?? latestPoint?.INTEXPY;
+  const priorInterestIncome = priorPoint?.INTINCY;
+  const priorInterestExpense = priorPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
   const priorRoa = priorPoint?.roa;
   const priorRoe = priorPoint?.roe;
@@ -582,6 +584,8 @@ export default function Home() {
   const nimTrend = getMetricTrend(latestNim, priorNim);
   const roaTrend = getMetricTrend(latestPoint?.roa, priorRoa);
   const roeTrend = getMetricTrend(latestPoint?.roe, priorRoe);
+  const interestIncomeTrend = getMetricTrend(latestInterestIncome, priorInterestIncome);
+  const interestExpenseTrend = getMetricTrend(latestInterestExpense, priorInterestExpense);
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -950,13 +954,46 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>INTINCY / INTEXPY</p>
-                    <p className={styles.metricValue}>
-                      {formatNumber(latestInterestIncome)}
-                    </p>
-                    <p className={styles.metricValue}>
-                      {formatNumber(latestInterestExpense)}
-                    </p>
+                    <p className={styles.metricName}>INTINCY</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatNumber(latestInterestIncome)}
+                      </p>
+                      {interestIncomeTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            interestIncomeTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={interestIncomeTrend.label}
+                          title={interestIncomeTrend.label}
+                        >
+                          {interestIncomeTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>INTEXPY</p>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatNumber(latestInterestExpense)}
+                      </p>
+                      {interestExpenseTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            interestExpenseTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={interestExpenseTrend.label}
+                          title={interestExpenseTrend.label}
+                        >
+                          {interestExpenseTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>NIM</p>
