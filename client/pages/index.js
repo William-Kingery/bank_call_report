@@ -89,10 +89,23 @@ export default function Home() {
     }));
   }, [filteredPoints]);
 
+  const netChargeOffSeries = useMemo(() => {
+    if (!filteredPoints.length) return [];
+    return filteredPoints.map((point) => ({
+      callym: point.callym,
+      value: point.ntlnlsqr,
+    }));
+  }, [filteredPoints]);
+
   const maxCriticizedValue = useMemo(() => {
     if (!assetQualitySeries.length) return 0;
     return getMaxValue(assetQualitySeries);
   }, [assetQualitySeries]);
+
+  const maxNetChargeOffValue = useMemo(() => {
+    if (!netChargeOffSeries.length) return 0;
+    return getMaxValue(netChargeOffSeries);
+  }, [netChargeOffSeries]);
 
   const capitalSeries = useMemo(() => {
     if (!filteredPoints.length) {
@@ -424,6 +437,17 @@ export default function Home() {
                         </div>
                       </div>
                     )}
+                  </div>
+                  <div className={styles.assetQualityCard}>
+                    <p className={styles.chartTitle}>
+                      Net charge-offs to loans &amp; leases trend
+                    </p>
+                    <ColumnChart
+                      series={netChargeOffSeries}
+                      maxValue={maxNetChargeOffValue}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
                   </div>
                 </div>
                 <div className={styles.assetQualityCard}>
