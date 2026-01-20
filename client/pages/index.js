@@ -298,8 +298,7 @@ export default function Home() {
       const nonAccrualValue = Number(point.NAAsset);
       const npaValue = Number(point.nperf);
       const loanLeaseCoValue = Number(point.DRLNLSQ);
-      const netChargeOffRatioValue = Number(point.ntlnsqr);
-
+      const netChargeOffRatioValue = Number(point.ntlnlsqr);
       return {
         label: formatQuarterLabel(point.callym),
         delinq3089: Number.isFinite(delinq3089Value) ? delinq3089Value : null,
@@ -1663,37 +1662,82 @@ export default function Home() {
                             </span>
                           )}
                           {assetQualityColumnData.loanLeaseCO.hasData ? (
-                            <div
-                              className={styles.columnChartGrid}
-                              role="img"
-                              aria-label="Loans and leases charge-offs column chart"
-                              style={{
-                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
-                                minWidth: getAxisMinWidth(
-                                  assetQualityViewSeries.length,
-                                  assetQualityColumnWidth,
-                                ),
-                              }}
-                            >
-                              {assetQualityColumnData.loanLeaseCO.values.map((point) => (
-                                <div
-                                  key={`loanLeaseCO-${point.label}`}
-                                  className={styles.columnChartBarWrapper}
-                                  title={
-                                    point.value == null
-                                      ? `${point.label}: N/A`
-                                      : `${point.label}: ${formatNumber(point.value)}`
-                                  }
-                                >
+                            <>
+                              <div
+                                className={styles.columnChartGrid}
+                                role="img"
+                                aria-label="Loans and leases charge-offs column chart"
+                                style={{
+                                  gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                  minWidth: getAxisMinWidth(
+                                    assetQualityViewSeries.length,
+                                    assetQualityColumnWidth,
+                                  ),
+                                }}
+                              >
+                                {assetQualityColumnData.loanLeaseCO.values.map((point) => (
                                   <div
-                                    className={`${styles.columnChartBar} ${styles.loanLeaseCoColumnBar} ${
-                                      point.value == null ? styles.columnChartBarEmpty : ''
-                                    }`}
-                                    style={{ height: `${point.percentage}%` }}
-                                  />
+                                    key={`loanLeaseCO-${point.label}`}
+                                    className={styles.columnChartBarWrapper}
+                                    title={
+                                      point.value == null
+                                        ? `${point.label}: N/A`
+                                        : `${point.label}: ${formatNumber(point.value)}`
+                                    }
+                                  >
+                                    <div
+                                      className={`${styles.columnChartBar} ${styles.loanLeaseCoColumnBar} ${
+                                        point.value == null ? styles.columnChartBarEmpty : ''
+                                      }`}
+                                      style={{ height: `${point.percentage}%` }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              {assetQualityColumnData.netChargeOffRatio.hasData && (
+                                <div
+                                  className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                  aria-hidden="true"
+                                  style={{
+                                    minWidth: getAxisMinWidth(
+                                      assetQualityViewSeries.length,
+                                      assetQualityColumnWidth,
+                                    ),
+                                  }}
+                                >
+                                  <svg
+                                    className={styles.ratioLineChart}
+                                    role="img"
+                                    aria-label="Net charge-offs to loans and leases ratio line chart"
+                                    viewBox={`0 0 ${netChargeOffRatioChart.width} ${netChargeOffRatioChart.height}`}
+                                    width={netChargeOffRatioChart.width}
+                                    height={netChargeOffRatioChart.height}
+                                    preserveAspectRatio="none"
+                                  >
+                                    {netChargeOffRatioChart.segments.map((segment) => (
+                                      <polyline
+                                        key={`net-chargeoff-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                        className={styles.ratioLine}
+                                        points={segment
+                                          .map((point) => `${point.x},${point.y}`)
+                                          .join(' ')}
+                                      />
+                                    ))}
+                                    {netChargeOffRatioChart.points.map((point) =>
+                                      point ? (
+                                        <circle
+                                          key={`net-chargeoff-dot-${point.label}`}
+                                          className={styles.ratioLineDot}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        />
+                                      ) : null,
+                                    )}
+                                  </svg>
                                 </div>
-                              ))}
-                            </div>
+                              )}
+                            </>
                           ) : (
                             <p className={styles.status}>No charge-off data available.</p>
                           )}
@@ -1717,89 +1761,6 @@ export default function Home() {
                       </div>
                     </div>
 
-                    <div className={styles.chartCard}>
-                      <div className={styles.lineChartBlock}>
-                        <div className={styles.lineChartHeader}>
-                          <h4 className={styles.lineChartTitle}>
-                            Net charge-offs to loans &amp; leases
-                          </h4>
-                          <p className={styles.lineChartSubhead}>Ratio of net charge-offs</p>
-                        </div>
-                        <div className={styles.lineChartBody}>
-                          <span className={styles.lineChartYAxis}>Percent</span>
-                          {assetQualityColumnData.netChargeOffRatio.max != null && (
-                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
-                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.max)}
-                            </span>
-                          )}
-                          {assetQualityColumnData.netChargeOffRatio.min != null && (
-                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
-                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.min)}
-                            </span>
-                          )}
-                          {assetQualityColumnData.netChargeOffRatio.hasData ? (
-                            <div
-                              className={styles.ratioLineChartWrapper}
-                              style={{
-                                minWidth: getAxisMinWidth(
-                                  assetQualityViewSeries.length,
-                                  assetQualityColumnWidth,
-                                ),
-                              }}
-                            >
-                              <svg
-                                className={styles.ratioLineChart}
-                                role="img"
-                                aria-label="Net charge-offs to loans and leases ratio line chart"
-                                viewBox={`0 0 ${netChargeOffRatioChart.width} ${netChargeOffRatioChart.height}`}
-                                width={netChargeOffRatioChart.width}
-                                height={netChargeOffRatioChart.height}
-                                preserveAspectRatio="none"
-                              >
-                                {netChargeOffRatioChart.segments.map((segment, index) => (
-                                  <polyline
-                                    key={`net-chargeoff-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                    className={styles.ratioLine}
-                                    points={segment
-                                      .map((point) => `${point.x},${point.y}`)
-                                      .join(' ')}
-                                  />
-                                ))}
-                                {netChargeOffRatioChart.points.map((point) =>
-                                  point ? (
-                                    <circle
-                                      key={`net-chargeoff-dot-${point.label}`}
-                                      className={styles.ratioLineDot}
-                                      cx={point.x}
-                                      cy={point.y}
-                                      r="4"
-                                    />
-                                  ) : null,
-                                )}
-                              </svg>
-                            </div>
-                          ) : (
-                            <p className={styles.status}>No net charge-off ratio data.</p>
-                          )}
-                        </div>
-                        <div
-                          className={`${styles.lineChartLabels} ${styles.assetQualityChartLabels}`}
-                          style={{
-                            gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
-                            minWidth: getAxisMinWidth(
-                              assetQualityViewSeries.length,
-                              assetQualityColumnWidth,
-                            ),
-                          }}
-                        >
-                          {assetQualityViewSeries.map((point) => (
-                            <span key={`netChargeOffRatio-label-${point.label}`}>
-                              {formatQuarterShortLabel(point.label)}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </section>
               </section>
