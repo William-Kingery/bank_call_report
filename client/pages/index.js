@@ -1662,6 +1662,16 @@ export default function Home() {
                               {formatNumber(assetQualityColumnData.loanLeaseCO.min)}
                             </span>
                           )}
+                          {assetQualityColumnData.netChargeOffRatio.max != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
+                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.netChargeOffRatio.min != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
+                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.min)}
+                            </span>
+                          )}
                           {assetQualityColumnData.loanLeaseCO.hasData ? (
                             <>
                               <div
@@ -1732,7 +1742,11 @@ export default function Home() {
                                           cx={point.x}
                                           cy={point.y}
                                           r="4"
-                                        />
+                                        >
+                                          <title>
+                                            {`${point.label}: ${formatPercentage(point.value)}`}
+                                          </title>
+                                        </circle>
                                       ) : null,
                                     )}
                                   </svg>
