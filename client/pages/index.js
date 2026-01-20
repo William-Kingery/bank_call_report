@@ -298,7 +298,7 @@ export default function Home() {
       const nonAccrualValue = Number(point.NAAsset);
       const npaValue = Number(point.nperf);
       const loanLeaseCoValue = Number(point.DRLNLSQ);
-      const netChargeOffRatioValue = Number(point.ntlnsqr);
+      const netChargeOffRatioValue = Number(point.ntlnlsqr);
 
       return {
         label: formatQuarterLabel(point.callym),
