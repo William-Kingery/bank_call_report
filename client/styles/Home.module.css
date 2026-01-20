@@ -1001,6 +1001,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   filter: drop-shadow(0 6px 10px rgba(37, 99, 235, 0.3));
+  pointer-events: none;
 }
 
 .ratioLineDot {
@@ -1023,9 +1024,34 @@
   z-index: 2;
 }
 
+.lineChartYAxisRight {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  transform-origin: right top;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 2;
+}
+
 .lineChartTick {
   position: absolute;
   left: 0.6rem;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: #64748b;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.lineChartTickRight {
+  position: absolute;
+  right: 0.6rem;
   transform: translateY(-50%);
   font-size: 0.7rem;
   color: #64748b;

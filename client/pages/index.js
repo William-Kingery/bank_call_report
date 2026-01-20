@@ -1651,6 +1651,7 @@ export default function Home() {
                         </div>
                         <div className={styles.lineChartBody}>
                           <span className={styles.lineChartYAxis}>Thousands</span>
+                          <span className={styles.lineChartYAxisRight}>Percent</span>
                           {assetQualityColumnData.loanLeaseCO.max != null && (
                             <span className={styles.lineChartTick} style={{ top: '12%' }}>
                               {formatNumber(assetQualityColumnData.loanLeaseCO.max)}
