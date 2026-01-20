@@ -354,7 +354,26 @@ export default function Home() {
   );
 
   const netChargeOffRatioChart = useMemo(() => {
-    const values = assetQualityColumnData.netChargeOffRatio.values;
+    const rawValues = assetQualityViewSeries.map((point) => ({
+      label: point.label,
+      value: Number(point?.netChargeOffRatio),
+    }));
+    const numericValues = rawValues
+      .map((point) => point.value)
+      .filter((value) => Number.isFinite(value));
+    const min = numericValues.length ? Math.min(...numericValues) : 0;
+    const max = numericValues.length ? Math.max(...numericValues) : 0;
+    const range = max - min;
+    const values = rawValues.map((point) => {
+      if (!Number.isFinite(point.value)) {
+        return { label: point.label, value: null, percentage: 0 };
+      }
+      return {
+        label: point.label,
+        value: point.value,
+        percentage: range === 0 ? 50 : ((point.value - min) / range) * 100,
+      };
+    });
     const height = 160;
     const paddingTop = 18;
     const paddingBottom = 18;
@@ -395,11 +414,7 @@ export default function Home() {
       points,
       segments,
     };
-  }, [
-    assetQualityColumnData.netChargeOffRatio.values,
-    assetQualityColumnWidth,
-    assetQualityViewSeries.length,
-  ]);
+  }, [assetQualityColumnWidth, assetQualityViewSeries]);
 
   const latestPoint = useMemo(() => {
     if (!sortedPoints.length) return null;
@@ -1662,6 +1677,16 @@ export default function Home() {
                               {formatNumber(assetQualityColumnData.loanLeaseCO.min)}
                             </span>
                           )}
+                          {assetQualityColumnData.netChargeOffRatio.max != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
+                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.netChargeOffRatio.min != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
+                              {formatPercentage(assetQualityColumnData.netChargeOffRatio.min)}
+                            </span>
+                          )}
                           {assetQualityColumnData.loanLeaseCO.hasData ? (
                             <>
                               <div
@@ -1732,7 +1757,11 @@ export default function Home() {
                                           cx={point.x}
                                           cy={point.y}
                                           r="4"
-                                        />
+                                        >
+                                          <title>
+                                            {`${point.label}: ${formatPercentage(point.value)}`}
+                                          </title>
+                                        </circle>
                                       ) : null,
                                     )}
                                   </svg>
