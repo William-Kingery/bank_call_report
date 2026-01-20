@@ -89,10 +89,92 @@ export default function Home() {
     }));
   }, [filteredPoints]);
 
+  const netChargeOffSeries = useMemo(() => {
+    if (!filteredPoints.length) return [];
+    return filteredPoints.map((point) => ({
+      callym: point.callym,
+      value: point.ntlnlsqr,
+    }));
+  }, [filteredPoints]);
+
   const maxCriticizedValue = useMemo(() => {
     if (!assetQualitySeries.length) return 0;
     return getMaxValue(assetQualitySeries);
   }, [assetQualitySeries]);
+
+  const ratioExtent = useMemo(() => {
+    if (!netChargeOffSeries.length) return { min: 0, max: 0 };
+
+    const values = netChargeOffSeries
+      .map((point) => point.value)
+      .filter((value) => value !== null && value !== undefined)
+      .map((value) => Number(value));
+
+    if (!values.length) return { min: 0, max: 0 };
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    if (min === max) {
+      return { min: min - 1, max: max + 1 };
+    }
+    const padding = Math.max(0.25, (max - min) * 0.15);
+    return { min: min - padding, max: max + padding };
+  }, [netChargeOffSeries]);
+
+  const ratioChart = useMemo(() => {
+    if (!netChargeOffSeries.length) {
+      return { points: [], path: '', width: 560, height: 180, padding: 24 };
+    }
+
+    const width = 560;
+    const height = 180;
+    const padding = 24;
+    const range = ratioExtent.max - ratioExtent.min || 1;
+
+    const points = netChargeOffSeries.map((point, index) => {
+      const value =
+        point.value === null || point.value === undefined ? null : Number(point.value);
+      const x =
+        netChargeOffSeries.length === 1
+          ? width / 2
+          : padding +
+            (index / (netChargeOffSeries.length - 1)) * (width - padding * 2);
+      const y =
+        value === null
+          ? null
+          : padding + (1 - (value - ratioExtent.min) / range) * (height - padding * 2);
+
+      return {
+        ...point,
+        value,
+        x,
+        y,
+      };
+    });
+
+    let path = '';
+    let penDown = false;
+    points.forEach((point) => {
+      if (point.y === null) {
+        penDown = false;
+        return;
+      }
+      if (!penDown) {
+        path += `M ${point.x} ${point.y}`;
+        penDown = true;
+      } else {
+        path += ` L ${point.x} ${point.y}`;
+      }
+    });
+
+    return {
+      points,
+      path,
+      width,
+      height,
+      padding,
+    };
+  }, [netChargeOffSeries, ratioExtent]);
 
   const capitalSeries = useMemo(() => {
     if (!filteredPoints.length) {
@@ -423,6 +505,78 @@ export default function Home() {
                           </div>
                         </div>
                       </div>
+                      )}
+                  </div>
+                  <div className={styles.assetQualityCard}>
+                    <p className={styles.chartTitle}>
+                      Loan &amp; lease net charge-off ratio (NTLNLSQR)
+                    </p>
+                    {netChargeOffSeries.length === 0 ? (
+                      <p className={styles.emptyState}>No quarterly data available.</p>
+                    ) : (
+                      <>
+                        <svg
+                          className={styles.RatioLineChart}
+                          viewBox={`0 0 ${ratioChart.width} ${ratioChart.height}`}
+                          role="img"
+                          aria-label="Loan and lease net charge-off ratio trend"
+                        >
+                          <defs>
+                            <linearGradient id="ratioLineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor="#38bdf8" />
+                              <stop offset="100%" stopColor="#0ea5e9" />
+                            </linearGradient>
+                          </defs>
+                          <line
+                            x1={ratioChart.padding}
+                            y1={ratioChart.height - ratioChart.padding}
+                            x2={ratioChart.width - ratioChart.padding}
+                            y2={ratioChart.height - ratioChart.padding}
+                            className={styles.ratioAxis}
+                          />
+                          <line
+                            x1={ratioChart.padding}
+                            y1={ratioChart.padding}
+                            x2={ratioChart.padding}
+                            y2={ratioChart.height - ratioChart.padding}
+                            className={styles.ratioAxis}
+                          />
+                          {ratioChart.path && (
+                            <path
+                              d={ratioChart.path}
+                              fill="none"
+                              stroke="url(#ratioLineGradient)"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          )}
+                          {ratioChart.points.map((point) =>
+                            point.y === null ? null : (
+                              <circle
+                                key={point.callym}
+                                cx={point.x}
+                                cy={point.y}
+                                r="4.5"
+                                className={styles.ratioPoint}
+                              >
+                                <title>
+                                  {formatQuarterLabel(point.callym)}:{' '}
+                                  {formatPercentage(point.value)}
+                                </title>
+                              </circle>
+                            )
+                          )}
+                        </svg>
+                        <div className={styles.lineChartLabels}>
+                          {ratioChart.points.map((point) => (
+                            <span key={point.callym}>{formatQuarterLabel(point.callym)}</span>
+                          ))}
+                        </div>
+                        <div className={styles.lineChartRange}>
+                          <span>{formatPercentage(ratioExtent.max)}</span>
+                          <span>{formatPercentage(ratioExtent.min)}</span>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -464,6 +618,7 @@ export default function Home() {
                       <tr>
                         <th scope="col">Quarter</th>
                         <th scope="col">CCIDOUBT</th>
+                        <th scope="col">NTLNLSQR</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -471,6 +626,7 @@ export default function Home() {
                         <tr key={point.callym}>
                           <td>{formatQuarterLabel(point.callym)}</td>
                           <td>{formatNumber(point.ccidoubt)}</td>
+                          <td>{formatPercentage(point.ntlnlsqr)}</td>
                         </tr>
                       ))}
                     </tbody>
