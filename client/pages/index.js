@@ -560,6 +560,7 @@ export default function Home() {
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
   const latestInterestIncome = latestRatPoint?.INTINCY ?? latestPoint?.INTINCY;
   const latestInterestExpense = latestRatPoint?.INTEXPY ?? latestPoint?.INTEXPY;
+  const latestLoanDepositRatio = latestRatPoint?.lnlsdepr ?? latestPoint?.lnlsdepr;
   const priorInterestIncome = priorPoint?.INTINCY;
   const priorInterestExpense = priorPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
@@ -958,8 +959,18 @@ export default function Home() {
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
                   </div>
                   <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Total loans &amp; leases</p>
+                    <p className={styles.metricValue}>{formatNumber(latestPoint?.lnlsgr)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
                     <p className={styles.metricName}>Total deposits</p>
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Loan to deposit ratio</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestLoanDepositRatio)}
+                    </p>
                   </div>
                   <div className={styles.metricCard}>
                     <p className={styles.metricName}>Risk-weighted assets</p>
