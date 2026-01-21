@@ -781,7 +781,7 @@ export default function Home() {
   return (
     <main className={styles.main}>
       <div className={styles.header}>
-        <div>
+        <div className={styles.headerContent}>
           <p className={styles.kicker}>FDIC Call Report explorer</p>
           <h1 className={styles.title}>Search by Bank and view performance metrics</h1>
           <h2 className={styles.secondaryTitle}>National Averages and Peer Group Trends</h2>
@@ -790,6 +790,11 @@ export default function Home() {
           </p>
           <Link className={styles.headerLink} href="/national-averages">
             View national averages overview
+          </Link>
+        </div>
+        <div className={styles.headerActions}>
+          <Link className={styles.headerLink} href="/smart-pricing">
+            Smart Pricing
           </Link>
         </div>
       </div>
