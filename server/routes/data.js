@@ -196,7 +196,9 @@ const fetchStateSegmentSummary = async ({
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
        SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
        SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0))) AS netInterestIncome,
        SUM(COALESCE(c.ERNAST, 0)) AS avgEarningAssets,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0))) AS netInterestIncome,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
          / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
@@ -295,6 +297,7 @@ const fetchSegmentSummary = async ({
        SUM(f.NETINC) AS netIncome,
        SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0))) AS netInterestIncome,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
          / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
@@ -387,6 +390,7 @@ const fetchDistrictSummary = async ({
        SUM(f.NETINC) AS netIncome,
        SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0))) AS netInterestIncome,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
          / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
@@ -872,6 +876,7 @@ router.get('/national-averages/region-summary', async (req, res) => {
       const netIncome = Number(row.netIncome) || 0;
       const interestIncome = Number(row.interestIncome) || 0;
       const interestExpense = Number(row.interestExpense) || 0;
+      const netInterestIncome = Number(row.netInterestIncome) || 0;
       const avgEarningAssets = Number(row.avgEarningAssets) || 0;
 
       if (!regionMap.has(key)) {
@@ -886,6 +891,7 @@ router.get('/national-averages/region-summary', async (req, res) => {
           netIncome: 0,
           interestIncome: 0,
           interestExpense: 0,
+          netInterestIncome: 0,
           avgEarningAssets: 0,
         });
       }
@@ -899,6 +905,7 @@ router.get('/national-averages/region-summary', async (req, res) => {
       summary.netIncome += netIncome;
       summary.interestIncome += interestIncome;
       summary.interestExpense += interestExpense;
+      summary.netInterestIncome += netInterestIncome;
       summary.avgEarningAssets += avgEarningAssets;
     });
 
@@ -922,6 +929,7 @@ router.get('/national-averages/region-summary', async (req, res) => {
         liabilities: summary.liabilities,
         equity: summary.equity,
         netIncome: summary.netIncome,
+        netInterestIncome: summary.netInterestIncome,
         roa,
         roe,
         nim,
