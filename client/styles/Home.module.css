@@ -524,7 +524,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.7rem;
+}
+
+.yoyTrend,
+.qoqTrendText {
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -557,12 +561,6 @@
   font-weight: 700;
 }
 
-.qoqTrendText {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
 
 .trendUp {
   color: #16a34a;
