@@ -521,7 +521,7 @@ const NationalAverages = () => {
                     <th>Net income</th>
                     <th>ROA</th>
                     <th>ROE</th>
-                    <th>Net interest income (NIM)</th>
+                    <th>Net interest income</th>
                   </tr>
                 </thead>
                 <tbody>
