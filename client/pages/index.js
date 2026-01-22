@@ -554,16 +554,18 @@ export default function Home() {
     return parts.length > 0 ? parts.join(', ') : null;
   }, [reportData]);
 
-  const latestLiabilities =
-    latestPoint?.asset != null && latestPoint?.eq != null
-      ? latestPoint.asset - latestPoint.eq
-      : null;
+  const getLiabilitiesValue = (point) =>
+    point?.asset != null && point?.eq != null ? point.asset - point.eq : null;
+  const latestLiabilities = getLiabilitiesValue(latestPoint);
 
   const latestRwa = latestPoint?.rwa;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
   const latestInterestIncome = latestRatPoint?.INTINCY ?? latestPoint?.INTINCY;
   const latestInterestExpense = latestRatPoint?.INTEXPY ?? latestPoint?.INTEXPY;
   const latestLoanDepositRatio = latestRatPoint?.lnlsdepr ?? latestPoint?.lnlsdepr;
+  const priorLiabilities = getLiabilitiesValue(priorPoint);
+  const priorRwa = priorPoint?.rwa;
+  const priorLoanDepositRatio = priorPoint?.lnlsdepr;
   const priorInterestIncome = priorPoint?.INTINCY;
   const priorInterestExpense = priorPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
@@ -618,6 +620,21 @@ export default function Home() {
     priorInterestExpense,
     'prior quarter',
   );
+  const assetsTrend = getMetricTrend(latestPoint?.asset, priorPoint?.asset, 'prior quarter');
+  const liabilitiesTrend = getMetricTrend(
+    latestLiabilities,
+    priorLiabilities,
+    'prior quarter',
+  );
+  const equityTrend = getMetricTrend(latestPoint?.eq, priorPoint?.eq, 'prior quarter');
+  const loansTrend = getMetricTrend(latestPoint?.lnlsgr, priorPoint?.lnlsgr, 'prior quarter');
+  const depositsTrend = getMetricTrend(latestPoint?.dep, priorPoint?.dep, 'prior quarter');
+  const loanDepositTrend = getMetricTrend(
+    latestLoanDepositRatio,
+    priorLoanDepositRatio,
+    'prior quarter',
+  );
+  const rwaTrend = getMetricTrend(latestRwa, priorRwa, 'prior quarter');
   const nimYearTrend = getMetricTrend(latestNim, yearAgoPoint?.nimy, 'prior year');
   const roaYearTrend = getMetricTrend(latestPoint?.roa, yearAgoPoint?.roa, 'prior year');
   const roeYearTrend = getMetricTrend(latestPoint?.roe, yearAgoPoint?.roe, 'prior year');
@@ -631,6 +648,21 @@ export default function Home() {
     yearAgoPoint?.INTEXPY,
     'prior year',
   );
+  const assetsYearTrend = getMetricTrend(latestPoint?.asset, yearAgoPoint?.asset, 'prior year');
+  const liabilitiesYearTrend = getMetricTrend(
+    latestLiabilities,
+    getLiabilitiesValue(yearAgoPoint),
+    'prior year',
+  );
+  const equityYearTrend = getMetricTrend(latestPoint?.eq, yearAgoPoint?.eq, 'prior year');
+  const loansYearTrend = getMetricTrend(latestPoint?.lnlsgr, yearAgoPoint?.lnlsgr, 'prior year');
+  const depositsYearTrend = getMetricTrend(latestPoint?.dep, yearAgoPoint?.dep, 'prior year');
+  const loanDepositYearTrend = getMetricTrend(
+    latestLoanDepositRatio,
+    yearAgoPoint?.lnlsdepr,
+    'prior year',
+  );
+  const rwaYearTrend = getMetricTrend(latestRwa, yearAgoPoint?.rwa, 'prior year');
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -982,34 +1014,241 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Assets</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Assets</p>
+                      {assetsYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            assetsYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${assetsYearTrend.label}`}
+                          title={`Year over year change: ${assetsYearTrend.label}`}
+                        >
+                          YoY {assetsYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestPoint?.asset)}</p>
+                      {assetsTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            assetsTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={assetsTrend.label}
+                          title={assetsTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {assetsTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Liabilities</p>
-                    <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Liabilities</p>
+                      {liabilitiesYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            liabilitiesYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${liabilitiesYearTrend.label}`}
+                          title={`Year over year change: ${liabilitiesYearTrend.label}`}
+                        >
+                          YoY {liabilitiesYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestLiabilities)}</p>
+                      {liabilitiesTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            liabilitiesTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={liabilitiesTrend.label}
+                          title={liabilitiesTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {liabilitiesTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Equity</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Equity</p>
+                      {equityYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            equityYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${equityYearTrend.label}`}
+                          title={`Year over year change: ${equityYearTrend.label}`}
+                        >
+                          YoY {equityYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestPoint?.eq)}</p>
+                      {equityTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            equityTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={equityTrend.label}
+                          title={equityTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {equityTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Total loans &amp; leases</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.lnlsgr)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Total loans &amp; leases</p>
+                      {loansYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            loansYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${loansYearTrend.label}`}
+                          title={`Year over year change: ${loansYearTrend.label}`}
+                        >
+                          YoY {loansYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestPoint?.lnlsgr)}</p>
+                      {loansTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            loansTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={loansTrend.label}
+                          title={loansTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {loansTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Total deposits</p>
-                    <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Total deposits</p>
+                      {depositsYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            depositsYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${depositsYearTrend.label}`}
+                          title={`Year over year change: ${depositsYearTrend.label}`}
+                        >
+                          YoY {depositsYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestPoint?.dep)}</p>
+                      {depositsTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            depositsTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={depositsTrend.label}
+                          title={depositsTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {depositsTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Loan to deposit ratio</p>
-                    <p className={styles.metricValue}>
-                      {formatPercentage(latestLoanDepositRatio)}
-                    </p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Loan to deposit ratio</p>
+                      {loanDepositYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            loanDepositYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${loanDepositYearTrend.label}`}
+                          title={`Year over year change: ${loanDepositYearTrend.label}`}
+                        >
+                          YoY {loanDepositYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestLoanDepositRatio)}
+                      </p>
+                      {loanDepositTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            loanDepositTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={loanDepositTrend.label}
+                          title={loanDepositTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {loanDepositTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Risk-weighted assets</p>
-                    <p className={styles.metricValue}>{formatNumber(latestRwa)}</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Risk-weighted assets</p>
+                      {rwaYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            rwaYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${rwaYearTrend.label}`}
+                          title={`Year over year change: ${rwaYearTrend.label}`}
+                        >
+                          YoY {rwaYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestRwa)}</p>
+                      {rwaTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            rwaTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={rwaTrend.label}
+                          title={rwaTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {rwaTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className={styles.metricsGrid}>
