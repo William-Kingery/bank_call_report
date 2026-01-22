@@ -532,7 +532,6 @@ const NationalAverages = () => {
                     <th>Net income</th>
                     <th>ROA</th>
                     <th>ROE</th>
-                    <th>Total earning assets</th>
                     <th>Net interest income</th>
                     <th>NIM</th>
                   </tr>
@@ -555,7 +554,6 @@ const NationalAverages = () => {
                         <td>{formatCurrency(Number(row.netIncome))}</td>
                         <td>{formatPercentage(Number(row.roa))}</td>
                         <td>{formatPercentage(Number(row.roe))}</td>
-                        <td>{formatCurrency(Number(row.earningAssets))}</td>
                         <td>{formatCurrency(Number(row.netInterestIncome))}</td>
                         <td>{formatPercentage(Number(row.nim))}</td>
                       </tr>
@@ -563,7 +561,7 @@ const NationalAverages = () => {
                   })}
                   {!filteredSummaryRows.length ? (
                     <tr>
-                      <td colSpan={12}>No summary data for the selected quarter.</td>
+                      <td colSpan={11}>No summary data for the selected quarter.</td>
                     </tr>
                   ) : null}
                 </tbody>
