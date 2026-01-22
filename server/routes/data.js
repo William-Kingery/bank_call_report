@@ -159,7 +159,11 @@ const fetchStateSegmentSummary = async (quarter) => {
        SUM(f.NETINC) AS netIncome,
        SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-       AVG(r.NIMY) AS nim
+       SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
+       SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
+       SUM(COALESCE(f.NAASSET, 0)) AS avgEarningAssets,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
+         / NULLIF(SUM(COALESCE(f.NAASSET, 0)), 0) * 100 AS nim
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -573,7 +577,8 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.NETINC) AS netIncome,
          SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
          SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-         AVG(r.NIMY) AS nim
+         (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
+           / NULLIF(SUM(COALESCE(f.NAASSET, 0)), 0) * 100 AS nim
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
@@ -627,7 +632,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
       const liabilities = Number(row.liabilities) || 0;
       const equity = Number(row.equity) || 0;
       const netIncome = Number(row.netIncome) || 0;
-      const nimValue = Number(row.nim);
+      const interestIncome = Number(row.interestIncome) || 0;
+      const interestExpense = Number(row.interestExpense) || 0;
+      const avgEarningAssets = Number(row.avgEarningAssets) || 0;
 
       if (!regionMap.has(key)) {
         regionMap.set(key, {
@@ -639,8 +646,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
           liabilities: 0,
           equity: 0,
           netIncome: 0,
-          nimWeightedSum: 0,
-          nimWeight: 0,
+          interestIncome: 0,
+          interestExpense: 0,
+          avgEarningAssets: 0,
         });
       }
 
@@ -651,10 +659,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
       summary.liabilities += liabilities;
       summary.equity += equity;
       summary.netIncome += netIncome;
-      if (Number.isFinite(nimValue) && bankCount > 0) {
-        summary.nimWeightedSum += nimValue * bankCount;
-        summary.nimWeight += bankCount;
-      }
+      summary.interestIncome += interestIncome;
+      summary.interestExpense += interestExpense;
+      summary.avgEarningAssets += avgEarningAssets;
     });
 
     const results = Array.from(regionMap.values()).map((summary) => {
@@ -664,7 +671,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
       const roe = summary.equity
         ? (summary.netIncome / summary.equity) * 100
         : null;
-      const nim = summary.nimWeight ? summary.nimWeightedSum / summary.nimWeight : null;
+      const nim = summary.avgEarningAssets
+        ? ((summary.interestIncome - summary.interestExpense) / summary.avgEarningAssets) * 100
+        : null;
 
       return {
         region: summary.region,
