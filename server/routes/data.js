@@ -4,14 +4,24 @@ import { stateNameToAbbr, stateNameToCoords, stateNames } from '../utils/stateGe
 
 const router = Router();
 
-const segmentRanges = {
-  'Over 1 Trillion': { min: 1000000000 },
-  'Between $250 B and 1 Trillion': { min: 250000000, max: 1000000000 },
-  'Between $100 B and 250 B': { min: 100000000, max: 250000000 },
-  'Between $10 B and 100 B': { min: 10000000, max: 100000000 },
-  'Between $1 B and 10 B': { min: 1000000, max: 10000000 },
-  'Less than 1 B': { max: 1000000 },
-};
+const SEGMENT_RANGES = [
+  { label: 'Over 700 Billion', min: 700000000 },
+  { label: 'Between $250 B and 700 Billion', min: 250000000, max: 700000000 },
+  { label: 'Between $100 B and 250 B', min: 100000000, max: 250000000 },
+  { label: 'Between $50 B and 100 B', min: 50000000, max: 100000000 },
+  { label: 'Between $10 B and 50 B', min: 10000000, max: 50000000 },
+  { label: 'Between $5 B and 10 B', min: 5000000, max: 10000000 },
+  { label: 'Between $1 B and 5 B', min: 1000000, max: 5000000 },
+  { label: 'Between $0.5 B and 1 B', min: 500000, max: 1000000 },
+  { label: 'Less than 0.5 B', max: 500000 },
+];
+const SEGMENT_ORDER = new Map(
+  SEGMENT_RANGES.map((range, index) => [range.label, index])
+);
+const segmentRanges = SEGMENT_RANGES.reduce((acc, range) => {
+  acc[range.label] = { min: range.min, max: range.max };
+  return acc;
+}, {});
 const FRB_DISTRICTS = {
   1: 'Boston',
   2: 'New York',
@@ -92,6 +102,23 @@ const FRB_DISTRICT_BY_NAME = Object.entries(FRB_DISTRICTS).reduce((acc, [key, va
 }, {});
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+const buildSegmentCaseStatement = () => {
+  const cases = SEGMENT_RANGES.map((range) => {
+    const conditions = [];
+    if (range.min != null) {
+      conditions.push(`f.ASSET >= ${range.min}`);
+    }
+    if (range.max != null) {
+      conditions.push(`f.ASSET < ${range.max}`);
+    }
+    return `WHEN ${conditions.join(' AND ')} THEN '${range.label}'`;
+  });
+  return `CASE ${cases.join(' ')} ELSE 'Unknown' END`;
+};
+const fetchLatestQuarter = async () => {
+  const [latestRows] = await pool.query(`SELECT MAX(CALLYM) AS callym FROM fdic_fts`);
+  return latestRows?.[0]?.callym ?? null;
+};
 const getFrbDistrict = (fedValue) => {
   const fedNumber = Number.parseInt(fedValue, 10);
   if (!Number.isFinite(fedNumber)) {
@@ -103,6 +130,106 @@ const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
   acc.set(name.toLowerCase(), name);
   return acc;
 }, new Map());
+const REGION_ORDER = ['Northeast', 'Midwest', 'South', 'West', 'Unknown'];
+
+const fetchStateSegmentSummary = async ({
+  quarter,
+  segment,
+  region,
+  district,
+} = {}) => {
+  const segmentCase = buildSegmentCaseStatement();
+  const conditions = ['s.STNAME IS NOT NULL', 'f.ASSET IS NOT NULL'];
+  const params = [];
+  let targetQuarter = quarter;
+
+  if (!targetQuarter) {
+    targetQuarter = await fetchLatestQuarter();
+  }
+
+  if (targetQuarter) {
+    conditions.push('f.CALLYM = ?');
+    params.push(targetQuarter);
+  }
+
+  const range = getSegmentRange(segment);
+  if (range) {
+    if (range.min != null) {
+      conditions.push('f.ASSET >= ?');
+      params.push(range.min);
+    }
+    if (range.max != null) {
+      conditions.push('f.ASSET < ?');
+      params.push(range.max);
+    }
+  }
+
+  if (region && region !== 'All Regions') {
+    const states = REGION_STATES[region] ?? [];
+    if (!states.length) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+    params.push(...states);
+  }
+
+  if (district && district !== 'All Districts') {
+    const fedCode = FRB_DISTRICT_BY_NAME[district];
+    if (!Number.isFinite(fedCode)) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push('s.FED = ?');
+    params.push(fedCode);
+  }
+
+  const [rows] = await pool.query(
+    `SELECT
+       s.STNAME AS stateName,
+       ${segmentCase} AS segment,
+       COUNT(DISTINCT f.CERT) AS bankCount,
+       SUM(f.ASSET) AS assets,
+       SUM(f.DEP) AS deposits,
+       SUM(f.LIAB) AS liabilities,
+       SUM(f.EQ) AS equity,
+       SUM(f.NETINC) AS netIncome,
+       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
+       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+       SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
+       SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
+       SUM(COALESCE(f.NAASSET, 0)) AS avgEarningAssets,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
+         / NULLIF(SUM(COALESCE(f.NAASSET, 0)), 0) * 100 AS nim
+     FROM fdic_fts f
+     JOIN (
+       SELECT CERT, MAX(CALLYM) AS callym
+       FROM fdic_structure
+       GROUP BY CERT
+     ) latest_structure
+       ON latest_structure.CERT = f.CERT
+     JOIN fdic_structure s
+       ON s.CERT = latest_structure.CERT
+       AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_rat r
+       ON r.CERT = f.CERT
+       AND r.CALLYM = f.CALLYM
+     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+     GROUP BY s.STNAME, segment
+     ORDER BY s.STNAME ASC`,
+    params
+  );
+
+  const sortedRows = rows
+    .sort((a, b) => {
+      if (a.stateName === b.stateName) {
+        const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+        const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+        return orderA - orderB;
+      }
+      return a.stateName.localeCompare(b.stateName);
+    });
+
+  return { rows: sortedRows, quarter: targetQuarter };
+};
 
 router.get('/search', async (req, res) => {
   const { query } = req.query;
@@ -483,7 +610,9 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.LIAB) AS liabilities,
          SUM(f.EQ) AS equity,
          SUM(f.NETINC) AS netIncome,
-         SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa
+         SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
+         SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+         SUM(f.NIM) AS nim
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
@@ -494,6 +623,9 @@ router.get('/national-averages/summary', async (req, res) => {
        JOIN fdic_structure s
          ON s.CERT = latest_structure.CERT
          AND s.CALLYM = latest_structure.callym
+       LEFT JOIN fdic_rat r
+         ON r.CERT = f.CERT
+         AND r.CALLYM = f.CALLYM
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY f.CALLYM
        ORDER BY f.CALLYM DESC`,
@@ -504,6 +636,119 @@ router.get('/national-averages/summary', async (req, res) => {
   } catch (error) {
     console.error('Error fetching national average summary:', error);
     res.status(500).json({ message: 'Failed to fetch national average summary' });
+  }
+});
+
+router.get('/national-averages/state-summary', async (req, res) => {
+  try {
+    const quarter = req.query.quarter;
+    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary({ quarter });
+
+    res.json({ results: rows, quarter: resolvedQuarter });
+  } catch (error) {
+    console.error('Error fetching state segment summary:', error);
+    res.status(500).json({ message: 'Failed to fetch state segment summary' });
+  }
+});
+
+router.get('/national-averages/region-summary', async (req, res) => {
+  try {
+    const quarter = req.query.quarter;
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary({
+      quarter,
+      segment,
+      region,
+      district,
+    });
+    const regionMap = new Map();
+
+    rows.forEach((row) => {
+      const region = REGION_BY_STATE[row.stateName] ?? 'Unknown';
+      const key = `${region}::${row.segment}`;
+      const bankCount = Number(row.bankCount) || 0;
+      const assets = Number(row.assets) || 0;
+      const deposits = Number(row.deposits) || 0;
+      const liabilities = Number(row.liabilities) || 0;
+      const equity = Number(row.equity) || 0;
+      const netIncome = Number(row.netIncome) || 0;
+      const interestIncome = Number(row.interestIncome) || 0;
+      const interestExpense = Number(row.interestExpense) || 0;
+      const avgEarningAssets = Number(row.avgEarningAssets) || 0;
+
+      if (!regionMap.has(key)) {
+        regionMap.set(key, {
+          region,
+          segment: row.segment,
+          bankCount: 0,
+          assets: 0,
+          deposits: 0,
+          liabilities: 0,
+          equity: 0,
+          netIncome: 0,
+          interestIncome: 0,
+          interestExpense: 0,
+          avgEarningAssets: 0,
+        });
+      }
+
+      const summary = regionMap.get(key);
+      summary.bankCount += bankCount;
+      summary.assets += assets;
+      summary.deposits += deposits;
+      summary.liabilities += liabilities;
+      summary.equity += equity;
+      summary.netIncome += netIncome;
+      summary.interestIncome += interestIncome;
+      summary.interestExpense += interestExpense;
+      summary.avgEarningAssets += avgEarningAssets;
+    });
+
+    const results = Array.from(regionMap.values()).map((summary) => {
+      const roa = summary.assets
+        ? (summary.netIncome / summary.assets) * 100
+        : null;
+      const roe = summary.equity
+        ? (summary.netIncome / summary.equity) * 100
+        : null;
+      const nim = summary.avgEarningAssets
+        ? ((summary.interestIncome - summary.interestExpense) / summary.avgEarningAssets) * 100
+        : null;
+
+      return {
+        region: summary.region,
+        segment: summary.segment,
+        bankCount: summary.bankCount,
+        assets: summary.assets,
+        deposits: summary.deposits,
+        liabilities: summary.liabilities,
+        equity: summary.equity,
+        netIncome: summary.netIncome,
+        roa,
+        roe,
+        nim,
+      };
+    });
+
+    results.sort((a, b) => {
+      const regionIndexA = REGION_ORDER.indexOf(a.region);
+      const regionIndexB = REGION_ORDER.indexOf(b.region);
+      const normalizedRegionA = regionIndexA === -1 ? Number.MAX_SAFE_INTEGER : regionIndexA;
+      const normalizedRegionB = regionIndexB === -1 ? Number.MAX_SAFE_INTEGER : regionIndexB;
+      if (normalizedRegionA !== normalizedRegionB) {
+        return normalizedRegionA - normalizedRegionB;
+      }
+      const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+      const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    res.json({ results, quarter: resolvedQuarter });
+  } catch (error) {
+    console.error('Error fetching region segment summary:', error);
+    res.status(500).json({ message: 'Failed to fetch region segment summary' });
   }
 });
 
