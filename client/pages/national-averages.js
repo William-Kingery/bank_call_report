@@ -521,7 +521,7 @@ const NationalAverages = () => {
                     <th>Net income</th>
                     <th>ROA</th>
                     <th>ROE</th>
-                    <th>NIM</th>
+                    <th>Net interest income (NIM)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -542,7 +542,7 @@ const NationalAverages = () => {
                         <td>{formatCurrency(Number(row.netIncome))}</td>
                         <td>{formatPercentage(Number(row.roa))}</td>
                         <td>{formatPercentage(Number(row.roe))}</td>
-                        <td>{formatPercentage(Number(row.nim))}</td>
+                        <td>{formatCurrency(Number(row.nim))}</td>
                       </tr>
                     );
                   })}

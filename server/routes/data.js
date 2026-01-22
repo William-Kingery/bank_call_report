@@ -612,8 +612,7 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.NETINC) AS netIncome,
          SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
          SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-         (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-           / NULLIF(SUM(COALESCE(f.NAASSET, 0)), 0) * 100 AS nim
+         SUM(f.NIM) AS nim
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
