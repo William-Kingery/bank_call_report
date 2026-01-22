@@ -196,9 +196,9 @@ const fetchStateSegmentSummary = async ({
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
        SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
        SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
-       SUM(COALESCE(f.NAASSET, 0)) AS avgEarningAssets,
+       SUM(COALESCE(c.EARNAST, 0)) AS avgEarningAssets,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-         / NULLIF(SUM(COALESCE(f.NAASSET, 0)), 0) * 100 AS nim
+         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -212,6 +212,9 @@ const fetchStateSegmentSummary = async ({
      LEFT JOIN fdic_rat r
        ON r.CERT = f.CERT
        AND r.CALLYM = f.CALLYM
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
      GROUP BY s.STNAME, segment
      ORDER BY s.STNAME ASC`,
@@ -229,6 +232,191 @@ const fetchStateSegmentSummary = async ({
     });
 
   return { rows: sortedRows, quarter: targetQuarter };
+};
+
+const fetchSegmentSummary = async ({
+  quarter,
+  segment,
+  region,
+  district,
+} = {}) => {
+  const segmentCase = buildSegmentCaseStatement();
+  const conditions = ['f.ASSET IS NOT NULL'];
+  const params = [];
+  let targetQuarter = quarter;
+
+  if (!targetQuarter) {
+    targetQuarter = await fetchLatestQuarter();
+  }
+
+  if (targetQuarter) {
+    conditions.push('f.CALLYM = ?');
+    params.push(targetQuarter);
+  }
+
+  const range = getSegmentRange(segment);
+  if (range) {
+    if (range.min != null) {
+      conditions.push('f.ASSET >= ?');
+      params.push(range.min);
+    }
+    if (range.max != null) {
+      conditions.push('f.ASSET < ?');
+      params.push(range.max);
+    }
+  }
+
+  if (region && region !== 'All Regions') {
+    const states = REGION_STATES[region] ?? [];
+    if (!states.length) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+    params.push(...states);
+  }
+
+  if (district && district !== 'All Districts') {
+    const fedCode = FRB_DISTRICT_BY_NAME[district];
+    if (!Number.isFinite(fedCode)) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push('s.FED = ?');
+    params.push(fedCode);
+  }
+
+  const [rows] = await pool.query(
+    `SELECT
+       ${segmentCase} AS segment,
+       COUNT(DISTINCT f.CERT) AS bankCount,
+       SUM(f.ASSET) AS assets,
+       SUM(f.DEP) AS deposits,
+       SUM(f.LIAB) AS liabilities,
+       SUM(f.EQ) AS equity,
+       SUM(f.NETINC) AS netIncome,
+       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
+       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
+         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+     FROM fdic_fts f
+     JOIN (
+       SELECT CERT, MAX(CALLYM) AS callym
+       FROM fdic_structure
+       GROUP BY CERT
+     ) latest_structure
+       ON latest_structure.CERT = f.CERT
+     JOIN fdic_structure s
+       ON s.CERT = latest_structure.CERT
+       AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_rat r
+       ON r.CERT = f.CERT
+       AND r.CALLYM = f.CALLYM
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
+     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+     GROUP BY segment`,
+    params
+  );
+
+  const sortedRows = rows.sort((a, b) => {
+    const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+    const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
+
+  return { rows: sortedRows, quarter: targetQuarter };
+};
+
+const fetchDistrictSummary = async ({
+  quarter,
+  segment,
+  region,
+  district,
+} = {}) => {
+  const conditions = ['s.FED IS NOT NULL', 'f.ASSET IS NOT NULL'];
+  const params = [];
+  let targetQuarter = quarter;
+
+  if (!targetQuarter) {
+    targetQuarter = await fetchLatestQuarter();
+  }
+
+  if (targetQuarter) {
+    conditions.push('f.CALLYM = ?');
+    params.push(targetQuarter);
+  }
+
+  const range = getSegmentRange(segment);
+  if (range) {
+    if (range.min != null) {
+      conditions.push('f.ASSET >= ?');
+      params.push(range.min);
+    }
+    if (range.max != null) {
+      conditions.push('f.ASSET < ?');
+      params.push(range.max);
+    }
+  }
+
+  if (region && region !== 'All Regions') {
+    const states = REGION_STATES[region] ?? [];
+    if (!states.length) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+    params.push(...states);
+  }
+
+  if (district && district !== 'All Districts') {
+    const fedCode = FRB_DISTRICT_BY_NAME[district];
+    if (!Number.isFinite(fedCode)) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push('s.FED = ?');
+    params.push(fedCode);
+  }
+
+  const [rows] = await pool.query(
+    `SELECT
+       s.FED AS fed,
+       COUNT(DISTINCT f.CERT) AS bankCount,
+       SUM(f.ASSET) AS assets,
+       SUM(f.DEP) AS deposits,
+       SUM(f.LIAB) AS liabilities,
+       SUM(f.EQ) AS equity,
+       SUM(f.NETINC) AS netIncome,
+       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
+       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
+       (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
+         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+     FROM fdic_fts f
+     JOIN (
+       SELECT CERT, MAX(CALLYM) AS callym
+       FROM fdic_structure
+       GROUP BY CERT
+     ) latest_structure
+       ON latest_structure.CERT = f.CERT
+     JOIN fdic_structure s
+       ON s.CERT = latest_structure.CERT
+       AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_rat r
+       ON r.CERT = f.CERT
+       AND r.CALLYM = f.CALLYM
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
+     ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+     GROUP BY s.FED
+     ORDER BY s.FED ASC`,
+    params
+  );
+
+  const mappedRows = rows.map((row) => ({
+    ...row,
+    district: getFrbDistrict(row.fed),
+  }));
+
+  return { rows: mappedRows, quarter: targetQuarter };
 };
 
 router.get('/search', async (req, res) => {
@@ -757,6 +945,46 @@ router.get('/national-averages/region-summary', async (req, res) => {
   } catch (error) {
     console.error('Error fetching region segment summary:', error);
     res.status(500).json({ message: 'Failed to fetch region segment summary' });
+  }
+});
+
+router.get('/national-averages/segment-summary', async (req, res) => {
+  try {
+    const quarter = req.query.quarter;
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const { rows, quarter: resolvedQuarter } = await fetchSegmentSummary({
+      quarter,
+      segment,
+      region,
+      district,
+    });
+
+    res.json({ results: rows, quarter: resolvedQuarter });
+  } catch (error) {
+    console.error('Error fetching segment summary:', error);
+    res.status(500).json({ message: 'Failed to fetch segment summary' });
+  }
+});
+
+router.get('/national-averages/district-summary', async (req, res) => {
+  try {
+    const quarter = req.query.quarter;
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const { rows, quarter: resolvedQuarter } = await fetchDistrictSummary({
+      quarter,
+      segment,
+      region,
+      district,
+    });
+
+    res.json({ results: rows, quarter: resolvedQuarter });
+  } catch (error) {
+    console.error('Error fetching district summary:', error);
+    res.status(500).json({ message: 'Failed to fetch district summary' });
   }
 });
 
