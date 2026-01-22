@@ -22,6 +22,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
+  flex-direction: column;
+  gap: 0.75rem;
   min-width: 180px;
 }
 
@@ -61,6 +63,28 @@
 .headerLink:focus {
   text-decoration: underline;
   outline: none;
+}
+
+.printButton {
+  border: 1px solid #cbd5f5;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.printButton:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+}
+
+.printButton:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .headerSummary {
@@ -1391,4 +1415,11 @@
 .legendEquity {
   background: linear-gradient(180deg, #93c5fd, #2563eb);
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+@media print {
+  .tabs,
+  .printButton {
+    display: none;
+  }
 }
