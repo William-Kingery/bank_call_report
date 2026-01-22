@@ -506,69 +506,6 @@ const NationalAverages = () => {
           </div>
         </div>
 
-        <div className={styles.summarySection}>
-          <div>
-            <p className={styles.sectionKicker}>Nation-wide performance</p>
-            <h3 className={styles.bankTitle}>FDIC industry totals by quarter</h3>
-            <p className={styles.sectionSubtitle}>
-              Aggregated totals for assets, deposits, liabilities, equity, and profitability.
-            </p>
-          </div>
-          {summaryError ? <p className={styles.error}>{summaryError}</p> : null}
-          {summaryLoading ? (
-            <p className={styles.status}>Loading national summary...</p>
-          ) : null}
-          {!summaryLoading && !summaryError ? (
-            <div className={styles.tableWrapper}>
-              <table className={styles.summaryTable}>
-                <thead>
-                  <tr>
-                    <th>Period</th>
-                    <th>Banks</th>
-                    <th>Assets</th>
-                    <th>Deposits</th>
-                    <th>Liabilities</th>
-                    <th>Equity</th>
-                    <th>Net income</th>
-                    <th>ROA</th>
-                    <th>ROE</th>
-                    <th>Net interest income</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSummaryRows.map((row) => {
-                    const rowKey = String(row.callym);
-                    const isSelected = selectedQuarterValue === rowKey;
-                    return (
-                      <tr
-                        key={rowKey}
-                        className={isSelected ? styles.highlightRow : undefined}
-                      >
-                        <td>{formatQuarter(row.callym)}</td>
-                        <td>{formatCount(Number(row.bankCount))}</td>
-                        <td>{formatCurrency(Number(row.assets))}</td>
-                        <td>{formatCurrency(Number(row.deposits))}</td>
-                        <td>{formatCurrency(Number(row.liabilities))}</td>
-                        <td>{formatCurrency(Number(row.equity))}</td>
-                        <td>{formatCurrency(Number(row.netIncome))}</td>
-                        <td>{formatPercentage(Number(row.roa))}</td>
-                        <td>{formatPercentage(Number(row.roe))}</td>
-                        <td>{formatCurrency(Number(row.netInterestIncome))}</td>
-                      </tr>
-                    );
-                  })}
-                  {!filteredSummaryRows.length ? (
-                    <tr>
-                      <td colSpan={10}>No summary data for the selected quarter.</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-        </div>
-
-
       </section>
     </main>
   );
