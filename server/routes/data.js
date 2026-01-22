@@ -196,9 +196,9 @@ const fetchStateSegmentSummary = async ({
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
        SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
        SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
-       SUM(COALESCE(c.EARNAST, 0)) AS avgEarningAssets,
+       SUM(COALESCE(c.ERNAST, 0)) AS avgEarningAssets,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -296,7 +296,7 @@ const fetchSegmentSummary = async ({
        SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -388,7 +388,7 @@ const fetchDistrictSummary = async ({
        SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
        SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
        (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-         / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -802,10 +802,10 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
          SUM(COALESCE(r.INTINCY, 0)) AS interestIncome,
          SUM(COALESCE(r.INTEXPY, 0)) AS interestExpense,
-         SUM(COALESCE(c.EARNAST, 0)) AS earningAssets,
+         SUM(COALESCE(c.ERNAST, 0)) AS earningAssets,
          (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0))) AS netInterestIncome,
          (SUM(COALESCE(r.INTINCY, 0)) - SUM(COALESCE(r.INTEXPY, 0)))
-           / NULLIF(SUM(COALESCE(c.EARNAST, 0)), 0) * 100 AS nim
+           / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
