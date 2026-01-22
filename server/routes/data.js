@@ -132,7 +132,12 @@ const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
 }, new Map());
 const REGION_ORDER = ['Northeast', 'Midwest', 'South', 'West', 'Unknown'];
 
-const fetchStateSegmentSummary = async (quarter) => {
+const fetchStateSegmentSummary = async ({
+  quarter,
+  segment,
+  region,
+  district,
+} = {}) => {
   const segmentCase = buildSegmentCaseStatement();
   const conditions = ['s.STNAME IS NOT NULL', 'f.ASSET IS NOT NULL'];
   const params = [];
@@ -145,6 +150,36 @@ const fetchStateSegmentSummary = async (quarter) => {
   if (targetQuarter) {
     conditions.push('f.CALLYM = ?');
     params.push(targetQuarter);
+  }
+
+  const range = getSegmentRange(segment);
+  if (range) {
+    if (range.min != null) {
+      conditions.push('f.ASSET >= ?');
+      params.push(range.min);
+    }
+    if (range.max != null) {
+      conditions.push('f.ASSET < ?');
+      params.push(range.max);
+    }
+  }
+
+  if (region && region !== 'All Regions') {
+    const states = REGION_STATES[region] ?? [];
+    if (!states.length) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+    params.push(...states);
+  }
+
+  if (district && district !== 'All Districts') {
+    const fedCode = FRB_DISTRICT_BY_NAME[district];
+    if (!Number.isFinite(fedCode)) {
+      return { rows: [], quarter: targetQuarter };
+    }
+    conditions.push('s.FED = ?');
+    params.push(fedCode);
   }
 
   const [rows] = await pool.query(
@@ -608,7 +643,7 @@ router.get('/national-averages/summary', async (req, res) => {
 router.get('/national-averages/state-summary', async (req, res) => {
   try {
     const quarter = req.query.quarter;
-    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary(quarter);
+    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary({ quarter });
 
     res.json({ results: rows, quarter: resolvedQuarter });
   } catch (error) {
@@ -620,7 +655,15 @@ router.get('/national-averages/state-summary', async (req, res) => {
 router.get('/national-averages/region-summary', async (req, res) => {
   try {
     const quarter = req.query.quarter;
-    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary(quarter);
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const { rows, quarter: resolvedQuarter } = await fetchStateSegmentSummary({
+      quarter,
+      segment,
+      region,
+      district,
+    });
     const regionMap = new Map();
 
     rows.forEach((row) => {
