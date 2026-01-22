@@ -513,6 +513,27 @@
   font-size: 0.85rem;
 }
 
+.metricNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.yoyTrend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.yoyTrend,
+.qoqTrendText {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .metricValue {
   margin: 0.35rem 0 0;
   font-size: 1.1rem;
@@ -535,9 +556,11 @@
 .trendArrow {
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
   font-size: 1.1rem;
   font-weight: 700;
 }
+
 
 .trendUp {
   color: #16a34a;
