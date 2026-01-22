@@ -206,6 +206,33 @@ const NationalAverages = () => {
   const [summaryRows, setSummaryRows] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
+  const [regionSummaryRows, setRegionSummaryRows] = useState([]);
+  const [regionSummaryLoading, setRegionSummaryLoading] = useState(false);
+  const [regionSummaryError, setRegionSummaryError] = useState(null);
+  const [segmentSummaryRows, setSegmentSummaryRows] = useState([]);
+  const [segmentSummaryLoading, setSegmentSummaryLoading] = useState(false);
+  const [segmentSummaryError, setSegmentSummaryError] = useState(null);
+  const [districtSummaryRows, setDistrictSummaryRows] = useState([]);
+  const [districtSummaryLoading, setDistrictSummaryLoading] = useState(false);
+  const [districtSummaryError, setDistrictSummaryError] = useState(null);
+
+  const buildSummaryQueryParams = () => {
+    const queryParams = new URLSearchParams();
+    if (selectedPortfolio && selectedPortfolio !== 'National Average') {
+      queryParams.set('segment', selectedPortfolio);
+    }
+    if (selectedPeriod) {
+      const [, periodValue] = selectedPeriod.split(':');
+      queryParams.set('quarter', periodValue);
+    }
+    if (selectedRegion && selectedRegion !== 'All Regions') {
+      queryParams.set('region', selectedRegion);
+    }
+    if (selectedDistrict && selectedDistrict !== 'All Districts') {
+      queryParams.set('district', selectedDistrict);
+    }
+    return queryParams;
+  };
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -256,21 +283,7 @@ const NationalAverages = () => {
       setSummaryLoading(true);
       setSummaryError(null);
       try {
-        const queryParams = new URLSearchParams();
-        if (selectedPortfolio && selectedPortfolio !== 'National Average') {
-          queryParams.set('segment', selectedPortfolio);
-        }
-        if (selectedPeriod) {
-          const [, periodValue] = selectedPeriod.split(':');
-          queryParams.set('quarter', periodValue);
-        }
-        if (selectedRegion && selectedRegion !== 'All Regions') {
-          queryParams.set('region', selectedRegion);
-        }
-        if (selectedDistrict && selectedDistrict !== 'All Districts') {
-          queryParams.set('district', selectedDistrict);
-        }
-        const queryString = queryParams.toString();
+        const queryString = buildSummaryQueryParams().toString();
         const response = await fetch(`${API_BASE}/national-averages/summary${queryString ? `?${queryString}` : ''}`, {
           signal: controller.signal,
         });
@@ -294,6 +307,101 @@ const NationalAverages = () => {
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchRegionSummary = async () => {
+      setRegionSummaryLoading(true);
+      setRegionSummaryError(null);
+      try {
+        const queryString = buildSummaryQueryParams().toString();
+        const response = await fetch(
+          `${API_BASE}/national-averages/region-summary${queryString ? `?${queryString}` : ''}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load region summary');
+        }
+        const data = await response.json();
+        setRegionSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setRegionSummaryRows([]);
+          setRegionSummaryError(err.message);
+        }
+      } finally {
+        setRegionSummaryLoading(false);
+      }
+    };
+
+    fetchRegionSummary();
+
+    return () => controller.abort();
+  }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchSegmentSummary = async () => {
+      setSegmentSummaryLoading(true);
+      setSegmentSummaryError(null);
+      try {
+        const queryString = buildSummaryQueryParams().toString();
+        const response = await fetch(
+          `${API_BASE}/national-averages/segment-summary${queryString ? `?${queryString}` : ''}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load segment summary');
+        }
+        const data = await response.json();
+        setSegmentSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setSegmentSummaryRows([]);
+          setSegmentSummaryError(err.message);
+        }
+      } finally {
+        setSegmentSummaryLoading(false);
+      }
+    };
+
+    fetchSegmentSummary();
+
+    return () => controller.abort();
+  }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchDistrictSummary = async () => {
+      setDistrictSummaryLoading(true);
+      setDistrictSummaryError(null);
+      try {
+        const queryString = buildSummaryQueryParams().toString();
+        const response = await fetch(
+          `${API_BASE}/national-averages/district-summary${queryString ? `?${queryString}` : ''}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load district summary');
+        }
+        const data = await response.json();
+        setDistrictSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setDistrictSummaryRows([]);
+          setDistrictSummaryError(err.message);
+        }
+      } finally {
+        setDistrictSummaryLoading(false);
+      }
+    };
+
+    fetchDistrictSummary();
+
+    return () => controller.abort();
+  }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -523,16 +631,16 @@ const NationalAverages = () => {
               <table className={styles.summaryTable}>
                 <thead>
                   <tr>
-                    <th>Period</th>
                     <th>Banks</th>
                     <th>Assets</th>
-                    <th>Deposits</th>
                     <th>Liabilities</th>
+                    <th>Deposits</th>
                     <th>Equity</th>
+                    <th>Net interest income</th>
                     <th>Net income</th>
                     <th>ROA</th>
                     <th>ROE</th>
-                    <th>Net interest income</th>
+                    <th>NIM</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -544,16 +652,16 @@ const NationalAverages = () => {
                         key={rowKey}
                         className={isSelected ? styles.highlightRow : undefined}
                       >
-                        <td>{formatQuarter(row.callym)}</td>
                         <td>{formatCount(Number(row.bankCount))}</td>
                         <td>{formatCurrency(Number(row.assets))}</td>
-                        <td>{formatCurrency(Number(row.deposits))}</td>
                         <td>{formatCurrency(Number(row.liabilities))}</td>
+                        <td>{formatCurrency(Number(row.deposits))}</td>
                         <td>{formatCurrency(Number(row.equity))}</td>
+                        <td>{formatCurrency(Number(row.netInterestIncome))}</td>
                         <td>{formatCurrency(Number(row.netIncome))}</td>
                         <td>{formatPercentage(Number(row.roa))}</td>
                         <td>{formatPercentage(Number(row.roe))}</td>
-                        <td>{formatCurrency(Number(row.nim))}</td>
+                        <td>{formatPercentage(Number(row.nim))}</td>
                       </tr>
                     );
                   })}
@@ -568,6 +676,176 @@ const NationalAverages = () => {
           ) : null}
         </div>
 
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Region segmentation</p>
+            <h3 className={styles.bankTitle}>Regional performance totals</h3>
+            <p className={styles.sectionSubtitle}>
+              Summary metrics broken out by region for the selected filters.
+            </p>
+          </div>
+          {regionSummaryError ? <p className={styles.error}>{regionSummaryError}</p> : null}
+          {regionSummaryLoading ? (
+            <p className={styles.status}>Loading regional summary...</p>
+          ) : null}
+          {!regionSummaryLoading && !regionSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Liabilities</th>
+                    <th>Deposits</th>
+                    <th>Equity</th>
+                    <th>Net interest income</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {regionSummaryRows.map((row) => (
+                    <tr key={`${row.region}-${row.segment ?? 'all'}`}>
+                      <td>{row.region}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                      <td>{formatCurrency(Number(row.assets))}</td>
+                      <td>{formatCurrency(Number(row.liabilities))}</td>
+                      <td>{formatCurrency(Number(row.deposits))}</td>
+                      <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatCurrency(Number(row.netInterestIncome))}</td>
+                      <td>{formatCurrency(Number(row.netIncome))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                    </tr>
+                  ))}
+                  {!regionSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={11}>No region summary data for the selected filters.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Asset range segmentation</p>
+            <h3 className={styles.bankTitle}>Asset range performance totals</h3>
+            <p className={styles.sectionSubtitle}>
+              Summary metrics grouped by asset range for the selected filters.
+            </p>
+          </div>
+          {segmentSummaryError ? <p className={styles.error}>{segmentSummaryError}</p> : null}
+          {segmentSummaryLoading ? (
+            <p className={styles.status}>Loading asset range summary...</p>
+          ) : null}
+          {!segmentSummaryLoading && !segmentSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>Asset range</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Liabilities</th>
+                    <th>Deposits</th>
+                    <th>Equity</th>
+                    <th>Net interest income</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {segmentSummaryRows.map((row) => (
+                    <tr key={row.segment}>
+                      <td>{row.segment}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                      <td>{formatCurrency(Number(row.assets))}</td>
+                      <td>{formatCurrency(Number(row.liabilities))}</td>
+                      <td>{formatCurrency(Number(row.deposits))}</td>
+                      <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatCurrency(Number(row.netInterestIncome))}</td>
+                      <td>{formatCurrency(Number(row.netIncome))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                    </tr>
+                  ))}
+                  {!segmentSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={11}>No asset range summary data for the selected filters.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>FRB District segmentation</p>
+            <h3 className={styles.bankTitle}>District performance totals</h3>
+            <p className={styles.sectionSubtitle}>
+              Summary metrics grouped by Federal Reserve district for the selected filters.
+            </p>
+          </div>
+          {districtSummaryError ? <p className={styles.error}>{districtSummaryError}</p> : null}
+          {districtSummaryLoading ? (
+            <p className={styles.status}>Loading district summary...</p>
+          ) : null}
+          {!districtSummaryLoading && !districtSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>District</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Liabilities</th>
+                    <th>Deposits</th>
+                    <th>Equity</th>
+                    <th>Net interest income</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {districtSummaryRows.map((row) => (
+                    <tr key={row.district}>
+                      <td>{row.district}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                      <td>{formatCurrency(Number(row.assets))}</td>
+                      <td>{formatCurrency(Number(row.liabilities))}</td>
+                      <td>{formatCurrency(Number(row.deposits))}</td>
+                      <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatCurrency(Number(row.netInterestIncome))}</td>
+                      <td>{formatCurrency(Number(row.netIncome))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                    </tr>
+                  ))}
+                  {!districtSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={11}>No district summary data for the selected filters.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
 
       </section>
     </main>
