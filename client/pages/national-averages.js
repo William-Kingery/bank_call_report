@@ -207,6 +207,12 @@ const NationalAverages = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
 
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -428,20 +434,25 @@ const NationalAverages = () => {
           ))}
         </select>
       </label>
-      <label className={styles.selectLabel}>
-        FRB District
-        <select
-          className={styles.select}
-          value={selectedDistrict}
-          onChange={(event) => setSelectedDistrict(event.target.value)}
-        >
-          {FRB_DISTRICT_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className={styles.printControlGroup}>
+        <button className={styles.printButton} type="button" onClick={handlePrint}>
+          Print chart + table
+        </button>
+        <label className={styles.selectLabel}>
+          FRB District
+          <select
+            className={styles.select}
+            value={selectedDistrict}
+            onChange={(event) => setSelectedDistrict(event.target.value)}
+          >
+            {FRB_DISTRICT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   );
 
