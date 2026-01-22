@@ -460,6 +460,70 @@ const NationalAverages = () => {
     return summaryRows.filter((row) => String(row.callym) === selectedQuarterValue);
   }, [selectedQuarterValue, summaryRows]);
 
+  const renderFilterControls = () => (
+    <div className={styles.filterControls}>
+      <label className={styles.selectLabel}>
+        Qtr by Year
+        <select
+          className={styles.select}
+          value={selectedPeriod}
+          onChange={(event) => setSelectedPeriod(event.target.value)}
+          disabled={!availableQuarters.length}
+        >
+          <optgroup label="Quarterly">
+            {availableQuarters.map((option) => (
+              <option key={option} value={`quarter:${option}`}>
+                {formatQuarter(option)}
+              </option>
+            ))}
+          </optgroup>
+        </select>
+      </label>
+      <label className={styles.selectLabel}>
+        Portfolio view
+        <select
+          className={styles.select}
+          value={selectedPortfolio}
+          onChange={(event) => setSelectedPortfolio(event.target.value)}
+        >
+          {BENCHMARK_PORTFOLIOS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.selectLabel}>
+        Region
+        <select
+          className={styles.select}
+          value={selectedRegion}
+          onChange={(event) => setSelectedRegion(event.target.value)}
+        >
+          {REGION_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.selectLabel}>
+        FRB District
+        <select
+          className={styles.select}
+          value={selectedDistrict}
+          onChange={(event) => setSelectedDistrict(event.target.value)}
+        >
+          {FRB_DISTRICT_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+
   return (
     <main className={styles.main}>
       <div className={styles.header}>
@@ -483,67 +547,7 @@ const NationalAverages = () => {
               Total Summary for each State for the selected period
             </p>
           </div>
-          <div className={styles.filterControls}>
-            <label className={styles.selectLabel}>
-              Qtr by Year
-              <select
-                className={styles.select}
-                value={selectedPeriod}
-                onChange={(event) => setSelectedPeriod(event.target.value)}
-                disabled={!availableQuarters.length}
-              >
-                <optgroup label="Quarterly">
-                  {availableQuarters.map((option) => (
-                    <option key={option} value={`quarter:${option}`}>
-                      {formatQuarter(option)}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </label>
-            <label className={styles.selectLabel}>
-              Portfolio view
-              <select
-                className={styles.select}
-                value={selectedPortfolio}
-                onChange={(event) => setSelectedPortfolio(event.target.value)}
-              >
-                {BENCHMARK_PORTFOLIOS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.selectLabel}>
-              Region
-              <select
-                className={styles.select}
-                value={selectedRegion}
-                onChange={(event) => setSelectedRegion(event.target.value)}
-              >
-                {REGION_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className={styles.selectLabel}>
-              FRB District
-              <select
-                className={styles.select}
-                value={selectedDistrict}
-                onChange={(event) => setSelectedDistrict(event.target.value)}
-              >
-                {FRB_DISTRICT_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          {renderFilterControls()}
         </div>
 
         {error ? <p className={styles.error}>{error}</p> : null}
@@ -640,6 +644,7 @@ const NationalAverages = () => {
               Assets, deposits, liabilities, equity, and profitability by region and segment.
             </p>
           </div>
+          {renderFilterControls()}
           {regionSummaryError ? <p className={styles.error}>{regionSummaryError}</p> : null}
           {regionSummaryLoading ? (
             <p className={styles.status}>Loading regional summary...</p>
@@ -697,6 +702,7 @@ const NationalAverages = () => {
               Segment summaries for each state in the selected period.
             </p>
           </div>
+          {renderFilterControls()}
           {stateSummaryError ? <p className={styles.error}>{stateSummaryError}</p> : null}
           {stateSummaryLoading ? (
             <p className={styles.status}>Loading statewide summary...</p>
