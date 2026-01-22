@@ -580,7 +580,7 @@ export default function Home() {
   const totalAssetsContext = latestPoint?.callym
     ? `As of ${latestQuarterLabel}`
     : 'Select a bank to see totals.';
-  const getMetricTrend = (latestValue, priorValue) => {
+  const getMetricTrend = (latestValue, priorValue, comparisonLabel) => {
     const latestNumber = Number(latestValue);
     const priorNumber = Number(priorValue);
 
@@ -589,21 +589,48 @@ export default function Home() {
     }
 
     if (latestNumber > priorNumber) {
-      return { direction: 'up', label: 'Higher than prior quarter' };
+      return { direction: 'up', label: `Higher than ${comparisonLabel}` };
     }
 
     if (latestNumber < priorNumber) {
-      return { direction: 'down', label: 'Lower than prior quarter' };
+      return { direction: 'down', label: `Lower than ${comparisonLabel}` };
     }
 
     return null;
   };
 
-  const nimTrend = getMetricTrend(latestNim, priorNim);
-  const roaTrend = getMetricTrend(latestPoint?.roa, priorRoa);
-  const roeTrend = getMetricTrend(latestPoint?.roe, priorRoe);
-  const interestIncomeTrend = getMetricTrend(latestInterestIncome, priorInterestIncome);
-  const interestExpenseTrend = getMetricTrend(latestInterestExpense, priorInterestExpense);
+  const yearAgoPoint = useMemo(() => {
+    if (!latestPoint?.callym) return null;
+    const targetCallym = Number(latestPoint.callym) - 100;
+    return sortedPoints.find((point) => Number(point.callym) === targetCallym) ?? null;
+  }, [latestPoint?.callym, sortedPoints]);
+
+  const nimTrend = getMetricTrend(latestNim, priorNim, 'prior quarter');
+  const roaTrend = getMetricTrend(latestPoint?.roa, priorRoa, 'prior quarter');
+  const roeTrend = getMetricTrend(latestPoint?.roe, priorRoe, 'prior quarter');
+  const interestIncomeTrend = getMetricTrend(
+    latestInterestIncome,
+    priorInterestIncome,
+    'prior quarter',
+  );
+  const interestExpenseTrend = getMetricTrend(
+    latestInterestExpense,
+    priorInterestExpense,
+    'prior quarter',
+  );
+  const nimYearTrend = getMetricTrend(latestNim, yearAgoPoint?.nimy, 'prior year');
+  const roaYearTrend = getMetricTrend(latestPoint?.roa, yearAgoPoint?.roa, 'prior year');
+  const roeYearTrend = getMetricTrend(latestPoint?.roe, yearAgoPoint?.roe, 'prior year');
+  const interestIncomeYearTrend = getMetricTrend(
+    latestInterestIncome,
+    yearAgoPoint?.INTINCY,
+    'prior year',
+  );
+  const interestExpenseYearTrend = getMetricTrend(
+    latestInterestExpense,
+    yearAgoPoint?.INTEXPY,
+    'prior year',
+  );
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -987,7 +1014,22 @@ export default function Home() {
                 </div>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>INTINCY</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>INTINCY</p>
+                      {interestIncomeYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            interestIncomeYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${interestIncomeYearTrend.label}`}
+                          title={`Year over year change: ${interestIncomeYearTrend.label}`}
+                        >
+                          YoY {interestIncomeYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.metricValueRow}>
                       <p className={styles.metricValue}>
                         {formatNumber(latestInterestIncome)}
@@ -1008,7 +1050,22 @@ export default function Home() {
                     </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>INTEXPY</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>INTEXPY</p>
+                      {interestExpenseYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            interestExpenseYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${interestExpenseYearTrend.label}`}
+                          title={`Year over year change: ${interestExpenseYearTrend.label}`}
+                        >
+                          YoY {interestExpenseYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.metricValueRow}>
                       <p className={styles.metricValue}>
                         {formatNumber(latestInterestExpense)}
@@ -1029,7 +1086,22 @@ export default function Home() {
                     </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>NIM</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>NIM</p>
+                      {nimYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            nimYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${nimYearTrend.label}`}
+                          title={`Year over year change: ${nimYearTrend.label}`}
+                        >
+                          YoY {nimYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.metricValueRow}>
                       <p className={styles.metricValue}>{formatPercentage(latestNim)}</p>
                       {nimTrend && (
@@ -1046,7 +1118,22 @@ export default function Home() {
                     </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>ROA</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>ROA</p>
+                      {roaYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            roaYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${roaYearTrend.label}`}
+                          title={`Year over year change: ${roaYearTrend.label}`}
+                        >
+                          YoY {roaYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.metricValueRow}>
                       <p className={styles.metricValue}>
                         {formatPercentage(latestPoint?.roa)}
@@ -1065,7 +1152,22 @@ export default function Home() {
                     </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>ROE</p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>ROE</p>
+                      {roeYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            roeYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${roeYearTrend.label}`}
+                          title={`Year over year change: ${roeYearTrend.label}`}
+                        >
+                          YoY {roeYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                     <div className={styles.metricValueRow}>
                       <p className={styles.metricValue}>
                         {formatPercentage(latestPoint?.roe)}
