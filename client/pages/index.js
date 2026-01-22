@@ -161,12 +161,15 @@ export default function Home() {
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
     if (!Number.isFinite(asset)) return null;
-    if (asset >= 1000000000) return 'Over 1 Trillion';
-    if (asset >= 250000000) return 'Between $250 B and 1 Trillion';
+    if (asset >= 700000000) return 'Over 700 Billion';
+    if (asset >= 250000000) return 'Between $250 B and 700 Billion';
     if (asset >= 100000000) return 'Between $100 B and 250 B';
-    if (asset >= 10000000) return 'Between $10 B and 100 B';
-    if (asset >= 1000000) return 'Between $1 B and 10 B';
-    return 'Less than 1 B';
+    if (asset >= 50000000) return 'Between $50 B and 100 B';
+    if (asset >= 10000000) return 'Between $10 B and 50 B';
+    if (asset >= 5000000) return 'Between $5 B and 10 B';
+    if (asset >= 1000000) return 'Between $1 B and 5 B';
+    if (asset >= 500000) return 'Between $0.5 B and 1 B';
+    return 'Less than 0.5 B';
   };
 
   const sortedPoints = useMemo(() => {

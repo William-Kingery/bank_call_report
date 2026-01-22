@@ -7,12 +7,15 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 
 const BENCHMARK_PORTFOLIOS = [
   'National Average',
-  'Over 1 Trillion',
-  'Between $250 B and 1 Trillion',
+  'Over 700 Billion',
+  'Between $250 B and 700 Billion',
   'Between $100 B and 250 B',
-  'Between $10 B and 100 B',
-  'Between $1 B and 10 B',
-  'Less than 1 B',
+  'Between $50 B and 100 B',
+  'Between $10 B and 50 B',
+  'Between $5 B and 10 B',
+  'Between $1 B and 5 B',
+  'Between $0.5 B and 1 B',
+  'Less than 0.5 B',
 ];
 
 const REGION_OPTIONS = ['All Regions', 'Northeast', 'Midwest', 'South', 'West'];
@@ -203,6 +206,12 @@ const NationalAverages = () => {
   const [summaryRows, setSummaryRows] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
+  const [regionSummaryRows, setRegionSummaryRows] = useState([]);
+  const [regionSummaryLoading, setRegionSummaryLoading] = useState(false);
+  const [regionSummaryError, setRegionSummaryError] = useState(null);
+  const [stateSummaryRows, setStateSummaryRows] = useState([]);
+  const [stateSummaryLoading, setStateSummaryLoading] = useState(false);
+  const [stateSummaryError, setStateSummaryError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -284,6 +293,80 @@ const NationalAverages = () => {
 
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod, selectedRegion, selectedDistrict]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchRegionSummary = async () => {
+      setRegionSummaryLoading(true);
+      setRegionSummaryError(null);
+      try {
+        const queryParams = new URLSearchParams();
+        if (selectedPeriod) {
+          const [, periodValue] = selectedPeriod.split(':');
+          queryParams.set('quarter', periodValue);
+        }
+        const queryString = queryParams.toString();
+        const response = await fetch(
+          `${API_BASE}/national-averages/region-summary${queryString ? `?${queryString}` : ''}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load region summary');
+        }
+        const data = await response.json();
+        setRegionSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setRegionSummaryRows([]);
+          setRegionSummaryError(err.message);
+        }
+      } finally {
+        setRegionSummaryLoading(false);
+      }
+    };
+
+    fetchRegionSummary();
+
+    return () => controller.abort();
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchStateSummary = async () => {
+      setStateSummaryLoading(true);
+      setStateSummaryError(null);
+      try {
+        const queryParams = new URLSearchParams();
+        if (selectedPeriod) {
+          const [, periodValue] = selectedPeriod.split(':');
+          queryParams.set('quarter', periodValue);
+        }
+        const queryString = queryParams.toString();
+        const response = await fetch(
+          `${API_BASE}/national-averages/state-summary${queryString ? `?${queryString}` : ''}`,
+          { signal: controller.signal }
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load state summary');
+        }
+        const data = await response.json();
+        setStateSummaryRows(data.results ?? []);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setStateSummaryRows([]);
+          setStateSummaryError(err.message);
+        }
+      } finally {
+        setStateSummaryLoading(false);
+      }
+    };
+
+    fetchStateSummary();
+
+    return () => controller.abort();
+  }, [selectedPeriod]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -512,6 +595,8 @@ const NationalAverages = () => {
                     <th>Equity</th>
                     <th>Net income</th>
                     <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -531,12 +616,128 @@ const NationalAverages = () => {
                         <td>{formatCurrency(Number(row.equity))}</td>
                         <td>{formatCurrency(Number(row.netIncome))}</td>
                         <td>{formatPercentage(Number(row.roa))}</td>
+                        <td>{formatPercentage(Number(row.roe))}</td>
+                        <td>{formatPercentage(Number(row.nim))}</td>
                       </tr>
                     );
                   })}
                   {!filteredSummaryRows.length ? (
                     <tr>
-                      <td colSpan={8}>No summary data for the selected quarter.</td>
+                      <td colSpan={10}>No summary data for the selected quarter.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Regional performance</p>
+            <h3 className={styles.bankTitle}>Regional segment summaries</h3>
+            <p className={styles.sectionSubtitle}>
+              Assets, deposits, liabilities, equity, and profitability by region and segment.
+            </p>
+          </div>
+          {regionSummaryError ? <p className={styles.error}>{regionSummaryError}</p> : null}
+          {regionSummaryLoading ? (
+            <p className={styles.status}>Loading regional summary...</p>
+          ) : null}
+          {!regionSummaryLoading && !regionSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Segment</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Deposits</th>
+                    <th>Liabilities</th>
+                    <th>Equity</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {regionSummaryRows.map((row) => (
+                    <tr key={`${row.region}-${row.segment}`}>
+                      <td>{row.region}</td>
+                      <td>{row.segment}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                      <td>{formatCurrency(Number(row.assets))}</td>
+                      <td>{formatCurrency(Number(row.deposits))}</td>
+                      <td>{formatCurrency(Number(row.liabilities))}</td>
+                      <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatCurrency(Number(row.netIncome))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                    </tr>
+                  ))}
+                  {!regionSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={11}>No regional summary data available.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Statewide performance</p>
+            <h3 className={styles.bankTitle}>Statewide segment summaries</h3>
+            <p className={styles.sectionSubtitle}>
+              Segment summaries for each state in the selected period.
+            </p>
+          </div>
+          {stateSummaryError ? <p className={styles.error}>{stateSummaryError}</p> : null}
+          {stateSummaryLoading ? (
+            <p className={styles.status}>Loading statewide summary...</p>
+          ) : null}
+          {!stateSummaryLoading && !stateSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>State</th>
+                    <th>Segment</th>
+                    <th>Banks</th>
+                    <th>Assets</th>
+                    <th>Deposits</th>
+                    <th>Liabilities</th>
+                    <th>Equity</th>
+                    <th>Net income</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
+                    <th>NIM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stateSummaryRows.map((row) => (
+                    <tr key={`${row.stateName}-${row.segment}`}>
+                      <td>{row.stateName}</td>
+                      <td>{row.segment}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                      <td>{formatCurrency(Number(row.assets))}</td>
+                      <td>{formatCurrency(Number(row.deposits))}</td>
+                      <td>{formatCurrency(Number(row.liabilities))}</td>
+                      <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatCurrency(Number(row.netIncome))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                    </tr>
+                  ))}
+                  {!stateSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={11}>No statewide summary data available.</td>
                     </tr>
                   ) : null}
                 </tbody>
