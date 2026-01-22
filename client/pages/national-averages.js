@@ -644,7 +644,6 @@ const NationalAverages = () => {
               Assets, deposits, liabilities, equity, and profitability by region and segment.
             </p>
           </div>
-          {renderFilterControls()}
           {regionSummaryError ? <p className={styles.error}>{regionSummaryError}</p> : null}
           {regionSummaryLoading ? (
             <p className={styles.status}>Loading regional summary...</p>
