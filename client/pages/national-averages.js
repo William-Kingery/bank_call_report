@@ -434,20 +434,25 @@ const NationalAverages = () => {
           ))}
         </select>
       </label>
-      <label className={styles.selectLabel}>
-        FRB District
-        <select
-          className={styles.select}
-          value={selectedDistrict}
-          onChange={(event) => setSelectedDistrict(event.target.value)}
-        >
-          {FRB_DISTRICT_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className={styles.printControlGroup}>
+        <button className={styles.printButton} type="button" onClick={handlePrint}>
+          Print chart + table
+        </button>
+        <label className={styles.selectLabel}>
+          FRB District
+          <select
+            className={styles.select}
+            value={selectedDistrict}
+            onChange={(event) => setSelectedDistrict(event.target.value)}
+          >
+            {FRB_DISTRICT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     </div>
   );
 
@@ -474,12 +479,7 @@ const NationalAverages = () => {
               Total Summary for each State for the selected period
             </p>
           </div>
-          <div className={styles.headerControls}>
-            {renderFilterControls()}
-            <button className={styles.printButton} type="button" onClick={handlePrint}>
-              Print chart + table
-            </button>
-          </div>
+          {renderFilterControls()}
         </div>
 
         {error ? <p className={styles.error}>{error}</p> : null}

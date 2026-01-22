@@ -84,13 +84,6 @@
   flex-wrap: wrap;
 }
 
-.headerControls {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 1rem;
-}
-
 .sectionKicker {
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -135,6 +128,13 @@
   background: rgba(255, 255, 255, 0.9);
   font-size: 0.95rem;
   min-width: 240px;
+}
+
+.printControlGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
 }
 
 .printButton {
