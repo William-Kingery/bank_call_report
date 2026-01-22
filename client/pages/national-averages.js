@@ -207,6 +207,12 @@ const NationalAverages = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryError, setSummaryError] = useState(null);
 
+  const handlePrint = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -468,7 +474,12 @@ const NationalAverages = () => {
               Total Summary for each State for the selected period
             </p>
           </div>
-          {renderFilterControls()}
+          <div className={styles.headerControls}>
+            {renderFilterControls()}
+            <button className={styles.printButton} type="button" onClick={handlePrint}>
+              Print chart + table
+            </button>
+          </div>
         </div>
 
         {error ? <p className={styles.error}>{error}</p> : null}
