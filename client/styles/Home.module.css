@@ -552,8 +552,16 @@
 .trendArrow {
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
   font-size: 1.1rem;
   font-weight: 700;
+}
+
+.qoqTrendText {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .trendUp {

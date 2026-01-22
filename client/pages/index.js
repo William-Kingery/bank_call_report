@@ -1044,6 +1044,7 @@ export default function Home() {
                           aria-label={interestIncomeTrend.label}
                           title={interestIncomeTrend.label}
                         >
+                          <span className={styles.qoqTrendText}>QoQ</span>
                           {interestIncomeTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
@@ -1080,6 +1081,7 @@ export default function Home() {
                           aria-label={interestExpenseTrend.label}
                           title={interestExpenseTrend.label}
                         >
+                          <span className={styles.qoqTrendText}>QoQ</span>
                           {interestExpenseTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
@@ -1112,6 +1114,7 @@ export default function Home() {
                           aria-label={nimTrend.label}
                           title={nimTrend.label}
                         >
+                          <span className={styles.qoqTrendText}>QoQ</span>
                           {nimTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
@@ -1146,6 +1149,7 @@ export default function Home() {
                           aria-label={roaTrend.label}
                           title={roaTrend.label}
                         >
+                          <span className={styles.qoqTrendText}>QoQ</span>
                           {roaTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
@@ -1180,6 +1184,7 @@ export default function Home() {
                           aria-label={roeTrend.label}
                           title={roeTrend.label}
                         >
+                          <span className={styles.qoqTrendText}>QoQ</span>
                           {roeTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
