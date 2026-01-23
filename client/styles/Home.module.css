@@ -1422,4 +1422,20 @@
   .printButton {
     display: none;
   }
+
+  .printPageBreak {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .chartSection,
+  .chartGrid,
+  .chartCard,
+  .lineChartBlock,
+  .lineChartBody,
+  .assetQualityChartSection,
+  .loanMixSection {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
