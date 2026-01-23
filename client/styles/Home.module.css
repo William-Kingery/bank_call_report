@@ -22,6 +22,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
+  flex-direction: column;
+  gap: 0.75rem;
   min-width: 180px;
 }
 
@@ -61,6 +63,28 @@
 .headerLink:focus {
   text-decoration: underline;
   outline: none;
+}
+
+.printButton {
+  border: 1px solid #cbd5f5;
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: #eef2ff;
+  color: #1e3a8a;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.printButton:hover {
+  background: #e0e7ff;
+  border-color: #a5b4fc;
+}
+
+.printButton:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .headerSummary {
@@ -501,14 +525,18 @@
 
 .metricCard {
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #0f172a;
   border-radius: 12px;
-  background: #e2e8f0;
+  background: #0f172a;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.35rem;
 }
 
 .metricName {
   margin: 0;
-  color: #475569;
+  color: #f8fafc;
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -518,6 +546,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  flex-wrap: nowrap;
 }
 
 .yoyTrend {
@@ -535,18 +564,19 @@
 }
 
 .metricValue {
-  margin: 0.35rem 0 0;
+  margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
+  white-space: nowrap;
 }
 
 .metricValueRow {
-  margin-top: 0.35rem;
   display: flex;
-  align-items: baseline;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 0.5rem;
+  flex-wrap: nowrap;
 }
 
 .metricValueRow .metricValue {
@@ -557,7 +587,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 1.1rem;
+  font-size: 0.65rem;
   font-weight: 700;
 }
 
@@ -1385,4 +1415,27 @@
 .legendEquity {
   background: linear-gradient(180deg, #93c5fd, #2563eb);
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+@media print {
+  .tabs,
+  .printButton {
+    display: none;
+  }
+
+  .printPageBreak {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .chartSection,
+  .chartGrid,
+  .chartCard,
+  .lineChartBlock,
+  .lineChartBody,
+  .assetQualityChartSection,
+  .loanMixSection {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }

@@ -113,6 +113,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
   const [activeTab, setActiveTab] = useState('portfolio');
+  const [printAllTabs, setPrintAllTabs] = useState(false);
   const [portfolioView, setPortfolioView] = useState('latest');
   const [assetQualityView, setAssetQualityView] = useState('latest');
   const [profitabilityView, setProfitabilityView] = useState('latest');
@@ -806,6 +807,27 @@ export default function Home() {
     };
   }, [hasSelectedBank, query, reportData, selectedName]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const handleBeforePrint = () => setPrintAllTabs(true);
+    const handleAfterPrint = () => setPrintAllTabs(false);
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, []);
+
+  const handlePrint = () => {
+    if (typeof window === 'undefined') return;
+    setPrintAllTabs(true);
+    window.setTimeout(() => window.print(), 50);
+  };
+
   const fetchReportData = async (cert) => {
     setLoading(true);
     setError(null);
@@ -858,6 +880,9 @@ export default function Home() {
           <Link className={styles.headerLink} href="/smart-pricing">
             Smart Pricing
           </Link>
+          <button type="button" className={styles.printButton} onClick={handlePrint}>
+            Print dashboard
+          </button>
         </div>
       </div>
 
@@ -1000,7 +1025,7 @@ export default function Home() {
             </button>
           </div>
 
-          {activeTab === 'portfolio' && (
+          {(activeTab === 'portfolio' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
               <section className={styles.latestMetrics}>
                 <div className={styles.latestHeader}>
@@ -1599,7 +1624,7 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'asset-quality' && (
+          {(activeTab === 'asset-quality' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Asset Quality</h3>
@@ -2162,7 +2187,7 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'profitability' && (
+          {(activeTab === 'profitability' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Profitability</h3>
@@ -2528,7 +2553,7 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'capital' && (
+          {(activeTab === 'capital' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Capital</h3>
