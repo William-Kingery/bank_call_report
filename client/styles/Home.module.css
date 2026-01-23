@@ -525,9 +525,9 @@
 
 .metricCard {
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #0f172a;
   border-radius: 12px;
-  background: #e2e8f0;
+  background: #0f172a;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -536,7 +536,7 @@
 
 .metricName {
   margin: 0;
-  color: #475569;
+  color: #f8fafc;
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -567,7 +567,7 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #f8fafc;
   white-space: nowrap;
 }
 
