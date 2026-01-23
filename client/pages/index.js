@@ -1387,7 +1387,7 @@ export default function Home() {
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>INTINCY</p>
+                      <p className={styles.metricName}>Int Income</p>
                       {interestIncomeYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
@@ -1424,7 +1424,7 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>INTEXPY</p>
+                      <p className={styles.metricName}>Int Exp</p>
                       {interestExpenseYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
