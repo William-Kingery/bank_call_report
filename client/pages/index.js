@@ -2674,6 +2674,18 @@ export default function Home() {
                       {formatPercentage(latestRatPoint?.eqtanqta)}
                     </p>
                   </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>CET1</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestRatPoint?.rbct1cer)}
+                    </p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Total RBC</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestRatPoint?.rbcrwaj)}
+                    </p>
+                  </div>
                 </div>
               </section>
               <section className={styles.chartSection}>

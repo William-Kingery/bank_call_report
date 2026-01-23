@@ -536,7 +536,9 @@ router.get('/charts', async (req, res) => {
          r.LNAGY1 AS LNAGY1,
          r.LNCIY1 AS LNCIY1,
          r.LNCOMRY1 AS LNCOMRY1,
-         r.LNCONY1 AS LNCONY1
+         r.LNCONY1 AS LNCONY1,
+         r.RBCT1CER AS rbct1cer,
+         r.RBCRWAJ AS rbcrwaj
        FROM fdic_rat r
        WHERE r.CERT = ?
        ORDER BY r.CALLYM DESC
