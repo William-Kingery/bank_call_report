@@ -301,6 +301,7 @@ export default function Home() {
       const delinq90Value = Number(point.P9Asset);
       const nonAccrualValue = Number(point.NAAsset);
       const npaValue = Number(point.nperf);
+      const npaRatioValue = Number(point.nperfRatio);
       const loanLeaseCoValue = Number(point.DRLNLSQ);
       const netChargeOffRatioValue = Number(point.ntlnlsqr);
       return {
@@ -309,6 +310,7 @@ export default function Home() {
         delinq90: Number.isFinite(delinq90Value) ? delinq90Value : null,
         nonAccruals: Number.isFinite(nonAccrualValue) ? nonAccrualValue : null,
         npa: Number.isFinite(npaValue) ? npaValue : null,
+        npaRatio: Number.isFinite(npaRatioValue) ? npaRatioValue : null,
         loanLeaseCO: Number.isFinite(loanLeaseCoValue) ? loanLeaseCoValue : null,
         netChargeOffRatio: Number.isFinite(netChargeOffRatioValue)
           ? netChargeOffRatioValue
@@ -351,11 +353,75 @@ export default function Home() {
       delinq90: buildColumnData(assetQualityViewSeries, 'delinq90'),
       nonAccruals: buildColumnData(assetQualityViewSeries, 'nonAccruals'),
       npa: buildColumnData(assetQualityViewSeries, 'npa'),
+      npaRatio: buildColumnData(assetQualityViewSeries, 'npaRatio'),
       loanLeaseCO: buildColumnData(assetQualityViewSeries, 'loanLeaseCO'),
       netChargeOffRatio: buildColumnData(assetQualityViewSeries, 'netChargeOffRatio'),
     }),
     [assetQualityViewSeries],
   );
+
+  const npaRatioChart = useMemo(() => {
+    const rawValues = assetQualityViewSeries.map((point) => ({
+      label: point.label,
+      value: Number(point?.npaRatio),
+    }));
+    const numericValues = rawValues
+      .map((point) => point.value)
+      .filter((value) => Number.isFinite(value));
+    const min = numericValues.length ? Math.min(...numericValues) : 0;
+    const max = numericValues.length ? Math.max(...numericValues) : 0;
+    const range = max - min;
+    const values = rawValues.map((point) => {
+      if (!Number.isFinite(point.value)) {
+        return { label: point.label, value: null, percentage: 0 };
+      }
+      return {
+        label: point.label,
+        value: point.value,
+        percentage: range === 0 ? 50 : ((point.value - min) / range) * 100,
+      };
+    });
+    const height = 160;
+    const paddingTop = 18;
+    const paddingBottom = 18;
+    const rangeHeight = height - paddingTop - paddingBottom;
+    const width = Math.max(assetQualityViewSeries.length * assetQualityColumnWidth, 320);
+    const points = values.map((point, index) => {
+      if (point.value == null) {
+        return null;
+      }
+      const x = index * assetQualityColumnWidth + assetQualityColumnWidth / 2;
+      const y = paddingTop + (1 - point.percentage / 100) * rangeHeight;
+      return {
+        x,
+        y,
+        label: point.label,
+        value: point.value,
+      };
+    });
+    const segments = [];
+    let current = [];
+    points.forEach((point) => {
+      if (!point) {
+        if (current.length > 1) {
+          segments.push(current);
+        }
+        current = [];
+        return;
+      }
+      current.push(point);
+    });
+    if (current.length > 1) {
+      segments.push(current);
+    }
+
+    return {
+      width,
+      height,
+      points,
+      segments,
+    };
+  }, [assetQualityColumnWidth, assetQualityViewSeries]);
 
   const netChargeOffRatioChart = useMemo(() => {
     const rawValues = assetQualityViewSeries.map((point) => ({
@@ -1652,26 +1718,6 @@ export default function Home() {
                     <p className={styles.metricName}>Loans and Leases C/O&apos;s</p>
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.DRLNLSQ)}</p>
                   </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Ag Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestAgLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>C&amp;I Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestCILoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>CRE Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestCreLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>RE Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestReLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Consumer Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestConsumerLoans)}</p>
-                  </div>
                 </div>
                 <div className={styles.loanMixSection}>
                   <div className={styles.loanMixHeader}>
@@ -1983,6 +2029,7 @@ export default function Home() {
                         </div>
                         <div className={styles.lineChartBody}>
                           <span className={styles.lineChartYAxis}>Thousands</span>
+                          <span className={styles.lineChartYAxisRight}>Percent</span>
                           {assetQualityColumnData.npa.max != null && (
                             <span className={styles.lineChartTick} style={{ top: '12%' }}>
                               {formatNumber(assetQualityColumnData.npa.max)}
@@ -1993,38 +2040,97 @@ export default function Home() {
                               {formatNumber(assetQualityColumnData.npa.min)}
                             </span>
                           )}
+                          {assetQualityColumnData.npaRatio.max != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
+                              {formatPercentage(assetQualityColumnData.npaRatio.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.npaRatio.min != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
+                              {formatPercentage(assetQualityColumnData.npaRatio.min)}
+                            </span>
+                          )}
                           {assetQualityColumnData.npa.hasData ? (
-                            <div
-                              className={styles.columnChartGrid}
-                              role="img"
-                              aria-label="Non-performing assets column chart"
-                              style={{
-                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
-                                minWidth: getAxisMinWidth(
-                                  assetQualityViewSeries.length,
-                                  assetQualityColumnWidth,
-                                ),
-                              }}
-                            >
-                              {assetQualityColumnData.npa.values.map((point) => (
-                                <div
-                                  key={`npa-${point.label}`}
-                                  className={styles.columnChartBarWrapper}
-                                  title={
-                                    point.value == null
-                                      ? `${point.label}: N/A`
-                                      : `${point.label}: ${formatNumber(point.value)}`
-                                  }
-                                >
+                            <>
+                              <div
+                                className={styles.columnChartGrid}
+                                role="img"
+                                aria-label="Non-performing assets column chart"
+                                style={{
+                                  gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                  minWidth: getAxisMinWidth(
+                                    assetQualityViewSeries.length,
+                                    assetQualityColumnWidth,
+                                  ),
+                                }}
+                              >
+                                {assetQualityColumnData.npa.values.map((point) => (
                                   <div
-                                    className={`${styles.columnChartBar} ${styles.npaColumnBar} ${
-                                      point.value == null ? styles.columnChartBarEmpty : ''
-                                    }`}
-                                    style={{ height: `${point.percentage}%` }}
-                                  />
+                                    key={`npa-${point.label}`}
+                                    className={styles.columnChartBarWrapper}
+                                    title={
+                                      point.value == null
+                                        ? `${point.label}: N/A`
+                                        : `${point.label}: ${formatNumber(point.value)}`
+                                    }
+                                  >
+                                    <div
+                                      className={`${styles.columnChartBar} ${styles.npaColumnBar} ${
+                                        point.value == null ? styles.columnChartBarEmpty : ''
+                                      }`}
+                                      style={{ height: `${point.percentage}%` }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              {assetQualityColumnData.npaRatio.hasData && (
+                                <div
+                                  className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                  aria-hidden="true"
+                                  style={{
+                                    minWidth: getAxisMinWidth(
+                                      assetQualityViewSeries.length,
+                                      assetQualityColumnWidth,
+                                    ),
+                                  }}
+                                >
+                                  <svg
+                                    className={styles.ratioLineChart}
+                                    role="img"
+                                    aria-label="Non-performing assets ratio line chart"
+                                    viewBox={`0 0 ${npaRatioChart.width} ${npaRatioChart.height}`}
+                                    width={npaRatioChart.width}
+                                    height={npaRatioChart.height}
+                                    preserveAspectRatio="none"
+                                  >
+                                    {npaRatioChart.segments.map((segment) => (
+                                      <polyline
+                                        key={`npa-ratio-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                        className={styles.ratioLine}
+                                        points={segment
+                                          .map((point) => `${point.x},${point.y}`)
+                                          .join(' ')}
+                                      />
+                                    ))}
+                                    {npaRatioChart.points.map((point) =>
+                                      point ? (
+                                        <circle
+                                          key={`npa-ratio-dot-${point.label}`}
+                                          className={styles.ratioLineDot}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>
+                                            {`${point.label}: ${formatPercentage(point.value)}`}
+                                          </title>
+                                        </circle>
+                                      ) : null,
+                                    )}
+                                  </svg>
                                 </div>
-                              ))}
-                            </div>
+                              )}
+                            </>
                           ) : (
                             <p className={styles.status}>No NPA data available.</p>
                           )}

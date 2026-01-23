@@ -511,7 +511,8 @@ router.get('/charts', async (req, res) => {
          r.LNCONT1R AS lncont1r,
          r.LNHRSKR AS lnhrskr,
          r.LNCDT1R AS lncdt1r,
-         r.NTLNLSQR AS ntlnlsqr
+         r.NTLNLSQR AS ntlnlsqr,
+         r.NPERFV AS nperfRatio
        FROM fdic_fts f
        LEFT JOIN fdic_cdi c
          ON f.CERT = c.CERT AND f.CALLYM = c.CALLYM
