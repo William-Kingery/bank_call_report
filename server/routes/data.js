@@ -493,6 +493,9 @@ router.get('/charts', async (req, res) => {
          c.NPERF AS nperf,
          c.DRLNLSQ AS DRLNLSQ,
          c.RWA AS rwa,
+         c.RBCT1 AS rbct1,
+         c.RBCT2 AS rbct2,
+         c.RBC AS rbc,
          r.ROAQ AS roa,
          r.ROEQ AS roe,
          r.LNLSDEPR AS lnlsdepr,
@@ -511,7 +514,8 @@ router.get('/charts', async (req, res) => {
          r.LNCONT1R AS lncont1r,
          r.LNHRSKR AS lnhrskr,
          r.LNCDT1R AS lncdt1r,
-         r.NTLNLSQR AS ntlnlsqr
+         r.NTLNLSQR AS ntlnlsqr,
+         r.NPERFV AS nperfRatio
        FROM fdic_fts f
        LEFT JOIN fdic_cdi c
          ON f.CERT = c.CERT AND f.CALLYM = c.CALLYM
@@ -535,7 +539,9 @@ router.get('/charts', async (req, res) => {
          r.LNAGY1 AS LNAGY1,
          r.LNCIY1 AS LNCIY1,
          r.LNCOMRY1 AS LNCOMRY1,
-         r.LNCONY1 AS LNCONY1
+         r.LNCONY1 AS LNCONY1,
+         r.RBCT1CER AS rbct1cer,
+         r.RBCRWAJ AS rbcrwaj
        FROM fdic_rat r
        WHERE r.CERT = ?
        ORDER BY r.CALLYM DESC

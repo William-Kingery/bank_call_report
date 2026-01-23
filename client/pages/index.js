@@ -153,8 +153,6 @@ export default function Home() {
 
   const getAxisMinWidth = (length, minColumnWidth = 64) =>
     `${Math.max(length * minColumnWidth, 320)}px`;
-  const getAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'latest4' ? 72 : 64);
   const getPortfolioAxisMinWidthForView = () => '100%';
   const getProfitabilityAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'latest4' ? 40 : 33);
@@ -257,6 +255,9 @@ export default function Home() {
       const consumerLoansValue = Number(point.lncont1r);
       const highRiskLoansValue = Number(point.lnhrskr);
       const constructionLoansValue = Number(point.lncdt1r);
+      const rbct1Value = Number(point.rbct1);
+      const rbct2Value = Number(point.rbct2);
+      const rbcValue = Number(point.rbc);
 
       return {
         label: formatQuarterLabel(point.callym),
@@ -268,6 +269,9 @@ export default function Home() {
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
           ? constructionLoansValue
           : null,
+        rbct1: Number.isFinite(rbct1Value) ? rbct1Value : null,
+        rbct2: Number.isFinite(rbct2Value) ? rbct2Value : null,
+        rbc: Number.isFinite(rbcValue) ? rbcValue : null,
       };
     });
   }, [sortedPoints]);
@@ -292,6 +296,7 @@ export default function Home() {
     () => sliceSeries(capitalSeries, capitalView),
     [capitalSeries, capitalView],
   );
+  const capitalColumnWidth = capitalView === 'latest4' ? 52 : 44;
 
   const assetQualitySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
@@ -301,6 +306,7 @@ export default function Home() {
       const delinq90Value = Number(point.P9Asset);
       const nonAccrualValue = Number(point.NAAsset);
       const npaValue = Number(point.nperf);
+      const npaRatioValue = Number(point.nperfRatio);
       const loanLeaseCoValue = Number(point.DRLNLSQ);
       const netChargeOffRatioValue = Number(point.ntlnlsqr);
       return {
@@ -309,6 +315,7 @@ export default function Home() {
         delinq90: Number.isFinite(delinq90Value) ? delinq90Value : null,
         nonAccruals: Number.isFinite(nonAccrualValue) ? nonAccrualValue : null,
         npa: Number.isFinite(npaValue) ? npaValue : null,
+        npaRatio: Number.isFinite(npaRatioValue) ? npaRatioValue : null,
         loanLeaseCO: Number.isFinite(loanLeaseCoValue) ? loanLeaseCoValue : null,
         netChargeOffRatio: Number.isFinite(netChargeOffRatioValue)
           ? netChargeOffRatioValue
@@ -345,17 +352,118 @@ export default function Home() {
     [capitalViewSeries],
   );
 
+  const capitalStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const rbct1Value = Number(point?.rbct1);
+      const rbct2Value = Number(point?.rbct2);
+      const rbcValue = Number(point?.rbc);
+      const rbct1 = Number.isFinite(rbct1Value) ? rbct1Value : null;
+      const rbct2 = Number.isFinite(rbct2Value) ? rbct2Value : null;
+      const rbc = Number.isFinite(rbcValue) ? rbcValue : null;
+      const total = (rbct1 ?? 0) + (rbct2 ?? 0) + (rbc ?? 0);
+      const hasAnyValue = rbct1 != null || rbct2 != null || rbc != null;
+
+      return {
+        label: point.label,
+        rbct1,
+        rbct2,
+        rbc,
+        total: Number.isFinite(total) && hasAnyValue ? total : null,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        rbct1Percent: point.rbct1 != null && max > 0 ? (point.rbct1 / max) * 100 : 0,
+        rbct2Percent: point.rbct2 != null && max > 0 ? (point.rbct2 / max) * 100 : 0,
+        rbcPercent: point.rbc != null && max > 0 ? (point.rbc / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
+
   const assetQualityColumnData = useMemo(
     () => ({
       delinq3089: buildColumnData(assetQualityViewSeries, 'delinq3089'),
       delinq90: buildColumnData(assetQualityViewSeries, 'delinq90'),
       nonAccruals: buildColumnData(assetQualityViewSeries, 'nonAccruals'),
       npa: buildColumnData(assetQualityViewSeries, 'npa'),
+      npaRatio: buildColumnData(assetQualityViewSeries, 'npaRatio'),
       loanLeaseCO: buildColumnData(assetQualityViewSeries, 'loanLeaseCO'),
       netChargeOffRatio: buildColumnData(assetQualityViewSeries, 'netChargeOffRatio'),
     }),
     [assetQualityViewSeries],
   );
+
+  const npaRatioChart = useMemo(() => {
+    const rawValues = assetQualityViewSeries.map((point) => ({
+      label: point.label,
+      value: Number(point?.npaRatio),
+    }));
+    const numericValues = rawValues
+      .map((point) => point.value)
+      .filter((value) => Number.isFinite(value));
+    const min = numericValues.length ? Math.min(...numericValues) : 0;
+    const max = numericValues.length ? Math.max(...numericValues) : 0;
+    const range = max - min;
+    const values = rawValues.map((point) => {
+      if (!Number.isFinite(point.value)) {
+        return { label: point.label, value: null, percentage: 0 };
+      }
+      return {
+        label: point.label,
+        value: point.value,
+        percentage: range === 0 ? 50 : ((point.value - min) / range) * 100,
+      };
+    });
+    const height = 160;
+    const paddingTop = 18;
+    const paddingBottom = 18;
+    const rangeHeight = height - paddingTop - paddingBottom;
+    const width = Math.max(assetQualityViewSeries.length * assetQualityColumnWidth, 320);
+    const points = values.map((point, index) => {
+      if (point.value == null) {
+        return null;
+      }
+      const x = index * assetQualityColumnWidth + assetQualityColumnWidth / 2;
+      const y = paddingTop + (1 - point.percentage / 100) * rangeHeight;
+      return {
+        x,
+        y,
+        label: point.label,
+        value: point.value,
+      };
+    });
+    const segments = [];
+    let current = [];
+    points.forEach((point) => {
+      if (!point) {
+        if (current.length > 1) {
+          segments.push(current);
+        }
+        current = [];
+        return;
+      }
+      current.push(point);
+    });
+    if (current.length > 1) {
+      segments.push(current);
+    }
+
+    return {
+      width,
+      height,
+      points,
+      segments,
+    };
+  }, [assetQualityColumnWidth, assetQualityViewSeries]);
 
   const netChargeOffRatioChart = useMemo(() => {
     const rawValues = assetQualityViewSeries.map((point) => ({
@@ -1652,26 +1760,6 @@ export default function Home() {
                     <p className={styles.metricName}>Loans and Leases C/O&apos;s</p>
                     <p className={styles.metricValue}>{formatNumber(latestPoint?.DRLNLSQ)}</p>
                   </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Ag Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestAgLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>C&amp;I Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestCILoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>CRE Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestCreLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>RE Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestReLoans)}</p>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Consumer Loans</p>
-                    <p className={styles.metricValue}>{formatNumber(latestConsumerLoans)}</p>
-                  </div>
                 </div>
                 <div className={styles.loanMixSection}>
                   <div className={styles.loanMixHeader}>
@@ -1983,6 +2071,7 @@ export default function Home() {
                         </div>
                         <div className={styles.lineChartBody}>
                           <span className={styles.lineChartYAxis}>Thousands</span>
+                          <span className={styles.lineChartYAxisRight}>Percent</span>
                           {assetQualityColumnData.npa.max != null && (
                             <span className={styles.lineChartTick} style={{ top: '12%' }}>
                               {formatNumber(assetQualityColumnData.npa.max)}
@@ -1993,38 +2082,97 @@ export default function Home() {
                               {formatNumber(assetQualityColumnData.npa.min)}
                             </span>
                           )}
+                          {assetQualityColumnData.npaRatio.max != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
+                              {formatPercentage(assetQualityColumnData.npaRatio.max)}
+                            </span>
+                          )}
+                          {assetQualityColumnData.npaRatio.min != null && (
+                            <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
+                              {formatPercentage(assetQualityColumnData.npaRatio.min)}
+                            </span>
+                          )}
                           {assetQualityColumnData.npa.hasData ? (
-                            <div
-                              className={styles.columnChartGrid}
-                              role="img"
-                              aria-label="Non-performing assets column chart"
-                              style={{
-                                gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
-                                minWidth: getAxisMinWidth(
-                                  assetQualityViewSeries.length,
-                                  assetQualityColumnWidth,
-                                ),
-                              }}
-                            >
-                              {assetQualityColumnData.npa.values.map((point) => (
-                                <div
-                                  key={`npa-${point.label}`}
-                                  className={styles.columnChartBarWrapper}
-                                  title={
-                                    point.value == null
-                                      ? `${point.label}: N/A`
-                                      : `${point.label}: ${formatNumber(point.value)}`
-                                  }
-                                >
+                            <>
+                              <div
+                                className={styles.columnChartGrid}
+                                role="img"
+                                aria-label="Non-performing assets column chart"
+                                style={{
+                                  gridTemplateColumns: `repeat(${assetQualityViewSeries.length}, minmax(0, ${assetQualityColumnWidth}px))`,
+                                  minWidth: getAxisMinWidth(
+                                    assetQualityViewSeries.length,
+                                    assetQualityColumnWidth,
+                                  ),
+                                }}
+                              >
+                                {assetQualityColumnData.npa.values.map((point) => (
                                   <div
-                                    className={`${styles.columnChartBar} ${styles.npaColumnBar} ${
-                                      point.value == null ? styles.columnChartBarEmpty : ''
-                                    }`}
-                                    style={{ height: `${point.percentage}%` }}
-                                  />
+                                    key={`npa-${point.label}`}
+                                    className={styles.columnChartBarWrapper}
+                                    title={
+                                      point.value == null
+                                        ? `${point.label}: N/A`
+                                        : `${point.label}: ${formatNumber(point.value)}`
+                                    }
+                                  >
+                                    <div
+                                      className={`${styles.columnChartBar} ${styles.npaColumnBar} ${
+                                        point.value == null ? styles.columnChartBarEmpty : ''
+                                      }`}
+                                      style={{ height: `${point.percentage}%` }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                              {assetQualityColumnData.npaRatio.hasData && (
+                                <div
+                                  className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                  aria-hidden="true"
+                                  style={{
+                                    minWidth: getAxisMinWidth(
+                                      assetQualityViewSeries.length,
+                                      assetQualityColumnWidth,
+                                    ),
+                                  }}
+                                >
+                                  <svg
+                                    className={styles.ratioLineChart}
+                                    role="img"
+                                    aria-label="Non-performing assets ratio line chart"
+                                    viewBox={`0 0 ${npaRatioChart.width} ${npaRatioChart.height}`}
+                                    width={npaRatioChart.width}
+                                    height={npaRatioChart.height}
+                                    preserveAspectRatio="none"
+                                  >
+                                    {npaRatioChart.segments.map((segment) => (
+                                      <polyline
+                                        key={`npa-ratio-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                        className={styles.ratioLine}
+                                        points={segment
+                                          .map((point) => `${point.x},${point.y}`)
+                                          .join(' ')}
+                                      />
+                                    ))}
+                                    {npaRatioChart.points.map((point) =>
+                                      point ? (
+                                        <circle
+                                          key={`npa-ratio-dot-${point.label}`}
+                                          className={styles.ratioLineDot}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>
+                                            {`${point.label}: ${formatPercentage(point.value)}`}
+                                          </title>
+                                        </circle>
+                                      ) : null,
+                                    )}
+                                  </svg>
                                 </div>
-                              ))}
-                            </div>
+                              )}
+                            </>
                           ) : (
                             <p className={styles.status}>No NPA data available.</p>
                           )}
@@ -2568,6 +2716,18 @@ export default function Home() {
                       {formatPercentage(latestRatPoint?.eqtanqta)}
                     </p>
                   </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>CET1</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestRatPoint?.rbct1cer)}
+                    </p>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <p className={styles.metricName}>Total RBC</p>
+                    <p className={styles.metricValue}>
+                      {formatPercentage(latestRatPoint?.rbcrwaj)}
+                    </p>
+                  </div>
                 </div>
               </section>
               <section className={styles.chartSection}>
@@ -2634,8 +2794,8 @@ export default function Home() {
                             role="img"
                             aria-label="Tangible equity capital ratio column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.tangibleEquity.values.map((point) => (
@@ -2664,12 +2824,109 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`tangible-equity-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>
+                          Risk-based capital components
+                        </h4>
+                        <p className={styles.lineChartSubhead}>
+                          RBCT1, RBCT2, and RBC by quarter
+                        </p>
+                      </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbct1}`} />
+                          <span className={styles.legendLabel}>RBCT1</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbct2}`} />
+                          <span className={styles.legendLabel}>RBCT2</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbc}`} />
+                          <span className={styles.legendLabel}>RBC</span>
+                        </div>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        {capitalStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(capitalStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
+                        {capitalStackedData.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Risk-based capital components stacked column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                            }}
+                          >
+                            {capitalStackedData.values.map((point) => (
+                              <div
+                                key={`capital-components-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.total == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: RBCT1 ${formatNumber(point.rbct1)} | RBCT2 ${formatNumber(point.rbct2)} | RBC ${formatNumber(point.rbc)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.stackedColumnBar} ${
+                                    point.total == null ? styles.stackedColumnBarEmpty : ''
+                                  }`}
+                                >
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                    style={{ height: `${point.rbct1Percent}%` }}
+                                  />
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbct2}`}
+                                    style={{ height: `${point.rbct2Percent}%` }}
+                                  />
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbc}`}
+                                    style={{ height: `${point.rbcPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No risk-based capital data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                        }}
+                      >
+                        {capitalViewSeries.map((point) => (
+                          <span key={`capital-components-label-${point.label}`}>
                             {formatQuarterShortLabel(point.label)}
                           </span>
                         ))}
@@ -2701,8 +2958,8 @@ export default function Home() {
                             role="img"
                             aria-label="C&I loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.ciLoans.values.map((point) => (
@@ -2731,8 +2988,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2768,8 +3025,8 @@ export default function Home() {
                             role="img"
                             aria-label="Real estate loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.reLoans.values.map((point) => (
@@ -2798,8 +3055,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2835,8 +3092,8 @@ export default function Home() {
                             role="img"
                             aria-label="Consumer loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.consumerLoans.values.map((point) => (
@@ -2865,8 +3122,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2902,8 +3159,8 @@ export default function Home() {
                             role="img"
                             aria-label="High risk loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.highRiskLoans.values.map((point) => (
@@ -2932,8 +3189,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2971,8 +3228,8 @@ export default function Home() {
                             role="img"
                             aria-label="Construction and land development loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.constructionLoans.values.map((point) => (
@@ -3003,8 +3260,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
