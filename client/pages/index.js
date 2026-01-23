@@ -153,8 +153,6 @@ export default function Home() {
 
   const getAxisMinWidth = (length, minColumnWidth = 64) =>
     `${Math.max(length * minColumnWidth, 320)}px`;
-  const getAxisMinWidthForView = (length, view) =>
-    getAxisMinWidth(length, view === 'latest4' ? 72 : 64);
   const getPortfolioAxisMinWidthForView = () => '100%';
   const getProfitabilityAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'latest4' ? 40 : 33);
@@ -292,6 +290,7 @@ export default function Home() {
     () => sliceSeries(capitalSeries, capitalView),
     [capitalSeries, capitalView],
   );
+  const capitalColumnWidth = capitalView === 'latest4' ? 52 : 44;
 
   const assetQualitySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
@@ -2752,8 +2751,8 @@ export default function Home() {
                             role="img"
                             aria-label="Tangible equity capital ratio column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.tangibleEquity.values.map((point) => (
@@ -2782,8 +2781,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2819,8 +2818,8 @@ export default function Home() {
                             role="img"
                             aria-label="C&I loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.ciLoans.values.map((point) => (
@@ -2849,8 +2848,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2886,8 +2885,8 @@ export default function Home() {
                             role="img"
                             aria-label="Real estate loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.reLoans.values.map((point) => (
@@ -2916,8 +2915,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -2953,8 +2952,8 @@ export default function Home() {
                             role="img"
                             aria-label="Consumer loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.consumerLoans.values.map((point) => (
@@ -2983,8 +2982,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -3020,8 +3019,8 @@ export default function Home() {
                             role="img"
                             aria-label="High risk loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.highRiskLoans.values.map((point) => (
@@ -3050,8 +3049,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
@@ -3089,8 +3088,8 @@ export default function Home() {
                             role="img"
                             aria-label="Construction and land development loans to Tier 1 capital column chart"
                             style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                              minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
                             {capitalColumnData.constructionLoans.values.map((point) => (
@@ -3121,8 +3120,8 @@ export default function Home() {
                       <div
                         className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
                         style={{
-                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, 1fr))`,
-                          minWidth: getAxisMinWidthForView(capitalViewSeries.length, capitalView),
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                         }}
                       >
                         {capitalViewSeries.map((point) => (
