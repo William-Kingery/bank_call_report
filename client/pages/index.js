@@ -255,6 +255,9 @@ export default function Home() {
       const consumerLoansValue = Number(point.lncont1r);
       const highRiskLoansValue = Number(point.lnhrskr);
       const constructionLoansValue = Number(point.lncdt1r);
+      const rbct1Value = Number(point.rbct1);
+      const rbct2Value = Number(point.rbct2);
+      const rbcValue = Number(point.rbc);
 
       return {
         label: formatQuarterLabel(point.callym),
@@ -266,6 +269,9 @@ export default function Home() {
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
           ? constructionLoansValue
           : null,
+        rbct1: Number.isFinite(rbct1Value) ? rbct1Value : null,
+        rbct2: Number.isFinite(rbct2Value) ? rbct2Value : null,
+        rbc: Number.isFinite(rbcValue) ? rbcValue : null,
       };
     });
   }, [sortedPoints]);
@@ -345,6 +351,43 @@ export default function Home() {
     }),
     [capitalViewSeries],
   );
+
+  const capitalStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const rbct1Value = Number(point?.rbct1);
+      const rbct2Value = Number(point?.rbct2);
+      const rbcValue = Number(point?.rbc);
+      const rbct1 = Number.isFinite(rbct1Value) ? rbct1Value : null;
+      const rbct2 = Number.isFinite(rbct2Value) ? rbct2Value : null;
+      const rbc = Number.isFinite(rbcValue) ? rbcValue : null;
+      const total = (rbct1 ?? 0) + (rbct2 ?? 0) + (rbc ?? 0);
+      const hasAnyValue = rbct1 != null || rbct2 != null || rbc != null;
+
+      return {
+        label: point.label,
+        rbct1,
+        rbct2,
+        rbc,
+        total: Number.isFinite(total) && hasAnyValue ? total : null,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        rbct1Percent: point.rbct1 != null && max > 0 ? (point.rbct1 / max) * 100 : 0,
+        rbct2Percent: point.rbct2 != null && max > 0 ? (point.rbct2 / max) * 100 : 0,
+        rbcPercent: point.rbc != null && max > 0 ? (point.rbc / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
 
   const assetQualityColumnData = useMemo(
     () => ({
@@ -2787,6 +2830,104 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`tangible-equity-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
+                        ))}
+                      </div>
+                      <span className={styles.lineChartXAxis}>Quarter</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>
+                          Risk-based capital components
+                        </h4>
+                        <p className={styles.lineChartSubhead}>
+                          RBCT1, RBCT2, and RBC by quarter
+                        </p>
+                      </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbct1}`} />
+                          <span className={styles.legendLabel}>RBCT1</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbct2}`} />
+                          <span className={styles.legendLabel}>RBCT2</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendRbc}`} />
+                          <span className={styles.legendLabel}>RBC</span>
+                        </div>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        {capitalStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(capitalStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
+                        {capitalStackedData.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Risk-based capital components stacked column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                            }}
+                          >
+                            {capitalStackedData.values.map((point) => (
+                              <div
+                                key={`capital-components-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.total == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: RBCT1 ${formatNumber(point.rbct1)} | RBCT2 ${formatNumber(point.rbct2)} | RBC ${formatNumber(point.rbc)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.stackedColumnBar} ${
+                                    point.total == null ? styles.stackedColumnBarEmpty : ''
+                                  }`}
+                                >
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                    style={{ height: `${point.rbct1Percent}%` }}
+                                  />
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbct2}`}
+                                    style={{ height: `${point.rbct2Percent}%` }}
+                                  />
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbc}`}
+                                    style={{ height: `${point.rbcPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No risk-based capital data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                        }}
+                      >
+                        {capitalViewSeries.map((point) => (
+                          <span key={`capital-components-label-${point.label}`}>
                             {formatQuarterShortLabel(point.label)}
                           </span>
                         ))}
