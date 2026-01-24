@@ -69,7 +69,6 @@
 
 .headerActions {
   display: flex;
-
   justify-content: flex-end;
   flex-direction: column;
   gap: 0.75rem;
