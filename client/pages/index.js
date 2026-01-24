@@ -2767,7 +2767,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className={styles.chartGrid}>
+                <div className={`${styles.chartGrid} ${styles.capitalChartGrid}`}>
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
