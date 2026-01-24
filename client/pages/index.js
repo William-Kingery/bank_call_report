@@ -145,6 +145,11 @@ export default function Home() {
     if (!year || !quarter) return label;
     return `${quarter} '${year.slice(-2)}`;
   };
+  const formatCapitalAxisLabel = (point) => {
+    if (!point) return 'N/A';
+    if (point.callym) return formatQuarterLabel(point.callym);
+    return point.label ?? 'N/A';
+  };
 
   const sliceSeries = (series, view) => {
     const count = view === 'latest4' ? 4 : 9;
@@ -2827,7 +2832,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`tangible-equity-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -2917,7 +2922,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`capital-components-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -2985,7 +2990,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`ci-loans-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -3053,7 +3058,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`re-loans-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -3121,7 +3126,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`consumer-loans-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -3189,7 +3194,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`high-risk-loans-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
@@ -3261,7 +3266,7 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`construction-loans-label-${point.label}`}>
-                            {formatQuarterLabel(point.callym)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
