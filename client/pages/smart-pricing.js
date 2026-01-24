@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import styles from '../styles/SmartPricing.module.css';
 
+const THEME_STORAGE_KEY = 'bloomberg-theme';
 const DAY_COUNT_OPTIONS = ['30/360', 'ACT/360', 'ACT/365'];
 const PAYMENT_RULES = ['recast_on_reset', 'fixed_payment'];
 const PAYMENTS_PER_YEAR_OPTIONS = [12, 6, 4, 3, 2, 1];
@@ -356,6 +357,21 @@ export default function SmartPricing() {
   const [error, setError] = useState(null);
   const [warning, setWarning] = useState(null);
   const [results, setResults] = useState(null);
+  const [theme, setTheme] = useState('night');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === 'day' || storedTheme === 'night') {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+  }, [theme]);
 
   const spread = useMemo(() => spreadBps / 10000, [spreadBps]);
   const defaultIndex = useMemo(() => defaultIndexPct / 100, [defaultIndexPct]);
@@ -446,7 +462,11 @@ export default function SmartPricing() {
   };
 
   return (
-    <main className={styles.main}>
+    <main
+      className={`${styles.main} ${
+        theme === 'night' ? styles.themeNight : styles.themeDay
+      }`}
+    >
       <header className={styles.header}>
         <div>
           <p className={styles.kicker}>Smart Pricing</p>
@@ -458,6 +478,29 @@ export default function SmartPricing() {
           <Link className={styles.backButton} href="/">
             Back to search
           </Link>
+        </div>
+        <div className={styles.headerActions}>
+          <span className={styles.themeLabel}>Mode</span>
+          <div className={styles.themeButtons} role="group" aria-label="Display mode">
+            <button
+              type="button"
+              className={`${styles.themeButton} ${
+                theme === 'day' ? styles.themeButtonActive : ''
+              }`}
+              onClick={() => setTheme('day')}
+            >
+              Day
+            </button>
+            <button
+              type="button"
+              className={`${styles.themeButton} ${
+                theme === 'night' ? styles.themeButtonActive : ''
+              }`}
+              onClick={() => setTheme('night')}
+            >
+              Night
+            </button>
+          </div>
         </div>
       </header>
 

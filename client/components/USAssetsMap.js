@@ -73,6 +73,10 @@ const USAssetsMap = ({
 
   const handleMouseLeave = () => setTooltip(null);
 
+  const mutedFill = 'var(--terminal-map-muted)';
+  const emptyFill = 'var(--terminal-map-empty)';
+  const strokeColor = 'var(--terminal-map-border)';
+
   return (
     <div ref={containerRef} className={styles.mapWrapper}>
       <ComposableMap
@@ -91,10 +95,10 @@ const USAssetsMap = ({
               const value = stateName ? stateAssetMap[stateName] : undefined;
               const inRegion = stateName ? isStateInRegion(stateName) : false;
               const fill = !inRegion
-                ? '#f1f5f9'
+                ? mutedFill
                 : Number.isFinite(value)
                   ? getTileFill(value, minAsset, maxAsset)
-                  : '#e5e7eb';
+                  : emptyFill;
               const projectedCentroid = projection?.(geoCentroid(geo));
               const [x, y] = projectedCentroid ?? geoCentroid(geo);
               const isSmallState = labelAbbr ? SMALL_STATE_ABBRS.has(labelAbbr) : false;
@@ -108,7 +112,7 @@ const USAssetsMap = ({
                   <Geography
                     geography={geo}
                     fill={fill}
-                    stroke="#000000"
+                    stroke={strokeColor}
                     strokeWidth={0.75}
                     onMouseEnter={(event) => handleMouseEnter(event, geo)}
                     onMouseMove={handleMouseMove}
@@ -187,4 +191,3 @@ const USAssetsMap = ({
 };
 
 export default USAssetsMap;
-
