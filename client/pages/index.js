@@ -853,6 +853,9 @@ export default function Home() {
   const latestLiabilities = getLiabilitiesValue(latestPoint);
 
   const latestRwa = latestPoint?.rwa;
+  const latestTangibleEquity = latestPoint?.eqtanqta;
+  const latestCet1 = latestPoint?.rbct1cer;
+  const latestTotalRbc = latestPoint?.rbcrwaj;
   const latestNim = latestRatPoint?.nimy ?? latestPoint?.nimy;
   const latestInterestIncome = latestRatPoint?.INTINCY ?? latestPoint?.INTINCY;
   const latestInterestExpense = latestRatPoint?.INTEXPY ?? latestPoint?.INTEXPY;
