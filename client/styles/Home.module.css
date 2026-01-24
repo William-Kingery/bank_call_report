@@ -1191,6 +1191,13 @@
   white-space: nowrap;
 }
 
+.chartXAxisLabel {
+  margin: 0.2rem 0 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
 .profitabilityChartLabels {
   font-size: 0.55rem;
 }

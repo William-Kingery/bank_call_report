@@ -2834,6 +2834,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -2931,6 +2932,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -2998,6 +3000,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3065,6 +3068,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3132,6 +3136,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3199,6 +3204,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3270,6 +3276,7 @@ export default function Home() {
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
                 </div>
