@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import styles from '../styles/Home.module.css';
 import Link from 'next/link';
+import ThemeToggle from '../components/ThemeToggle';
+import styles from '../styles/Home.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 const THEME_STORAGE_KEY = 'bloomberg-theme';
@@ -1335,29 +1336,7 @@ export default function Home() {
           </div>
         </div>
         <div className={styles.headerActions}>
-          <div className={styles.themeToggle}>
-            <span className={styles.themeLabel}>Mode</span>
-            <div className={styles.themeButtons} role="group" aria-label="Display mode">
-              <button
-                type="button"
-                className={`${styles.themeButton} ${
-                  theme === 'day' ? styles.themeButtonActive : ''
-                }`}
-                onClick={() => setTheme('day')}
-              >
-                Day
-              </button>
-              <button
-                type="button"
-                className={`${styles.themeButton} ${
-                  theme === 'night' ? styles.themeButtonActive : ''
-                }`}
-                onClick={() => setTheme('night')}
-              >
-                Night
-              </button>
-            </div>
-          </div>
+          <ThemeToggle theme={theme} onChange={setTheme} />
           <button type="button" className={styles.printButton} onClick={handlePrint}>
             Print dashboard
           </button>

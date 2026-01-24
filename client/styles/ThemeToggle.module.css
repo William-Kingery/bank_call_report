@@ -1,0 +1,41 @@
+.toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--terminal-muted);
+  align-self: center;
+  text-align: center;
+}
+
+.buttons {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+}
+
+.button {
+  border: none;
+  background: transparent;
+  color: var(--terminal-muted);
+  font-weight: 700;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.buttonActive {
+  background: var(--terminal-accent);
+  color: var(--terminal-button-text);
+}
