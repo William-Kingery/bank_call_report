@@ -763,6 +763,16 @@
   align-items: start;
 }
 
+.capitalChartGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .capitalChartGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chartCard {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -1212,6 +1222,13 @@
   transform: rotate(-45deg);
   transform-origin: top left;
   white-space: nowrap;
+}
+
+.chartXAxisLabel {
+  margin: 0.2rem 0 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #64748b;
 }
 
 .profitabilityChartLabels {

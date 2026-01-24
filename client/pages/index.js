@@ -218,6 +218,11 @@ export default function Home() {
     if (!year || !quarter) return label;
     return `${quarter} '${year.slice(-2)}`;
   };
+  const formatCapitalAxisLabel = (point) => {
+    if (!point) return 'N/A';
+    if (point.callym) return formatQuarterLabel(point.callym);
+    return point.label ?? 'N/A';
+  };
 
   const sliceSeries = (series, view) => {
     const count = view === 'latest4' ? 4 : 9;
@@ -332,6 +337,7 @@ export default function Home() {
       const rbct2Value = Number(point.rbct2);
 
       return {
+        callym: point.callym,
         label: formatQuarterLabel(point.callym),
         tangibleEquityRatio: Number.isFinite(tangibleEquityValue) ? tangibleEquityValue : null,
         ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
@@ -873,6 +879,9 @@ export default function Home() {
   const priorNim = priorPoint?.nimy;
   const priorRoa = priorPoint?.roa;
   const priorRoe = priorPoint?.roe;
+  const priorTangibleEquity = priorPoint?.eqtanqta;
+  const priorCet1 = priorPoint?.rbct1cer;
+  const priorTotalRbc = priorPoint?.rbcrwaj;
   const latestAgLoans = latestPoint?.LNAG;
   const latestCILoans = latestPoint?.LNCI;
   const latestCreLoans = latestPoint?.LNCOMRE;
@@ -922,6 +931,13 @@ export default function Home() {
     priorInterestExpense,
     'prior quarter',
   );
+  const tangibleEquityTrend = getMetricTrend(
+    latestTangibleEquity,
+    priorTangibleEquity,
+    'prior quarter',
+  );
+  const cet1Trend = getMetricTrend(latestCet1, priorCet1, 'prior quarter');
+  const totalRbcTrend = getMetricTrend(latestTotalRbc, priorTotalRbc, 'prior quarter');
   const assetsTrend = getMetricTrend(latestPoint?.asset, priorPoint?.asset, 'prior quarter');
   const liabilitiesTrend = getMetricTrend(
     latestLiabilities,
@@ -965,6 +981,13 @@ export default function Home() {
     yearAgoPoint?.INTEXPY,
     'prior year',
   );
+  const tangibleEquityYearTrend = getMetricTrend(
+    latestTangibleEquity,
+    yearAgoPoint?.eqtanqta,
+    'prior year',
+  );
+  const cet1YearTrend = getMetricTrend(latestCet1, yearAgoPoint?.rbct1cer, 'prior year');
+  const totalRbcYearTrend = getMetricTrend(latestTotalRbc, yearAgoPoint?.rbcrwaj, 'prior year');
   const assetsYearTrend = getMetricTrend(latestPoint?.asset, yearAgoPoint?.asset, 'prior year');
   const liabilitiesYearTrend = getMetricTrend(
     latestLiabilities,
@@ -1685,7 +1708,7 @@ export default function Home() {
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>INTINCY</p>
+                      <p className={styles.metricName}>Int Income</p>
                       {interestIncomeYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
@@ -1722,7 +1745,7 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>INTEXPY</p>
+                      <p className={styles.metricName}>Int Exp</p>
                       {interestExpenseYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
@@ -3460,22 +3483,109 @@ export default function Home() {
                 </p>
                 <div className={styles.metricsGrid}>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Tangible equity capital</p>
-                    <p className={styles.metricValue}>
-                      {formatPercentage(latestRatPoint?.eqtanqta)}
-                    </p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Tangible equity capital</p>
+                      {tangibleEquityYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            tangibleEquityYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${tangibleEquityYearTrend.label}`}
+                          title={`Year over year change: ${tangibleEquityYearTrend.label}`}
+                        >
+                          YoY {tangibleEquityYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestTangibleEquity)}
+                      </p>
+                      {tangibleEquityTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            tangibleEquityTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={tangibleEquityTrend.label}
+                          title={tangibleEquityTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {tangibleEquityTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>CET1</p>
-                    <p className={styles.metricValue}>
-                      {formatPercentage(latestRatPoint?.rbct1cer)}
-                    </p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>CET1</p>
+                      {cet1YearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            cet1YearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${cet1YearTrend.label}`}
+                          title={`Year over year change: ${cet1YearTrend.label}`}
+                        >
+                          YoY {cet1YearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatPercentage(latestCet1)}</p>
+                      {cet1Trend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            cet1Trend.direction === 'up' ? styles.trendUp : styles.trendDown
+                          }`}
+                          aria-label={cet1Trend.label}
+                          title={cet1Trend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {cet1Trend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.metricCard}>
-                    <p className={styles.metricName}>Total RBC</p>
-                    <p className={styles.metricValue}>
-                      {formatPercentage(latestRatPoint?.rbcrwaj)}
-                    </p>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Total RBC</p>
+                      {totalRbcYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            totalRbcYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${totalRbcYearTrend.label}`}
+                          title={`Year over year change: ${totalRbcYearTrend.label}`}
+                        >
+                          YoY {totalRbcYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatPercentage(latestTotalRbc)}</p>
+                      {totalRbcTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            totalRbcTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={totalRbcTrend.label}
+                          title={totalRbcTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {totalRbcTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -3516,7 +3626,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className={styles.chartGrid}>
+                <div className={`${styles.chartGrid} ${styles.capitalChartGrid}`}>
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
@@ -3579,10 +3689,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`tangible-equity-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3668,10 +3779,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`capital-components-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3735,10 +3847,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`ci-loans-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3802,10 +3915,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`re-loans-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3869,10 +3983,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`consumer-loans-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -3936,10 +4051,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`high-risk-loans-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
 
@@ -4007,10 +4123,11 @@ export default function Home() {
                       >
                         {capitalViewSeries.map((point) => (
                           <span key={`construction-loans-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
                   </div>
                 </div>
