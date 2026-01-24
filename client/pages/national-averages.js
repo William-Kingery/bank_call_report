@@ -4,6 +4,7 @@ import styles from '../styles/NationalAverages.module.css';
 import USAssetsMap from '../components/USAssetsMap';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+const THEME_STORAGE_KEY = 'bloomberg-theme';
 
 const BENCHMARK_PORTFOLIOS = [
   'National Average',
@@ -215,6 +216,21 @@ const NationalAverages = () => {
   const [districtSummaryRows, setDistrictSummaryRows] = useState([]);
   const [districtSummaryLoading, setDistrictSummaryLoading] = useState(false);
   const [districtSummaryError, setDistrictSummaryError] = useState(null);
+  const [theme, setTheme] = useState('night');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === 'day' || storedTheme === 'night') {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+  }, [theme]);
 
   const buildSummaryQueryParams = () => {
     const queryParams = new URLSearchParams();
@@ -565,14 +581,45 @@ const NationalAverages = () => {
   );
 
   return (
-    <main className={styles.main}>
+    <main
+      className={`${styles.main} ${
+        theme === 'night' ? styles.themeNight : styles.themeDay
+      }`}
+    >
       <div className={styles.header}>
-        <p className={styles.kicker}>National Averages</p>
-        <h1 className={styles.title}>Peer Group Trends Overview</h1>
-        <p className={styles.subtitle}>
-          This page provides a quick way to return to the National Averages and Peer Group Trends
-          dashboard.
-        </p>
+        <div className={styles.headerTop}>
+          <div>
+            <p className={styles.kicker}>National Averages</p>
+            <h1 className={styles.title}>Peer Group Trends Overview</h1>
+            <p className={styles.subtitle}>
+              This page provides a quick way to return to the National Averages and Peer Group
+              Trends dashboard.
+            </p>
+          </div>
+          <div className={styles.headerActions}>
+            <span className={styles.themeLabel}>Mode</span>
+            <div className={styles.themeButtons} role="group" aria-label="Display mode">
+              <button
+                type="button"
+                className={`${styles.themeButton} ${
+                  theme === 'day' ? styles.themeButtonActive : ''
+                }`}
+                onClick={() => setTheme('day')}
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                className={`${styles.themeButton} ${
+                  theme === 'night' ? styles.themeButtonActive : ''
+                }`}
+                onClick={() => setTheme('night')}
+              >
+                Night
+              </button>
+            </div>
+          </div>
+        </div>
         <Link className={styles.backButton} href="/">
           Back to Individual Bank Call Reports
         </Link>

@@ -3,6 +3,7 @@ import styles from '../styles/Home.module.css';
 import Link from 'next/link';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
+const THEME_STORAGE_KEY = 'bloomberg-theme';
 const buildColumnData = (series, key) => {
   if (!series?.length) {
     return {
@@ -191,6 +192,21 @@ export default function Home() {
   const [profitabilityView, setProfitabilityView] = useState('latest');
   const [capitalView, setCapitalView] = useState('latest');
   const [liquidityView, setLiquidityView] = useState('latest');
+  const [theme, setTheme] = useState('night');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === 'day' || storedTheme === 'night') {
+      setTheme(storedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    }
+  }, [theme]);
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -1286,7 +1302,11 @@ export default function Home() {
   };
 
   return (
-    <main className={styles.main}>
+    <main
+      className={`${styles.main} ${
+        theme === 'night' ? styles.themeNight : styles.themeDay
+      }`}
+    >
       <div className={styles.header}>
         <div className={styles.headerContent}>
           <p className={styles.kicker}>FDIC Call Report explorer</p>
@@ -1303,6 +1323,29 @@ export default function Home() {
           <Link className={styles.headerLink} href="/smart-pricing">
             Smart Pricing
           </Link>
+          <div className={styles.themeToggle}>
+            <span className={styles.themeLabel}>Mode</span>
+            <div className={styles.themeButtons} role="group" aria-label="Display mode">
+              <button
+                type="button"
+                className={`${styles.themeButton} ${
+                  theme === 'day' ? styles.themeButtonActive : ''
+                }`}
+                onClick={() => setTheme('day')}
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                className={`${styles.themeButton} ${
+                  theme === 'night' ? styles.themeButtonActive : ''
+                }`}
+                onClick={() => setTheme('night')}
+              >
+                Night
+              </button>
+            </div>
+          </div>
           <button type="button" className={styles.printButton} onClick={handlePrint}>
             Print dashboard
           </button>
