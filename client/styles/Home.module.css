@@ -749,6 +749,16 @@
   align-items: start;
 }
 
+.capitalChartGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .capitalChartGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chartCard {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -1181,6 +1191,13 @@
   white-space: nowrap;
 }
 
+.chartXAxisLabel {
+  margin: 0.2rem 0 0;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
 .profitabilityChartLabels {
   font-size: 0.55rem;
 }
@@ -1464,11 +1481,6 @@
 .legendRbct2 {
   background: linear-gradient(180deg, #4ade80, #16a34a);
   box-shadow: 0 8px 18px rgba(22, 163, 74, 0.2);
-}
-
-.legendRbc {
-  background: linear-gradient(180deg, #fbbf24, #f97316);
-  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.2);
 }
 
 @media print {
