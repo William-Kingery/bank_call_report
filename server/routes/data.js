@@ -643,6 +643,44 @@ router.get('/benchmark', async (_req, res) => {
   }
 });
 
+router.get('/segment-liquidity', async (req, res) => {
+  try {
+    const segment = req.query.segment;
+    const range = getSegmentRange(segment);
+    const conditions = ['r.LNLSDEPR IS NOT NULL', 'f.ASSET IS NOT NULL'];
+    const params = [];
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
+    const [rows] = await pool.query(
+      `SELECT
+         r.CALLYM AS callym,
+         AVG(r.LNLSDEPR) AS avgLnlsdepr
+       FROM fdic_rat r
+       JOIN fdic_fts f
+         ON f.CERT = r.CERT AND f.CALLYM = r.CALLYM
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       GROUP BY r.CALLYM
+       ORDER BY r.CALLYM ASC`,
+      params,
+    );
+
+    res.json({ results: rows });
+  } catch (error) {
+    console.error('Error fetching segment liquidity averages:', error);
+    res.status(500).json({ message: 'Failed to fetch segment liquidity averages' });
+  }
+});
+
 router.get('/state-assets', async (req, res) => {
   try {
     const segment = req.query.segment;

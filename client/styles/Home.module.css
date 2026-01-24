@@ -1121,6 +1121,17 @@
   stroke-width: 2.5;
 }
 
+.ratioLineAverage {
+  stroke: #64748b;
+  stroke-dasharray: 6 6;
+  filter: drop-shadow(0 4px 8px rgba(100, 116, 139, 0.3));
+}
+
+.ratioLineAverageDot {
+  fill: #fff;
+  stroke: #64748b;
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.35rem;
@@ -1496,6 +1507,16 @@
 .legendCoreRatio {
   background: #2563eb;
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.legendLoanDeposit {
+  background: #2563eb;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.legendLoanDepositAverage {
+  background: #64748b;
+  box-shadow: 0 8px 18px rgba(100, 116, 139, 0.2);
 }
 
 @media print {

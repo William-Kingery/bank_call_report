@@ -173,6 +173,10 @@ export default function Home() {
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [benchmarkError, setBenchmarkError] = useState(null);
   const [benchmarkSegment, setBenchmarkSegment] = useState(null);
+  const [segmentLiquidityData, setSegmentLiquidityData] = useState([]);
+  const [segmentLiquidityLoading, setSegmentLiquidityLoading] = useState(false);
+  const [segmentLiquidityError, setSegmentLiquidityError] = useState(null);
+  const [segmentLiquiditySegment, setSegmentLiquiditySegment] = useState(null);
   const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
   const [loading, setLoading] = useState(false);
@@ -544,6 +548,28 @@ export default function Home() {
         (point) => point.loanDepositRatio,
       ),
     [liquidityColumnWidth, liquidityViewSeries],
+  );
+
+  const segmentLoanDepositLookup = useMemo(() => {
+    const lookup = new Map();
+    segmentLiquidityData.forEach((row) => {
+      const label = formatQuarterLabel(row.callym);
+      const value = Number(row.avgLnlsdepr);
+      if (Number.isFinite(value)) {
+        lookup.set(label, value);
+      }
+    });
+    return lookup;
+  }, [segmentLiquidityData]);
+
+  const segmentLoanDepositChart = useMemo(
+    () =>
+      buildLineChartData(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => segmentLoanDepositLookup.get(point.label),
+      ),
+    [liquidityColumnWidth, liquidityViewSeries, segmentLoanDepositLookup],
   );
 
   const assetQualityColumnData = useMemo(
@@ -1075,6 +1101,45 @@ export default function Home() {
     benchmarkData.length,
     benchmarkLoading,
     benchmarkSegment,
+    selectedAssetSegment,
+  ]);
+
+  useEffect(() => {
+    if (!selectedAssetSegment || segmentLiquidityLoading) {
+      return;
+    }
+
+    if (segmentLiquiditySegment === selectedAssetSegment && segmentLiquidityData.length > 0) {
+      return;
+    }
+
+    const fetchSegmentLiquidity = async () => {
+      setSegmentLiquidityLoading(true);
+      setSegmentLiquidityError(null);
+      try {
+        const response = await fetch(
+          `${API_BASE}/segment-liquidity?segment=${encodeURIComponent(selectedAssetSegment)}`,
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load segment liquidity averages');
+        }
+        const data = await response.json();
+        setSegmentLiquidityData(data.results ?? []);
+        setSegmentLiquiditySegment(selectedAssetSegment);
+      } catch (err) {
+        setSegmentLiquidityError(err.message);
+        setSegmentLiquidityData([]);
+        setSegmentLiquiditySegment(selectedAssetSegment);
+      } finally {
+        setSegmentLiquidityLoading(false);
+      }
+    };
+
+    fetchSegmentLiquidity();
+  }, [
+    segmentLiquidityData.length,
+    segmentLiquidityLoading,
+    segmentLiquiditySegment,
     selectedAssetSegment,
   ]);
 
@@ -3215,6 +3280,18 @@ export default function Home() {
                         <h4 className={styles.lineChartTitle}>LNLSDEPR</h4>
                         <p className={styles.lineChartSubhead}>Loan to deposit ratio trend</p>
                       </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendLoanDeposit}`} />
+                          <span className={styles.legendLabel}>Bank</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendLoanDepositAverage}`}
+                          />
+                          <span className={styles.legendLabel}>Segment average</span>
+                        </div>
+                      </div>
                       <div className={styles.lineChartBody}>
                         <span className={styles.lineChartYAxis}>Percent</span>
                         {loanDepositRatioChart.max != null && (
@@ -3228,48 +3305,79 @@ export default function Home() {
                           </span>
                         )}
                         {loanDepositRatioChart.hasData ? (
-                          <div
-                            className={styles.ratioLineChartWrapper}
-                            style={{
-                              minWidth: getAxisMinWidth(
-                                liquidityViewSeries.length,
-                                liquidityColumnWidth,
-                              ),
-                            }}
-                          >
-                            <svg
-                              className={styles.ratioLineChart}
-                              role="img"
-                              aria-label="Loan to deposit ratio line chart"
-                              viewBox={`0 0 ${loanDepositRatioChart.width} ${loanDepositRatioChart.height}`}
-                              width={loanDepositRatioChart.width}
-                              height={loanDepositRatioChart.height}
-                              preserveAspectRatio="none"
+                          <>
+                            <div
+                              className={styles.ratioLineChartWrapper}
+                              style={{
+                                minWidth: getAxisMinWidth(
+                                  liquidityViewSeries.length,
+                                  liquidityColumnWidth,
+                                ),
+                              }}
                             >
-                              {loanDepositRatioChart.segments.map((segment) => (
-                                <polyline
-                                  key={`loan-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                  className={styles.ratioLine}
-                                  points={segment.map((point) => `${point.x},${point.y}`).join(' ')}
-                                />
-                              ))}
-                              {loanDepositRatioChart.points.map((point) =>
-                                point ? (
-                                  <circle
-                                    key={`loan-deposit-dot-${point.label}`}
-                                    className={styles.ratioLineDot}
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="4"
-                                  >
-                                    <title>
-                                      {`${point.label}: ${formatPercentage(point.value)}`}
-                                    </title>
-                                  </circle>
-                                ) : null,
-                              )}
-                            </svg>
-                          </div>
+                              <svg
+                                className={styles.ratioLineChart}
+                                role="img"
+                                aria-label="Loan to deposit ratio line chart"
+                                viewBox={`0 0 ${loanDepositRatioChart.width} ${loanDepositRatioChart.height}`}
+                                width={loanDepositRatioChart.width}
+                                height={loanDepositRatioChart.height}
+                                preserveAspectRatio="none"
+                              >
+                                {loanDepositRatioChart.segments.map((segment) => (
+                                  <polyline
+                                    key={`loan-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                    className={styles.ratioLine}
+                                    points={segment
+                                      .map((point) => `${point.x},${point.y}`)
+                                      .join(' ')}
+                                  />
+                                ))}
+                                {loanDepositRatioChart.points.map((point) =>
+                                  point ? (
+                                    <circle
+                                      key={`loan-deposit-dot-${point.label}`}
+                                      className={styles.ratioLineDot}
+                                      cx={point.x}
+                                      cy={point.y}
+                                      r="4"
+                                    >
+                                      <title>
+                                        {`${point.label}: ${formatPercentage(point.value)}`}
+                                      </title>
+                                    </circle>
+                                  ) : null,
+                                )}
+                                {segmentLoanDepositChart.segments.map((segment) => (
+                                  <polyline
+                                    key={`segment-loan-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                    className={`${styles.ratioLine} ${styles.ratioLineAverage}`}
+                                    points={segment
+                                      .map((point) => `${point.x},${point.y}`)
+                                      .join(' ')}
+                                  />
+                                ))}
+                                {segmentLoanDepositChart.points.map((point) =>
+                                  point ? (
+                                    <circle
+                                      key={`segment-loan-deposit-dot-${point.label}`}
+                                      className={`${styles.ratioLineDot} ${styles.ratioLineAverageDot}`}
+                                      cx={point.x}
+                                      cy={point.y}
+                                      r="4"
+                                    >
+                                      <title>
+                                        {`${point.label}: ${formatPercentage(point.value)}`}
+                                      </title>
+                                    </circle>
+                                  ) : null,
+                                )}
+                              </svg>
+                            </div>
+                            {segmentLiquidityError && (
+                              <p className={styles.status}>{segmentLiquidityError}</p>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>
                             No loan to deposit ratio data available.
