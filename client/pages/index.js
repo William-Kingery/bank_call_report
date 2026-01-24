@@ -357,18 +357,15 @@ export default function Home() {
     const values = capitalViewSeries.map((point) => {
       const rbct1Value = Number(point?.rbct1);
       const rbct2Value = Number(point?.rbct2);
-      const rbcValue = Number(point?.rbc);
       const rbct1 = Number.isFinite(rbct1Value) ? rbct1Value : null;
       const rbct2 = Number.isFinite(rbct2Value) ? rbct2Value : null;
-      const rbc = Number.isFinite(rbcValue) ? rbcValue : null;
-      const total = (rbct1 ?? 0) + (rbct2 ?? 0) + (rbc ?? 0);
-      const hasAnyValue = rbct1 != null || rbct2 != null || rbc != null;
+      const total = (rbct1 ?? 0) + (rbct2 ?? 0);
+      const hasAnyValue = rbct1 != null || rbct2 != null;
 
       return {
         label: point.label,
         rbct1,
         rbct2,
-        rbc,
         total: Number.isFinite(total) && hasAnyValue ? total : null,
       };
     });
@@ -383,7 +380,6 @@ export default function Home() {
         ...point,
         rbct1Percent: point.rbct1 != null && max > 0 ? (point.rbct1 / max) * 100 : 0,
         rbct2Percent: point.rbct2 != null && max > 0 ? (point.rbct2 / max) * 100 : 0,
-        rbcPercent: point.rbc != null && max > 0 ? (point.rbc / max) * 100 : 0,
       })),
       max,
       hasData: totals.length > 0,
@@ -2846,7 +2842,7 @@ export default function Home() {
                           Risk-based capital components
                         </h4>
                         <p className={styles.lineChartSubhead}>
-                          RBCT1, RBCT2, and RBC by quarter
+                          RBCT1 and RBCT2 by quarter
                         </p>
                       </div>
                       <div className={styles.chartLegendRow} aria-hidden="true">
@@ -2857,10 +2853,6 @@ export default function Home() {
                         <div className={styles.legendItem}>
                           <span className={`${styles.legendSwatch} ${styles.legendRbct2}`} />
                           <span className={styles.legendLabel}>RBCT2</span>
-                        </div>
-                        <div className={styles.legendItem}>
-                          <span className={`${styles.legendSwatch} ${styles.legendRbc}`} />
-                          <span className={styles.legendLabel}>RBC</span>
                         </div>
                       </div>
                       <div className={styles.lineChartBody}>
@@ -2892,7 +2884,7 @@ export default function Home() {
                                 title={
                                   point.total == null
                                     ? `${point.label}: N/A`
-                                    : `${point.label}: RBCT1 ${formatNumber(point.rbct1)} | RBCT2 ${formatNumber(point.rbct2)} | RBC ${formatNumber(point.rbc)}`
+                                    : `${point.label}: RBCT1 ${formatNumber(point.rbct1)} | RBCT2 ${formatNumber(point.rbct2)}`
                                 }
                               >
                                 <div
@@ -2907,10 +2899,6 @@ export default function Home() {
                                   <div
                                     className={`${styles.stackedSegment} ${styles.stackedSegmentRbct2}`}
                                     style={{ height: `${point.rbct2Percent}%` }}
-                                  />
-                                  <div
-                                    className={`${styles.stackedSegment} ${styles.stackedSegmentRbc}`}
-                                    style={{ height: `${point.rbcPercent}%` }}
                                   />
                                 </div>
                               </div>

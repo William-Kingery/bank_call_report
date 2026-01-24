@@ -1483,11 +1483,6 @@
   box-shadow: 0 8px 18px rgba(22, 163, 74, 0.2);
 }
 
-.legendRbc {
-  background: linear-gradient(180deg, #fbbf24, #f97316);
-  box-shadow: 0 8px 18px rgba(249, 115, 22, 0.2);
-}
-
 @media print {
   .tabs,
   .printButton {
