@@ -18,6 +18,7 @@
   --terminal-map-empty: #0a111b;
   --terminal-map-muted: #0f1926;
   --terminal-map-border: #23344a;
+  background-color: var(--terminal-bg);
 }
 
 .themeDay {
@@ -40,6 +41,7 @@
   --terminal-map-empty: #e6ecf3;
   --terminal-map-muted: #d3dae4;
   --terminal-map-border: #94a3b8;
+  background-color: var(--terminal-bg);
 }
 
 .main {
