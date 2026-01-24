@@ -179,6 +179,8 @@ export default function Home() {
   const [segmentLiquiditySegment, setSegmentLiquiditySegment] = useState(null);
   const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
+  const [segmentBankCount, setSegmentBankCount] = useState(null);
+  const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -1144,6 +1146,33 @@ export default function Home() {
   ]);
 
   useEffect(() => {
+    if (!selectedAssetSegment) {
+      setSegmentBankCount(null);
+      setSegmentBankCountError(null);
+      return;
+    }
+
+    const fetchSegmentBankCount = async () => {
+      setSegmentBankCountError(null);
+      try {
+        const response = await fetch(
+          `${API_BASE}/segment-bank-count?segment=${encodeURIComponent(selectedAssetSegment)}`,
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load peer group count');
+        }
+        const data = await response.json();
+        setSegmentBankCount(data.count ?? null);
+      } catch (err) {
+        setSegmentBankCountError(err.message);
+        setSegmentBankCount(null);
+      }
+    };
+
+    fetchSegmentBankCount();
+  }, [selectedAssetSegment]);
+
+  useEffect(() => {
     const controller = new AbortController();
 
     if (
@@ -1311,6 +1340,15 @@ export default function Home() {
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
             {formattedLocation && (
               <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
+            {(segmentBankCount != null || segmentBankCountError) && (
+              <p className={styles.peerGroupCount}>
+                {segmentBankCountError
+                  ? segmentBankCountError
+                  : `Number of Banks within Peer Group: ${segmentBankCount.toLocaleString(
+                      'en-US',
+                    )}`}
+              </p>
             )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>

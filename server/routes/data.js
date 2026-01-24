@@ -681,6 +681,48 @@ router.get('/segment-liquidity', async (req, res) => {
   }
 });
 
+router.get('/segment-bank-count', async (req, res) => {
+  try {
+    const segment = req.query.segment;
+    const range = getSegmentRange(segment);
+
+    if (!range) {
+      return res.status(400).json({ message: 'Invalid segment parameter' });
+    }
+
+    const conditions = ['f.ASSET IS NOT NULL'];
+    const params = [];
+
+    if (range.min != null) {
+      conditions.push('f.ASSET >= ?');
+      params.push(range.min);
+    }
+    if (range.max != null) {
+      conditions.push('f.ASSET < ?');
+      params.push(range.max);
+    }
+
+    const [rows] = await pool.query(
+      `SELECT COUNT(*) AS bankCount
+       FROM (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ) latest_fts
+       JOIN fdic_fts f
+         ON f.CERT = latest_fts.CERT
+         AND f.CALLYM = latest_fts.callym
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}`,
+      params,
+    );
+
+    res.json({ count: rows?.[0]?.bankCount ?? 0 });
+  } catch (error) {
+    console.error('Error fetching segment bank count:', error);
+    res.status(500).json({ message: 'Failed to fetch segment bank count' });
+  }
+});
+
 router.get('/state-assets', async (req, res) => {
   try {
     const segment = req.query.segment;
