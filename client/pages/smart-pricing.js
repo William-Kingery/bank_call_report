@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import ThemeToggle from '../components/ThemeToggle';
 import styles from '../styles/SmartPricing.module.css';
 
 const THEME_STORAGE_KEY = 'bloomberg-theme';
@@ -490,27 +491,7 @@ export default function SmartPricing() {
           </Link>
         </div>
         <div className={styles.headerActions}>
-          <span className={styles.themeLabel}>Mode</span>
-          <div className={styles.themeButtons} role="group" aria-label="Display mode">
-            <button
-              type="button"
-              className={`${styles.themeButton} ${
-                theme === 'day' ? styles.themeButtonActive : ''
-              }`}
-              onClick={() => setTheme('day')}
-            >
-              Day
-            </button>
-            <button
-              type="button"
-              className={`${styles.themeButton} ${
-                theme === 'night' ? styles.themeButtonActive : ''
-              }`}
-              onClick={() => setTheme('night')}
-            >
-              Night
-            </button>
-          </div>
+          <ThemeToggle theme={theme} onChange={setTheme} />
         </div>
       </header>
 
