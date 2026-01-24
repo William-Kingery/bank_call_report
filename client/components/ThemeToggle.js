@@ -1,4 +1,4 @@
-import styles from './ThemeToggle.module.css';
+import styles from '../styles/ThemeToggle.module.css';
 
 const ThemeToggle = ({ theme, onChange, label = 'Mode' }) => {
   const setTheme = (nextTheme) => {
