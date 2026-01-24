@@ -373,6 +373,16 @@ export default function SmartPricing() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.classList.toggle(styles.themeNight, theme === 'night');
+    document.body.classList.toggle(styles.themeDay, theme === 'day');
+    return () => {
+      document.body.classList.remove(styles.themeNight);
+      document.body.classList.remove(styles.themeDay);
+    };
+  }, [theme]);
+
   const spread = useMemo(() => spreadBps / 10000, [spreadBps]);
   const defaultIndex = useMemo(() => defaultIndexPct / 100, [defaultIndexPct]);
 

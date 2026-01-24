@@ -18,6 +18,7 @@
   --terminal-map-empty: #0a111b;
   --terminal-map-muted: #0f1926;
   --terminal-map-border: #23344a;
+  background-color: var(--terminal-bg);
 }
 
 .themeDay {
@@ -40,6 +41,7 @@
   --terminal-map-empty: #e6ecf3;
   --terminal-map-muted: #d3dae4;
   --terminal-map-border: #94a3b8;
+  background-color: var(--terminal-bg);
 }
 
 .main {
@@ -86,6 +88,8 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--terminal-muted);
+  align-self: center;
+  text-align: center;
 }
 
 .themeButtons {
@@ -140,16 +144,35 @@
 
 .headerLink {
   display: inline-flex;
-  margin-top: 1rem;
-  color: var(--terminal-accent);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--terminal-border);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: var(--terminal-accent);
+  color: var(--terminal-button-text);
   font-weight: 600;
+  font-size: 0.85rem;
   text-decoration: none;
 }
 
 .headerLink:hover,
 .headerLink:focus {
-  text-decoration: underline;
+  background: var(--terminal-accent-strong);
+  border-color: var(--terminal-accent-strong);
   outline: none;
+}
+
+.headerLink:focus-visible {
+  outline: 2px solid var(--terminal-focus);
+  outline-offset: 2px;
+}
+
+.headerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
 }
 
 .printButton {

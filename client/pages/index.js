@@ -208,6 +208,16 @@ export default function Home() {
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.body.classList.toggle(styles.themeNight, theme === 'night');
+    document.body.classList.toggle(styles.themeDay, theme === 'day');
+    return () => {
+      document.body.classList.remove(styles.themeNight);
+      document.body.classList.remove(styles.themeDay);
+    };
+  }, [theme]);
+
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
 
@@ -1315,14 +1325,16 @@ export default function Home() {
           <p className={styles.subtitle}>
             Start typing a bank name to view assets, equity, and ROA over time.
           </p>
-          <Link className={styles.headerLink} href="/national-averages">
-            View national averages overview
-          </Link>
+          <div className={styles.headerLinks}>
+            <Link className={styles.headerLink} href="/national-averages">
+              View national averages overview
+            </Link>
+            <Link className={styles.headerLink} href="/smart-pricing">
+              Smart Pricing
+            </Link>
+          </div>
         </div>
         <div className={styles.headerActions}>
-          <Link className={styles.headerLink} href="/smart-pricing">
-            Smart Pricing
-          </Link>
           <div className={styles.themeToggle}>
             <span className={styles.themeLabel}>Mode</span>
             <div className={styles.themeButtons} role="group" aria-label="Display mode">
