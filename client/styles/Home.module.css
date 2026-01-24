@@ -1079,6 +1079,14 @@
   background: linear-gradient(180deg, #fbbf24, #f97316);
 }
 
+.stackedSegmentCore {
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+}
+
+.stackedSegmentBrokered {
+  background: linear-gradient(180deg, #f472b6, #db2777);
+}
+
 .ratioLineChartWrapper {
   height: 100%;
   padding: 0.75rem 0.75rem 0.6rem 0;
@@ -1191,6 +1199,10 @@
 
 .capitalChartLabels {
   font-size: 0.5rem;
+}
+
+.liquidityChartLabels {
+  font-size: 0.6rem;
 }
 
 .assetQualityChartLabels {
@@ -1469,6 +1481,21 @@
 .legendRbc {
   background: linear-gradient(180deg, #fbbf24, #f97316);
   box-shadow: 0 8px 18px rgba(249, 115, 22, 0.2);
+}
+
+.legendCoreDeposits {
+  background: linear-gradient(180deg, #60a5fa, #2563eb);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.legendBrokeredDeposits {
+  background: linear-gradient(180deg, #f472b6, #db2777);
+  box-shadow: 0 8px 18px rgba(219, 39, 119, 0.2);
+}
+
+.legendCoreRatio {
+  background: #2563eb;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
 }
 
 @media print {
