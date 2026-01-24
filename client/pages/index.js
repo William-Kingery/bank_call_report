@@ -50,6 +50,72 @@ const buildColumnData = (series, key) => {
   };
 };
 
+const buildLineChartData = (series, columnWidth, valueSelector) => {
+  const rawValues = series.map((point) => ({
+    label: point.label,
+    value: valueSelector(point),
+  }));
+  const numericValues = rawValues
+    .map((point) => point.value)
+    .filter((value) => Number.isFinite(value));
+  const min = numericValues.length ? Math.min(...numericValues) : null;
+  const max = numericValues.length ? Math.max(...numericValues) : null;
+  const range = Number.isFinite(max) && Number.isFinite(min) ? max - min : 0;
+  const values = rawValues.map((point) => {
+    if (!Number.isFinite(point.value)) {
+      return { label: point.label, value: null, percentage: 0 };
+    }
+    return {
+      label: point.label,
+      value: point.value,
+      percentage: range === 0 ? 50 : ((point.value - min) / range) * 100,
+    };
+  });
+  const height = 160;
+  const paddingTop = 18;
+  const paddingBottom = 18;
+  const rangeHeight = height - paddingTop - paddingBottom;
+  const width = Math.max(series.length * columnWidth, 320);
+  const points = values.map((point, index) => {
+    if (point.value == null) {
+      return null;
+    }
+    const x = index * columnWidth + columnWidth / 2;
+    const y = paddingTop + (1 - point.percentage / 100) * rangeHeight;
+    return {
+      x,
+      y,
+      label: point.label,
+      value: point.value,
+    };
+  });
+  const segments = [];
+  let current = [];
+  points.forEach((point) => {
+    if (!point) {
+      if (current.length > 1) {
+        segments.push(current);
+      }
+      current = [];
+      return;
+    }
+    current.push(point);
+  });
+  if (current.length > 1) {
+    segments.push(current);
+  }
+
+  return {
+    width,
+    height,
+    points,
+    segments,
+    min,
+    max,
+    hasData: numericValues.length > 0,
+  };
+};
+
 const buildQuarterSeries = (points, mapper) => {
   const grouped = new Map();
 
@@ -107,8 +173,14 @@ export default function Home() {
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
   const [benchmarkError, setBenchmarkError] = useState(null);
   const [benchmarkSegment, setBenchmarkSegment] = useState(null);
+  const [segmentLiquidityData, setSegmentLiquidityData] = useState([]);
+  const [segmentLiquidityLoading, setSegmentLiquidityLoading] = useState(false);
+  const [segmentLiquidityError, setSegmentLiquidityError] = useState(null);
+  const [segmentLiquiditySegment, setSegmentLiquiditySegment] = useState(null);
   const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
+  const [segmentBankCount, setSegmentBankCount] = useState(null);
+  const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -118,6 +190,7 @@ export default function Home() {
   const [assetQualityView, setAssetQualityView] = useState('latest');
   const [profitabilityView, setProfitabilityView] = useState('latest');
   const [capitalView, setCapitalView] = useState('latest');
+  const [liquidityView, setLiquidityView] = useState('latest');
 
   const formatQuarterLabel = (callym) => {
     if (!callym) return 'N/A';
@@ -262,7 +335,6 @@ export default function Home() {
       const constructionLoansValue = Number(point.lncdt1r);
       const rbct1Value = Number(point.rbct1);
       const rbct2Value = Number(point.rbct2);
-      const rbcValue = Number(point.rbc);
 
       return {
         callym: point.callym,
@@ -277,7 +349,33 @@ export default function Home() {
           : null,
         rbct1: Number.isFinite(rbct1Value) ? rbct1Value : null,
         rbct2: Number.isFinite(rbct2Value) ? rbct2Value : null,
-        rbc: Number.isFinite(rbcValue) ? rbcValue : null,
+      };
+    });
+  }, [sortedPoints]);
+
+  const liquiditySeries = useMemo(() => {
+    if (!sortedPoints.length) return [];
+
+    return buildQuarterSeries(sortedPoints, (point) => {
+      const coreDepositsValue = Number(point.coredep);
+      const brokeredDepositsValue = Number(point.bro);
+      const depositsValue = Number(point.dep);
+      const loanDepositRatioValue = Number(point.lnlsdepr);
+      const coreDepositRatio =
+        Number.isFinite(coreDepositsValue) &&
+        Number.isFinite(depositsValue) &&
+        depositsValue !== 0
+          ? (coreDepositsValue / depositsValue) * 100
+          : null;
+
+      return {
+        label: formatQuarterLabel(point.callym),
+        coreDeposits: Number.isFinite(coreDepositsValue) ? coreDepositsValue : null,
+        brokeredDeposits: Number.isFinite(brokeredDepositsValue)
+          ? brokeredDepositsValue
+          : null,
+        coreDepositRatio,
+        loanDepositRatio: Number.isFinite(loanDepositRatioValue) ? loanDepositRatioValue : null,
       };
     });
   }, [sortedPoints]);
@@ -303,6 +401,12 @@ export default function Home() {
     [capitalSeries, capitalView],
   );
   const capitalColumnWidth = capitalView === 'latest4' ? 52 : 44;
+
+  const liquidityViewSeries = useMemo(
+    () => sliceSeries(liquiditySeries, liquidityView),
+    [liquiditySeries, liquidityView],
+  );
+  const liquidityColumnWidth = liquidityView === 'latest4' ? 52 : 44;
 
   const assetQualitySeries = useMemo(() => {
     if (!sortedPoints.length) return [];
@@ -390,6 +494,85 @@ export default function Home() {
       hasData: totals.length > 0,
     };
   }, [capitalViewSeries]);
+
+  const liquidityStackedData = useMemo(() => {
+    const values = liquidityViewSeries.map((point) => {
+      const coreValue = Number(point?.coreDeposits);
+      const brokeredValue = Number(point?.brokeredDeposits);
+      const coreDeposits = Number.isFinite(coreValue) ? coreValue : null;
+      const brokeredDeposits = Number.isFinite(brokeredValue) ? brokeredValue : null;
+      const total = (coreDeposits ?? 0) + (brokeredDeposits ?? 0);
+      const hasAnyValue = coreDeposits != null || brokeredDeposits != null;
+
+      return {
+        label: point.label,
+        coreDeposits,
+        brokeredDeposits,
+        total: Number.isFinite(total) && hasAnyValue ? total : null,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        coreDepositsPercent:
+          point.coreDeposits != null && max > 0 ? (point.coreDeposits / max) * 100 : 0,
+        brokeredDepositsPercent:
+          point.brokeredDeposits != null && max > 0
+            ? (point.brokeredDeposits / max) * 100
+            : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [liquidityViewSeries]);
+
+  const coreDepositRatioChart = useMemo(
+    () =>
+      buildLineChartData(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => point.coreDepositRatio,
+      ),
+    [liquidityColumnWidth, liquidityViewSeries],
+  );
+
+  const loanDepositRatioChart = useMemo(
+    () =>
+      buildLineChartData(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => point.loanDepositRatio,
+      ),
+    [liquidityColumnWidth, liquidityViewSeries],
+  );
+
+  const segmentLoanDepositLookup = useMemo(() => {
+    const lookup = new Map();
+    segmentLiquidityData.forEach((row) => {
+      const label = formatQuarterLabel(row.callym);
+      const value = Number(row.avgLnlsdepr);
+      if (Number.isFinite(value)) {
+        lookup.set(label, value);
+      }
+    });
+    return lookup;
+  }, [segmentLiquidityData]);
+
+  const segmentLoanDepositChart = useMemo(
+    () =>
+      buildLineChartData(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => segmentLoanDepositLookup.get(point.label),
+      ),
+    [liquidityColumnWidth, liquidityViewSeries, segmentLoanDepositLookup],
+  );
 
   const assetQualityColumnData = useMemo(
     () => ({
@@ -674,12 +857,23 @@ export default function Home() {
   const latestInterestIncome = latestRatPoint?.INTINCY ?? latestPoint?.INTINCY;
   const latestInterestExpense = latestRatPoint?.INTEXPY ?? latestPoint?.INTEXPY;
   const latestLoanDepositRatio = latestRatPoint?.lnlsdepr ?? latestPoint?.lnlsdepr;
-  const latestTangibleEquity = latestRatPoint?.eqtanqta ?? latestPoint?.eqtanqta;
-  const latestCet1 = latestRatPoint?.rbct1cer ?? latestPoint?.rbct1cer;
-  const latestTotalRbc = latestRatPoint?.rbcrwaj ?? latestPoint?.rbcrwaj;
+  const latestCoreDeposits = latestPoint?.coredep;
+  const latestBrokeredDeposits = latestPoint?.bro;
+  const getCoreDepositRatio = (point) => {
+    const coreValue = Number(point?.coredep);
+    const depositValue = Number(point?.dep);
+    if (!Number.isFinite(coreValue) || !Number.isFinite(depositValue) || depositValue === 0) {
+      return null;
+    }
+    return (coreValue / depositValue) * 100;
+  };
+  const latestCoreDepositRatio = getCoreDepositRatio(latestPoint);
   const priorLiabilities = getLiabilitiesValue(priorPoint);
   const priorRwa = priorPoint?.rwa;
   const priorLoanDepositRatio = priorPoint?.lnlsdepr;
+  const priorCoreDeposits = priorPoint?.coredep;
+  const priorBrokeredDeposits = priorPoint?.bro;
+  const priorCoreDepositRatio = getCoreDepositRatio(priorPoint);
   const priorInterestIncome = priorPoint?.INTINCY;
   const priorInterestExpense = priorPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
@@ -759,6 +953,21 @@ export default function Home() {
     'prior quarter',
   );
   const rwaTrend = getMetricTrend(latestRwa, priorRwa, 'prior quarter');
+  const coreDepositsTrend = getMetricTrend(
+    latestCoreDeposits,
+    priorCoreDeposits,
+    'prior quarter',
+  );
+  const brokeredDepositsTrend = getMetricTrend(
+    latestBrokeredDeposits,
+    priorBrokeredDeposits,
+    'prior quarter',
+  );
+  const coreDepositRatioTrend = getMetricTrend(
+    latestCoreDepositRatio,
+    priorCoreDepositRatio,
+    'prior quarter',
+  );
   const nimYearTrend = getMetricTrend(latestNim, yearAgoPoint?.nimy, 'prior year');
   const roaYearTrend = getMetricTrend(latestPoint?.roa, yearAgoPoint?.roa, 'prior year');
   const roeYearTrend = getMetricTrend(latestPoint?.roe, yearAgoPoint?.roe, 'prior year');
@@ -794,6 +1003,21 @@ export default function Home() {
     'prior year',
   );
   const rwaYearTrend = getMetricTrend(latestRwa, yearAgoPoint?.rwa, 'prior year');
+  const coreDepositsYearTrend = getMetricTrend(
+    latestCoreDeposits,
+    yearAgoPoint?.coredep,
+    'prior year',
+  );
+  const brokeredDepositsYearTrend = getMetricTrend(
+    latestBrokeredDeposits,
+    yearAgoPoint?.bro,
+    'prior year',
+  );
+  const coreDepositRatioYearTrend = getMetricTrend(
+    latestCoreDepositRatio,
+    getCoreDepositRatio(yearAgoPoint),
+    'prior year',
+  );
 
   const loanMixData = useMemo(() => {
     const items = [
@@ -898,6 +1122,72 @@ export default function Home() {
     benchmarkSegment,
     selectedAssetSegment,
   ]);
+
+  useEffect(() => {
+    if (!selectedAssetSegment || segmentLiquidityLoading) {
+      return;
+    }
+
+    if (segmentLiquiditySegment === selectedAssetSegment && segmentLiquidityData.length > 0) {
+      return;
+    }
+
+    const fetchSegmentLiquidity = async () => {
+      setSegmentLiquidityLoading(true);
+      setSegmentLiquidityError(null);
+      try {
+        const response = await fetch(
+          `${API_BASE}/segment-liquidity?segment=${encodeURIComponent(selectedAssetSegment)}`,
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load segment liquidity averages');
+        }
+        const data = await response.json();
+        setSegmentLiquidityData(data.results ?? []);
+        setSegmentLiquiditySegment(selectedAssetSegment);
+      } catch (err) {
+        setSegmentLiquidityError(err.message);
+        setSegmentLiquidityData([]);
+        setSegmentLiquiditySegment(selectedAssetSegment);
+      } finally {
+        setSegmentLiquidityLoading(false);
+      }
+    };
+
+    fetchSegmentLiquidity();
+  }, [
+    segmentLiquidityData.length,
+    segmentLiquidityLoading,
+    segmentLiquiditySegment,
+    selectedAssetSegment,
+  ]);
+
+  useEffect(() => {
+    if (!selectedAssetSegment) {
+      setSegmentBankCount(null);
+      setSegmentBankCountError(null);
+      return;
+    }
+
+    const fetchSegmentBankCount = async () => {
+      setSegmentBankCountError(null);
+      try {
+        const response = await fetch(
+          `${API_BASE}/segment-bank-count?segment=${encodeURIComponent(selectedAssetSegment)}`,
+        );
+        if (!response.ok) {
+          throw new Error('Failed to load peer group count');
+        }
+        const data = await response.json();
+        setSegmentBankCount(data.count ?? null);
+      } catch (err) {
+        setSegmentBankCountError(err.message);
+        setSegmentBankCount(null);
+      }
+    };
+
+    fetchSegmentBankCount();
+  }, [selectedAssetSegment]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1067,6 +1357,15 @@ export default function Home() {
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
             {formattedLocation && (
               <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
+            {(segmentBankCount != null || segmentBankCountError) && (
+              <p className={styles.peerGroupCount}>
+                {segmentBankCountError
+                  ? segmentBankCountError
+                  : `Number of Banks within Peer Group: ${segmentBankCount.toLocaleString(
+                      'en-US',
+                    )}`}
+              </p>
             )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
@@ -2705,9 +3004,460 @@ export default function Home() {
               <section className={styles.assetQualityCard}>
                 <h3 className={styles.assetQualityTitle}>Liquidity</h3>
                 <p className={styles.assetQualityText}>
-                  Liquidity coverage and funding insights will be summarized here in an upcoming
-                  update.
+                  Track core funding strength and brokered reliance with deposit mix and loan to
+                  deposit trends.
                 </p>
+              </section>
+              <section className={styles.latestMetrics}>
+                <div className={styles.latestHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Latest quarter</p>
+                    <p className={styles.latestQuarter}>
+                      {formatQuarterLabel(latestPoint?.callym)}
+                    </p>
+                  </div>
+                  <p className={styles.latestHint}>Values shown are in thousands</p>
+                </div>
+                <div className={styles.metricsGrid}>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Core deposits</p>
+                      {coreDepositsYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            coreDepositsYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${coreDepositsYearTrend.label}`}
+                          title={`Year over year change: ${coreDepositsYearTrend.label}`}
+                        >
+                          YoY {coreDepositsYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestCoreDeposits)}</p>
+                      {coreDepositsTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            coreDepositsTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={coreDepositsTrend.label}
+                          title={coreDepositsTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {coreDepositsTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Brokered deposits</p>
+                      {brokeredDepositsYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            brokeredDepositsYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${brokeredDepositsYearTrend.label}`}
+                          title={`Year over year change: ${brokeredDepositsYearTrend.label}`}
+                        >
+                          YoY {brokeredDepositsYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>{formatNumber(latestBrokeredDeposits)}</p>
+                      {brokeredDepositsTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            brokeredDepositsTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={brokeredDepositsTrend.label}
+                          title={brokeredDepositsTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {brokeredDepositsTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Core deposits / total deposits</p>
+                      {coreDepositRatioYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            coreDepositRatioYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${coreDepositRatioYearTrend.label}`}
+                          title={`Year over year change: ${coreDepositRatioYearTrend.label}`}
+                        >
+                          YoY {coreDepositRatioYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestCoreDepositRatio)}
+                      </p>
+                      {coreDepositRatioTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            coreDepositRatioTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={coreDepositRatioTrend.label}
+                          title={coreDepositRatioTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {coreDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section className={styles.chartSection}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <p className={styles.chartKicker}>Trend lines</p>
+                    <h3 className={styles.sectionTitle}>Liquidity funding trends</h3>
+                  </div>
+                  <div className={styles.sectionHeaderMeta}>
+                    <p className={styles.chartHint}>Values shown are in thousands and percentages</p>
+                    <div
+                      className={styles.chartViewToggle}
+                      role="group"
+                      aria-label="Liquidity quarter range"
+                    >
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          liquidityView === 'latest' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setLiquidityView('latest')}
+                        aria-pressed={liquidityView === 'latest'}
+                      >
+                        Latest 9
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.chartViewButton} ${
+                          liquidityView === 'latest4' ? styles.chartViewButtonActive : ''
+                        }`}
+                        onClick={() => setLiquidityView('latest4')}
+                        aria-pressed={liquidityView === 'latest4'}
+                      >
+                        Latest 4 Qtrs
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.chartGrid}>
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Core vs brokered deposits</h4>
+                        <p className={styles.lineChartSubhead}>
+                          Core deposit ratio overlay
+                        </p>
+                      </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendCoreDeposits}`} />
+                          <span className={styles.legendLabel}>Core</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendBrokeredDeposits}`}
+                          />
+                          <span className={styles.legendLabel}>Brokered</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendCoreRatio}`}
+                          />
+                          <span className={styles.legendLabel}>Core deposit ratio</span>
+                        </div>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {liquidityStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(liquidityStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
+                        {coreDepositRatioChart.max != null && (
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
+                            {formatPercentage(coreDepositRatioChart.max)}
+                          </span>
+                        )}
+                        {coreDepositRatioChart.min != null && (
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
+                            {formatPercentage(coreDepositRatioChart.min)}
+                          </span>
+                        )}
+                        {liquidityStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Core and brokered deposits stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${liquidityViewSeries.length}, minmax(0, ${liquidityColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(
+                                  liquidityViewSeries.length,
+                                  liquidityColumnWidth,
+                                ),
+                              }}
+                            >
+                              {liquidityStackedData.values.map((point) => (
+                                <div
+                                  key={`liquidity-deposits-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: Core ${formatNumber(
+                                          point.coreDeposits,
+                                        )} | Brokered ${formatNumber(point.brokeredDeposits)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentBrokered}`}
+                                      style={{ height: `${point.brokeredDepositsPercent}%` }}
+                                    />
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentCore}`}
+                                      style={{ height: `${point.coreDepositsPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {coreDepositRatioChart.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(
+                                    liquidityViewSeries.length,
+                                    liquidityColumnWidth,
+                                  ),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Core deposit ratio line chart"
+                                  viewBox={`0 0 ${coreDepositRatioChart.width} ${coreDepositRatioChart.height}`}
+                                  width={coreDepositRatioChart.width}
+                                  height={coreDepositRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {coreDepositRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`core-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {coreDepositRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`core-deposit-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>
+                                          {`${point.label}: ${formatPercentage(point.value)}`}
+                                        </title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <p className={styles.status}>No core deposit data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.liquidityChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${liquidityViewSeries.length}, minmax(0, ${liquidityColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(
+                            liquidityViewSeries.length,
+                            liquidityColumnWidth,
+                          ),
+                        }}
+                      >
+                        {liquidityViewSeries.map((point) => (
+                          <span key={`core-deposit-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>LNLSDEPR</h4>
+                        <p className={styles.lineChartSubhead}>Loan to deposit ratio trend</p>
+                      </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span className={`${styles.legendSwatch} ${styles.legendLoanDeposit}`} />
+                          <span className={styles.legendLabel}>Bank</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendLoanDepositAverage}`}
+                          />
+                          <span className={styles.legendLabel}>Segment average</span>
+                        </div>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {loanDepositRatioChart.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(loanDepositRatioChart.max)}
+                          </span>
+                        )}
+                        {loanDepositRatioChart.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(loanDepositRatioChart.min)}
+                          </span>
+                        )}
+                        {loanDepositRatioChart.hasData ? (
+                          <>
+                            <div
+                              className={styles.ratioLineChartWrapper}
+                              style={{
+                                minWidth: getAxisMinWidth(
+                                  liquidityViewSeries.length,
+                                  liquidityColumnWidth,
+                                ),
+                              }}
+                            >
+                              <svg
+                                className={styles.ratioLineChart}
+                                role="img"
+                                aria-label="Loan to deposit ratio line chart"
+                                viewBox={`0 0 ${loanDepositRatioChart.width} ${loanDepositRatioChart.height}`}
+                                width={loanDepositRatioChart.width}
+                                height={loanDepositRatioChart.height}
+                                preserveAspectRatio="none"
+                              >
+                                {loanDepositRatioChart.segments.map((segment) => (
+                                  <polyline
+                                    key={`loan-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                    className={styles.ratioLine}
+                                    points={segment
+                                      .map((point) => `${point.x},${point.y}`)
+                                      .join(' ')}
+                                  />
+                                ))}
+                                {loanDepositRatioChart.points.map((point) =>
+                                  point ? (
+                                    <circle
+                                      key={`loan-deposit-dot-${point.label}`}
+                                      className={styles.ratioLineDot}
+                                      cx={point.x}
+                                      cy={point.y}
+                                      r="4"
+                                    >
+                                      <title>
+                                        {`${point.label}: ${formatPercentage(point.value)}`}
+                                      </title>
+                                    </circle>
+                                  ) : null,
+                                )}
+                                {segmentLoanDepositChart.segments.map((segment) => (
+                                  <polyline
+                                    key={`segment-loan-deposit-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                    className={`${styles.ratioLine} ${styles.ratioLineAverage}`}
+                                    points={segment
+                                      .map((point) => `${point.x},${point.y}`)
+                                      .join(' ')}
+                                  />
+                                ))}
+                                {segmentLoanDepositChart.points.map((point) =>
+                                  point ? (
+                                    <circle
+                                      key={`segment-loan-deposit-dot-${point.label}`}
+                                      className={`${styles.ratioLineDot} ${styles.ratioLineAverageDot}`}
+                                      cx={point.x}
+                                      cy={point.y}
+                                      r="4"
+                                    >
+                                      <title>
+                                        {`${point.label}: ${formatPercentage(point.value)}`}
+                                      </title>
+                                    </circle>
+                                  ) : null,
+                                )}
+                              </svg>
+                            </div>
+                            {segmentLiquidityError && (
+                              <p className={styles.status}>{segmentLiquidityError}</p>
+                            )}
+                          </>
+                        ) : (
+                          <p className={styles.status}>
+                            No loan to deposit ratio data available.
+                          </p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.liquidityChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${liquidityViewSeries.length}, minmax(0, ${liquidityColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(
+                            liquidityViewSeries.length,
+                            liquidityColumnWidth,
+                          ),
+                        }}
+                      >
+                        {liquidityViewSeries.map((point) => (
+                          <span key={`loan-deposit-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </section>
             </div>
           )}
