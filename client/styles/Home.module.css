@@ -1300,11 +1300,11 @@
   gap: var(--chart-column-gap, 0.5rem);
   text-align: center;
   overflow-x: auto;
-  padding-bottom: 0.6rem;
+  padding-bottom: 0.8rem;
   padding-left: 3.25rem;
   padding-right: 0.9rem;
   align-items: start;
-  min-height: 3.2rem;
+  min-height: clamp(3.4rem, 4vh, 4rem);
   font-size: clamp(0.55rem, 0.65vw, 0.7rem);
   justify-items: center;
 }
@@ -1314,6 +1314,8 @@
   transform: rotate(-45deg);
   transform-origin: top left;
   white-space: nowrap;
+  width: 100%;
+  text-align: center;
 }
 
 .chartXAxisLabel {
@@ -1324,7 +1326,7 @@
 }
 
 .profitabilityChartLabels {
-  font-size: 0.55rem;
+  font-size: clamp(0.5rem, 0.6vw, 0.7rem);
 }
 
 .profitabilityChartLabels span {
@@ -1332,11 +1334,11 @@
 }
 
 .capitalChartLabels {
-  font-size: 0.5rem;
+  font-size: clamp(0.45rem, 0.55vw, 0.65rem);
 }
 
 .liquidityChartLabels {
-  font-size: 0.6rem;
+  font-size: clamp(0.55rem, 0.65vw, 0.75rem);
 }
 
 .assetQualityChartLabels {
