@@ -1304,9 +1304,10 @@
   padding-left: 3.25rem;
   padding-right: 0.9rem;
   align-items: start;
-  min-height: clamp(3.4rem, 4vh, 4rem);
+  min-height: clamp(3.6rem, 4.5vh, 4.4rem);
   font-size: clamp(0.55rem, 0.65vw, 0.7rem);
   justify-items: center;
+  color: var(--terminal-text);
 }
 
 .lineChartLabels span {
@@ -1334,11 +1335,17 @@
 }
 
 .capitalChartLabels {
-  font-size: clamp(0.45rem, 0.55vw, 0.65rem);
+  font-size: clamp(0.6rem, 0.7vw, 0.8rem);
 }
 
 .liquidityChartLabels {
-  font-size: clamp(0.55rem, 0.65vw, 0.75rem);
+  font-size: clamp(0.6rem, 0.7vw, 0.8rem);
+}
+
+.capitalChartLabels span,
+.liquidityChartLabels span {
+  transform: none;
+  line-height: 1.4;
 }
 
 .assetQualityChartLabels {
