@@ -1339,6 +1339,11 @@
   font-size: 0.7rem;
 }
 
+.liquidityChartLabels span {
+  transform: none;
+  white-space: nowrap;
+}
+
 .assetQualityChartLabels {
   font-size: 0.7rem;
 }
