@@ -1335,17 +1335,21 @@
 }
 
 .capitalChartLabels {
-  font-size: clamp(0.6rem, 0.7vw, 0.8rem);
+  font-size: 0.7rem;
+}
+
+.capitalChartLabels span {
+  transform: none;
+  white-space: normal;
 }
 
 .liquidityChartLabels {
-  font-size: clamp(0.6rem, 0.7vw, 0.8rem);
+  font-size: 0.7rem;
 }
 
-.capitalChartLabels span,
 .liquidityChartLabels span {
   transform: none;
-  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .assetQualityChartLabels {
@@ -1651,15 +1655,80 @@
   box-shadow: 0 8px 18px rgba(100, 116, 139, 0.2);
 }
 
+.printOnly {
+  display: none;
+}
+
+.printHide {
+  display: block;
+}
+
 @media print {
   .tabs,
   .printButton {
     display: none;
   }
 
+  .printOnly {
+    display: block;
+  }
+
+  .printHide {
+    display: none;
+  }
+
   .printPageBreak {
     break-before: page;
     page-break-before: always;
+  }
+
+  .assetQualityChartSection .chartGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .assetQualityChartSection .chartCard {
+    padding: 0.55rem;
+    gap: 0.4rem;
+  }
+
+  .assetQualityChartSection .lineChartBlock {
+    gap: 0.35rem;
+    padding-top: 0.35rem;
+  }
+
+  .assetQualityChartSection .lineChartTitle {
+    font-size: 0.8rem;
+  }
+
+  .assetQualityChartSection .lineChartSubhead {
+    font-size: 0.7rem;
+  }
+
+  .assetQualityChartSection .lineChartBody {
+    height: 110px;
+    padding-left: 2rem;
+  }
+
+  .assetQualityChartSection .columnChartGrid {
+    padding: 0.4rem 0.4rem 0.3rem 0;
+    gap: 0.35rem;
+  }
+
+  .assetQualityChartSection .lineChartYAxis,
+  .assetQualityChartSection .lineChartYAxisRight {
+    font-size: 0.6rem;
+  }
+
+  .assetQualityChartSection .lineChartTick,
+  .assetQualityChartSection .lineChartTickRight {
+    font-size: 0.55rem;
+  }
+
+  .assetQualityChartSection .lineChartLabels {
+    min-height: 2rem;
+    padding-left: 2rem;
+    font-size: 0.5rem;
   }
 
   .chartSection,
