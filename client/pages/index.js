@@ -261,103 +261,6 @@ export default function Home() {
   const getPortfolioAxisMinWidthForView = () => '100%';
   const getProfitabilityAxisMinWidthForView = (length, view) =>
     getAxisMinWidth(length, view === 'latest4' ? 40 : 33);
-  const capitalMetrics = (
-    <div className={styles.metricsGrid}>
-      <div className={styles.metricCard}>
-        <div className={styles.metricNameRow}>
-          <p className={styles.metricName}>Tangible equity capital</p>
-          {tangibleEquityYearTrend && (
-            <span
-              className={`${styles.yoyTrend} ${
-                tangibleEquityYearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={`Year over year change: ${tangibleEquityYearTrend.label}`}
-              title={`Year over year change: ${tangibleEquityYearTrend.label}`}
-            >
-              YoY {tangibleEquityYearTrend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-        <div className={styles.metricValueRow}>
-          <p className={styles.metricValue}>{formatPercentage(latestTangibleEquity)}</p>
-          {tangibleEquityTrend && (
-            <span
-              className={`${styles.trendArrow} ${
-                tangibleEquityTrend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={tangibleEquityTrend.label}
-              title={tangibleEquityTrend.label}
-            >
-              <span className={styles.qoqTrendText}>QoQ</span>
-              {tangibleEquityTrend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className={styles.metricCard}>
-        <div className={styles.metricNameRow}>
-          <p className={styles.metricName}>CET1</p>
-          {cet1YearTrend && (
-            <span
-              className={`${styles.yoyTrend} ${
-                cet1YearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={`Year over year change: ${cet1YearTrend.label}`}
-              title={`Year over year change: ${cet1YearTrend.label}`}
-            >
-              YoY {cet1YearTrend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-        <div className={styles.metricValueRow}>
-          <p className={styles.metricValue}>{formatPercentage(latestCet1)}</p>
-          {cet1Trend && (
-            <span
-              className={`${styles.trendArrow} ${
-                cet1Trend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={cet1Trend.label}
-              title={cet1Trend.label}
-            >
-              <span className={styles.qoqTrendText}>QoQ</span>
-              {cet1Trend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-      </div>
-      <div className={styles.metricCard}>
-        <div className={styles.metricNameRow}>
-          <p className={styles.metricName}>Total RBC</p>
-          {totalRbcYearTrend && (
-            <span
-              className={`${styles.yoyTrend} ${
-                totalRbcYearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={`Year over year change: ${totalRbcYearTrend.label}`}
-              title={`Year over year change: ${totalRbcYearTrend.label}`}
-            >
-              YoY {totalRbcYearTrend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-        <div className={styles.metricValueRow}>
-          <p className={styles.metricValue}>{formatPercentage(latestTotalRbc)}</p>
-          {totalRbcTrend && (
-            <span
-              className={`${styles.trendArrow} ${
-                totalRbcTrend.direction === 'up' ? styles.trendUp : styles.trendDown
-              }`}
-              aria-label={totalRbcTrend.label}
-              title={totalRbcTrend.label}
-            >
-              <span className={styles.qoqTrendText}>QoQ</span>
-              {totalRbcTrend.direction === 'up' ? '▲' : '▼'}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   const getAssetSegment = (assetValue) => {
     const asset = Number(assetValue);
@@ -1144,6 +1047,104 @@ export default function Home() {
     latestCoreDepositRatio,
     getCoreDepositRatio(yearAgoPoint),
     'prior year',
+  );
+
+  const capitalMetrics = (
+    <div className={styles.metricsGrid}>
+      <div className={styles.metricCard}>
+        <div className={styles.metricNameRow}>
+          <p className={styles.metricName}>Tangible equity capital</p>
+          {tangibleEquityYearTrend && (
+            <span
+              className={`${styles.yoyTrend} ${
+                tangibleEquityYearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={`Year over year change: ${tangibleEquityYearTrend.label}`}
+              title={`Year over year change: ${tangibleEquityYearTrend.label}`}
+            >
+              YoY {tangibleEquityYearTrend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+        <div className={styles.metricValueRow}>
+          <p className={styles.metricValue}>{formatPercentage(latestTangibleEquity)}</p>
+          {tangibleEquityTrend && (
+            <span
+              className={`${styles.trendArrow} ${
+                tangibleEquityTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={tangibleEquityTrend.label}
+              title={tangibleEquityTrend.label}
+            >
+              <span className={styles.qoqTrendText}>QoQ</span>
+              {tangibleEquityTrend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className={styles.metricCard}>
+        <div className={styles.metricNameRow}>
+          <p className={styles.metricName}>CET1</p>
+          {cet1YearTrend && (
+            <span
+              className={`${styles.yoyTrend} ${
+                cet1YearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={`Year over year change: ${cet1YearTrend.label}`}
+              title={`Year over year change: ${cet1YearTrend.label}`}
+            >
+              YoY {cet1YearTrend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+        <div className={styles.metricValueRow}>
+          <p className={styles.metricValue}>{formatPercentage(latestCet1)}</p>
+          {cet1Trend && (
+            <span
+              className={`${styles.trendArrow} ${
+                cet1Trend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={cet1Trend.label}
+              title={cet1Trend.label}
+            >
+              <span className={styles.qoqTrendText}>QoQ</span>
+              {cet1Trend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className={styles.metricCard}>
+        <div className={styles.metricNameRow}>
+          <p className={styles.metricName}>Total RBC</p>
+          {totalRbcYearTrend && (
+            <span
+              className={`${styles.yoyTrend} ${
+                totalRbcYearTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={`Year over year change: ${totalRbcYearTrend.label}`}
+              title={`Year over year change: ${totalRbcYearTrend.label}`}
+            >
+              YoY {totalRbcYearTrend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+        <div className={styles.metricValueRow}>
+          <p className={styles.metricValue}>{formatPercentage(latestTotalRbc)}</p>
+          {totalRbcTrend && (
+            <span
+              className={`${styles.trendArrow} ${
+                totalRbcTrend.direction === 'up' ? styles.trendUp : styles.trendDown
+              }`}
+              aria-label={totalRbcTrend.label}
+              title={totalRbcTrend.label}
+            >
+              <span className={styles.qoqTrendText}>QoQ</span>
+              {totalRbcTrend.direction === 'up' ? '▲' : '▼'}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
   );
 
   const loanMixData = useMemo(() => {
