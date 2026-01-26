@@ -828,9 +828,9 @@
 
 .chartGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 1rem;
-  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
 }
 
 .capitalChartGrid {
@@ -846,13 +846,14 @@
 .chartCard {
   border: 1px solid var(--terminal-border);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.15rem;
   background: linear-gradient(180deg, var(--terminal-card), var(--terminal-surface-alt));
   box-shadow: var(--terminal-shadow);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   overflow: hidden;
+  min-height: clamp(360px, 34vh, 460px);
 }
 
 .chartCardHeader {
@@ -983,25 +984,28 @@
 
 .barChartWithAxis {
   display: grid;
-  grid-template-columns: minmax(3.5rem, auto) 1fr;
+  grid-template-columns: minmax(4.25rem, auto) 1fr;
   align-items: end;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .barChartYAxis {
   position: relative;
-  height: 240px;
-  margin-bottom: 1.4rem;
+  height: clamp(220px, 28vh, 320px);
+  margin-bottom: 1.8rem;
   border-right: 1px solid var(--terminal-border);
   color: var(--terminal-muted);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .barChartYAxisTick {
   position: absolute;
-  right: 0.4rem;
+  right: 0.5rem;
   transform: translateY(-50%);
   white-space: nowrap;
+  background: rgba(7, 14, 26, 0.55);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
 }
 
 .chartLegendRow {
@@ -1066,6 +1070,8 @@
   gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px dashed var(--terminal-border);
+  flex: 1;
+  --chart-column-gap: clamp(0.45rem, 1vw, 0.75rem);
 }
 
 .lineChartHeader {
@@ -1089,21 +1095,28 @@
 
 .lineChartBody {
   position: relative;
-  height: 160px;
+  height: clamp(210px, 28vh, 300px);
   border: 1px solid var(--terminal-border);
   border-radius: 12px;
   background: linear-gradient(180deg, var(--terminal-surface-alt), var(--terminal-card));
+  background-image: linear-gradient(
+      180deg,
+      rgba(148, 163, 184, 0.12) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 100% 28px, 90px 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding-left: 2.5rem;
+  padding-left: 3.25rem;
 }
 
 .columnChartGrid {
   display: grid;
   align-items: end;
-  gap: 0.5rem;
+  gap: var(--chart-column-gap);
   height: 100%;
-  padding: 0.75rem 0.75rem 0.6rem 0;
+  padding: 0.95rem 0.9rem 0.7rem 0;
   box-sizing: border-box;
 }
 
@@ -1116,7 +1129,7 @@
 .columnChartBar {
   width: 100%;
   min-height: 6px;
-  border-radius: 8px 8px 4px 4px;
+  border-radius: 4px;
   background: var(--column-bar-bg, linear-gradient(180deg, #60a5fa, #2563eb));
   box-shadow: var(--column-bar-shadow, 0 10px 18px rgba(37, 99, 235, 0.28));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1139,7 +1152,7 @@
   height: 100%;
   display: flex;
   flex-direction: column-reverse;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 10px 18px rgba(30, 64, 175, 0.22);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1183,7 +1196,7 @@
 
 .ratioLineChartWrapper {
   height: 100%;
-  padding: 0.75rem 0.75rem 0.6rem 0;
+  padding: 0.95rem 0.9rem 0.7rem 0;
   box-sizing: border-box;
 }
 
@@ -1228,11 +1241,11 @@
 
 .lineChartYAxis {
   position: absolute;
-  left: 0.35rem;
+  left: 0.5rem;
   top: 50%;
   transform: translateY(-50%) rotate(-90deg);
   transform-origin: left top;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--terminal-muted);
@@ -1242,11 +1255,11 @@
 
 .lineChartYAxisRight {
   position: absolute;
-  right: 0.35rem;
+  right: 0.5rem;
   top: 50%;
   transform: translateY(-50%) rotate(90deg);
   transform-origin: right top;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--terminal-muted);
@@ -1256,35 +1269,45 @@
 
 .lineChartTick {
   position: absolute;
-  left: 0.6rem;
+  left: 0.7rem;
   transform: translateY(-50%);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--terminal-muted);
   pointer-events: none;
   z-index: 2;
   white-space: nowrap;
+  background: rgba(7, 14, 26, 0.55);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
 }
 
 .lineChartTickRight {
   position: absolute;
-  right: 0.6rem;
+  right: 0.7rem;
   transform: translateY(-50%);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--terminal-muted);
   pointer-events: none;
   z-index: 2;
   white-space: nowrap;
+  background: rgba(7, 14, 26, 0.55);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
 }
 
 .lineChartLabels {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--chart-column-gap, 0.5rem);
   text-align: center;
   overflow-x: auto;
-  padding-bottom: 0.6rem;
-  padding-left: 2.5rem;
+  padding-bottom: 0.8rem;
+  padding-left: 3.25rem;
+  padding-right: 0.9rem;
   align-items: start;
-  min-height: 2.6rem;
+  min-height: clamp(3.6rem, 4.5vh, 4.4rem);
+  font-size: clamp(0.55rem, 0.65vw, 0.7rem);
+  justify-items: center;
+  color: var(--terminal-text);
 }
 
 .lineChartLabels span {
@@ -1292,6 +1315,8 @@
   transform: rotate(-45deg);
   transform-origin: top left;
   white-space: nowrap;
+  width: 100%;
+  text-align: center;
 }
 
 .chartXAxisLabel {
@@ -1302,7 +1327,7 @@
 }
 
 .profitabilityChartLabels {
-  font-size: 0.55rem;
+  font-size: clamp(0.5rem, 0.6vw, 0.7rem);
 }
 
 .profitabilityChartLabels span {
@@ -1486,9 +1511,9 @@
 
 .barWrapper {
   width: 100%;
-  height: 260px;
+  height: clamp(240px, 32vh, 360px);
   border-radius: 12px;
-  padding: 1.6rem 0.65rem 0.9rem;
+  padding: 1.85rem 0.75rem 1rem;
   display: flex;
   align-items: flex-end;
   position: relative;
@@ -1507,7 +1532,7 @@
 
 .bar {
   width: 100%;
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--bar-bg, linear-gradient(180deg, #34d399, #059669));
   box-shadow: var(--bar-shadow, 0 8px 18px rgba(16, 185, 129, 0.35));
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1521,7 +1546,7 @@
 
 .barTooltip {
   position: absolute;
-  top: 0.4rem;
+  top: 0.3rem;
   left: 50%;
   transform: translate(-50%, 0);
   padding: 0.25rem 0.5rem;
@@ -1529,7 +1554,7 @@
   border: 1px solid var(--terminal-border);
   background: var(--terminal-surface);
   color: var(--terminal-text);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   box-shadow: var(--terminal-shadow);
   opacity: 0;
