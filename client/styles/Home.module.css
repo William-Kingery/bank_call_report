@@ -1311,10 +1311,12 @@
 }
 
 .lineChartLabels span {
-  display: inline-block;
-  transform: rotate(-45deg);
-  transform-origin: top left;
-  white-space: nowrap;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  transform: none;
+  white-space: normal;
   width: 100%;
   text-align: center;
 }
@@ -1349,7 +1351,7 @@
 
 .liquidityChartLabels span {
   transform: none;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .assetQualityChartLabels {
@@ -1358,6 +1360,7 @@
 
 .assetQualityChartLabels span {
   transform: none;
+  white-space: normal;
 }
 
 .nimColumnBar {
@@ -1585,8 +1588,18 @@
   font-weight: 700;
   color: var(--terminal-text);
   font-size: 0.64rem;
-  white-space: nowrap;
+  white-space: normal;
   transform: none;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.chartAxisYear,
+.chartAxisQuarter {
+  display: block;
+  line-height: 1.1;
 }
 
 .barValue {

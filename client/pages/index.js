@@ -243,12 +243,17 @@ export default function Home() {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
     if (!year || !quarter) return label;
-    return `${quarter} '${year.slice(-2)}`;
+    return (
+      <>
+        <span className={styles.chartAxisYear}>{year}</span>
+        <span className={styles.chartAxisQuarter}>{quarter}</span>
+      </>
+    );
   };
   const formatCapitalAxisLabel = (point) => {
     if (!point) return 'N/A';
-    if (point.callym) return formatQuarterLabel(point.callym);
-    return point.label ?? 'N/A';
+    if (point.callym) return formatQuarterShortLabel(formatQuarterLabel(point.callym));
+    return formatQuarterShortLabel(point.label ?? 'N/A');
   };
 
   const sliceSeries = (series, view) => {
