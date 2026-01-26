@@ -396,6 +396,7 @@ export default function Home() {
           : null;
 
       return {
+        callym: point.callym,
         label: formatQuarterLabel(point.callym),
         coreDeposits: Number.isFinite(coreDepositsValue) ? coreDepositsValue : null,
         brokeredDeposits: Number.isFinite(brokeredDepositsValue)
@@ -3358,8 +3359,14 @@ export default function Home() {
                         }}
                       >
                         {liquidityViewSeries.map((point) => (
-                          <span key={`core-deposit-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                          <span
+                            key={`core-deposit-label-${point.label}`}
+                            className={styles.liquidityAxisLabel}
+                          >
+                            <span>{formatQuarterShortLabel(point.label)}</span>
+                            <span className={styles.liquidityAxisCallYm}>
+                              CallYM {point.callym ?? 'N/A'}
+                            </span>
                           </span>
                         ))}
                       </div>
