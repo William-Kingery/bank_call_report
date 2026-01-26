@@ -1339,23 +1339,6 @@
   font-size: 0.6rem;
 }
 
-.liquidityChartLabels span {
-  transform: none;
-  white-space: normal;
-}
-
-.liquidityAxisLabel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.liquidityAxisCallYm {
-  font-size: 0.5rem;
-  color: var(--terminal-muted);
-}
-
 .assetQualityChartLabels {
   font-size: 0.7rem;
 }
