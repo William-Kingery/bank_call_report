@@ -1313,6 +1313,25 @@
   font-size: 0.5rem;
 }
 
+.capitalAxisLabel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  transform: none;
+  white-space: normal;
+}
+
+.capitalAxisLabel span {
+  transform: none;
+  white-space: nowrap;
+}
+
+.capitalAxisCallYm {
+  font-size: 0.45rem;
+  color: var(--terminal-muted);
+}
+
 .liquidityChartLabels {
   font-size: 0.6rem;
 }
