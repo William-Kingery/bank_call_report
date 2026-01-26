@@ -3359,7 +3359,7 @@ export default function Home() {
                       >
                         {liquidityViewSeries.map((point) => (
                           <span key={`core-deposit-label-${point.label}`}>
-                            {formatQuarterShortLabel(point.label)}
+                            {point.label}
                           </span>
                         ))}
                       </div>
