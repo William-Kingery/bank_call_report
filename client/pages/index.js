@@ -2092,7 +2092,7 @@ export default function Home() {
 
           {(activeTab === 'asset-quality' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
-              <section className={styles.assetQualityCard}>
+              <section className={`${styles.assetQualityCard} ${styles.printPageBreak}`}>
                 <h3 className={styles.assetQualityTitle}>Asset Quality</h3>
                 <p className={styles.assetQualityText}>
                   Latest delinquency metrics from the call report. Values shown are in thousands.
@@ -2164,7 +2164,9 @@ export default function Home() {
                   </div>
                 </div>
 
-                <section className={`${styles.chartSection} ${styles.assetQualityChartSection}`}>
+                <section
+                  className={`${styles.chartSection} ${styles.assetQualityChartSection} ${styles.printPageBreak}`}
+                >
                   <div className={styles.sectionHeader}>
                     <div>
                       <p className={styles.chartKicker}>Quarterly trends</p>
@@ -2695,7 +2697,7 @@ export default function Home() {
 
           {(activeTab === 'profitability' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
-              <section className={styles.assetQualityCard}>
+              <section className={`${styles.assetQualityCard} ${styles.printPageBreak}`}>
                 <h3 className={styles.assetQualityTitle}>Profitability</h3>
                 <p className={styles.assetQualityText}>
                   Review net interest margin, return metrics, and efficiency ratio trends across
@@ -3036,9 +3038,9 @@ export default function Home() {
             </div>
           )}
 
-          {activeTab === 'liquidity' && (
+          {(activeTab === 'liquidity' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
-              <section className={styles.assetQualityCard}>
+              <section className={`${styles.assetQualityCard} ${styles.printPageBreak}`}>
                 <h3 className={styles.assetQualityTitle}>Liquidity</h3>
                 <p className={styles.assetQualityText}>
                   Track core funding strength and brokered reliance with deposit mix and loan to
@@ -3512,7 +3514,7 @@ export default function Home() {
 
           {(activeTab === 'capital' || printAllTabs) && (
             <div className={styles.tabPanel} role="tabpanel">
-              <section className={styles.assetQualityCard}>
+              <section className={`${styles.assetQualityCard} ${styles.printPageBreak}`}>
                 <h3 className={styles.assetQualityTitle}>Capital</h3>
                 <p className={styles.assetQualityText}>
                   Latest capital ratios from the call report as of{' '}
