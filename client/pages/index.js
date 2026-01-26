@@ -3725,14 +3725,8 @@ export default function Home() {
                         }}
                       >
                         {capitalViewSeries.map((point) => (
-                          <span
-                            key={`tangible-equity-label-${point.label}`}
-                            className={styles.capitalAxisLabel}
-                          >
-                            <span>{formatCapitalAxisLabel(point)}</span>
-                            <span className={styles.capitalAxisCallYm}>
-                              CallYM {point.callym ?? 'N/A'}
-                            </span>
+                          <span key={`tangible-equity-label-${point.label}`}>
+                            {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
                       </div>
