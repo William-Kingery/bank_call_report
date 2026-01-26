@@ -1630,9 +1630,25 @@
   box-shadow: 0 8px 18px rgba(100, 116, 139, 0.2);
 }
 
+.printOnly {
+  display: none;
+}
+
+.printHide {
+  display: block;
+}
+
 @media print {
   .tabs,
   .printButton {
+    display: none;
+  }
+
+  .printOnly {
+    display: block;
+  }
+
+  .printHide {
     display: none;
   }
 
