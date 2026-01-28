@@ -511,6 +511,8 @@ router.get('/charts', async (req, res) => {
          r.LNCIY1 AS LNCIY1,
          r.LNCOMRY1 AS LNCOMRY1,
          r.LNCONY1 AS LNCONY1,
+         r.RBCT1CER AS rbct1cer,
+         r.RBCRWAJ AS rbcrwaj,
          r.LNCIT1R AS lncit1r,
          r.LNRERT1R AS lnrert1r,
          r.LNCONT1R AS lncont1r,
