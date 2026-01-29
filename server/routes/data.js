@@ -191,13 +191,11 @@ const fetchStateSegmentSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(f.NETINC) AS netIncome,
-       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
-       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-       SUM(COALESCE(f.NIM, 0)) AS netInterestIncome,
-       SUM(COALESCE(c.ERNAST, 0)) AS avgEarningAssets,
-       SUM(COALESCE(f.NIM, 0))
-         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -288,12 +286,17 @@ const fetchSegmentSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(f.NETINC) AS netIncome,
-       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
-       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-       SUM(COALESCE(f.NIM, 0)) AS netInterestIncome,
-       SUM(COALESCE(f.NIM, 0))
-         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+       (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -378,12 +381,17 @@ const fetchDistrictSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(f.NETINC) AS netIncome,
-       SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
-       SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-       SUM(COALESCE(f.NIM, 0)) AS netInterestIncome,
-       SUM(COALESCE(f.NIM, 0))
-         / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+       (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -879,13 +887,17 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.DEP) AS deposits,
          SUM(f.LIAB) AS liabilities,
          SUM(f.EQ) AS equity,
-         SUM(f.NETINC) AS netIncome,
-         SUM(f.NETINC) / NULLIF(SUM(f.ASSET), 0) * 100 AS roa,
-         SUM(f.NETINC) / NULLIF(SUM(f.EQ), 0) * 100 AS roe,
-         SUM(COALESCE(c.ERNAST, 0)) AS earningAssets,
-         SUM(COALESCE(f.NIM, 0)) AS netInterestIncome,
-         SUM(COALESCE(f.NIM, 0))
-           / NULLIF(SUM(COALESCE(c.ERNAST, 0)), 0) * 100 AS nim
+         SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
+         SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+         SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+         SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+         SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+         (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+           / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+         SUM(COALESCE(c.NETINCQA, 0))
+           / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+         SUM(COALESCE(c.NETINCQA, 0))
+           / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
@@ -946,9 +958,11 @@ router.get('/national-averages/region-summary', async (req, res) => {
       const deposits = Number(row.deposits) || 0;
       const liabilities = Number(row.liabilities) || 0;
       const equity = Number(row.equity) || 0;
-      const netIncome = Number(row.netIncome) || 0;
-      const netInterestIncome = Number(row.netInterestIncome) || 0;
-      const avgEarningAssets = Number(row.avgEarningAssets) || 0;
+      const intincqa = Number(row.intincqa) || 0;
+      const eintxqa = Number(row.eintxqa) || 0;
+      const netincqa = Number(row.netincqa) || 0;
+      const ernast2 = Number(row.ernast2) || 0;
+      const eqtotcp = Number(row.eqtotcp) || 0;
 
       if (!regionMap.has(key)) {
         regionMap.set(key, {
@@ -959,9 +973,11 @@ router.get('/national-averages/region-summary', async (req, res) => {
           deposits: 0,
           liabilities: 0,
           equity: 0,
-          netIncome: 0,
-          netInterestIncome: 0,
-          avgEarningAssets: 0,
+          intincqa: 0,
+          eintxqa: 0,
+          netincqa: 0,
+          ernast2: 0,
+          eqtotcp: 0,
         });
       }
 
@@ -971,20 +987,22 @@ router.get('/national-averages/region-summary', async (req, res) => {
       summary.deposits += deposits;
       summary.liabilities += liabilities;
       summary.equity += equity;
-      summary.netIncome += netIncome;
-      summary.netInterestIncome += netInterestIncome;
-      summary.avgEarningAssets += avgEarningAssets;
+      summary.intincqa += intincqa;
+      summary.eintxqa += eintxqa;
+      summary.netincqa += netincqa;
+      summary.ernast2 += ernast2;
+      summary.eqtotcp += eqtotcp;
     });
 
     const results = Array.from(regionMap.values()).map((summary) => {
-      const roa = summary.assets
-        ? (summary.netIncome / summary.assets) * 100
+      const nim = summary.ernast2
+        ? ((summary.intincqa - summary.eintxqa) / summary.ernast2) * 100
         : null;
-      const roe = summary.equity
-        ? (summary.netIncome / summary.equity) * 100
+      const roa = summary.ernast2
+        ? (summary.netincqa / summary.ernast2) * 100
         : null;
-      const nim = summary.avgEarningAssets
-        ? (summary.netInterestIncome / summary.avgEarningAssets) * 100
+      const roe = summary.eqtotcp
+        ? (summary.netincqa / summary.eqtotcp) * 100
         : null;
 
       return {
@@ -995,11 +1013,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
         deposits: summary.deposits,
         liabilities: summary.liabilities,
         equity: summary.equity,
-        netIncome: summary.netIncome,
-        netInterestIncome: summary.netInterestIncome,
+        nim,
         roa,
         roe,
-        nim,
       };
     });
 
