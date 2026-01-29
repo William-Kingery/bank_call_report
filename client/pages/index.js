@@ -920,7 +920,7 @@ export default function Home() {
   const latestAgLoans = latestPoint?.LNAG;
   const latestCILoans = latestPoint?.LNCI;
   const latestDepositoryLoans = latestPoint?.LNDEP;
-  const latestNonDepositoryLoans = latestPoint?.LNNDEPC;
+  const latestNonDepositoryLoans = latestPoint?.LNOTHER;
   const latestCreLoans = latestPoint?.LNCOMRE;
   const latestReLoans = latestPoint?.LNRE;
   const latestConsumerLoans = latestPoint?.LNCON;

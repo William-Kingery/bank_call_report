@@ -493,7 +493,7 @@ router.get('/charts', async (req, res) => {
          f.LNAG AS LNAG,
          f.LNCI AS LNCI,
          f.LNDEP AS LNDEP,
-         f.LNNDEPC AS LNNDEPC,
+         f.LNOTHER AS LNOTHER,
          f.LNCOMRE AS LNCOMRE,
          f.LNRE AS LNRE,
          f.LNCON AS LNCON,
