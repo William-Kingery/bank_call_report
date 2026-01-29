@@ -886,7 +886,18 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(f.ASSET) AS assets,
          SUM(f.DEP) AS deposits,
          SUM(f.LIAB) AS liabilities,
-         SUM(f.EQ) AS equity
+         SUM(f.EQ) AS equity,
+         SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
+         SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+         SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+         SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+         SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+         (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+           / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+         SUM(COALESCE(c.NETINCQA, 0))
+           / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+         SUM(COALESCE(c.NETINCQA, 0))
+           / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
@@ -897,6 +908,9 @@ router.get('/national-averages/summary', async (req, res) => {
        JOIN fdic_structure s
          ON s.CERT = latest_structure.CERT
          AND s.CALLYM = latest_structure.callym
+       LEFT JOIN fdic_cdi c
+         ON c.CERT = f.CERT
+         AND c.CALLYM = f.CALLYM
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY f.CALLYM
        ORDER BY f.CALLYM DESC`,
