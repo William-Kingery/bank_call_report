@@ -754,31 +754,61 @@ export default function Home() {
     return sortedPoints[sortedPoints.length - 2];
   }, [sortedPoints]);
   const latestRatPoint = reportData?.latestRat ?? null;
+  const selectedDistrict = reportData?.frbDistrict ?? null;
 
   const selectedAssetSegment = useMemo(
     () => getAssetSegment(latestPoint?.asset),
     [latestPoint?.asset],
   );
+  const isDistrictPeerGroup = useMemo(() => {
+    const asset = Number(latestPoint?.asset);
+    return Number.isFinite(asset) && asset < 50000000;
+  }, [latestPoint?.asset]);
 
   const benchmarkSubtitle = selectedAssetSegment
-    ? `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
+    ? isDistrictPeerGroup && selectedDistrict
+      ? `Top 10 banks in the ${selectedAssetSegment} segment within the ${selectedDistrict} district.`
+      : `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
     : 'Top 10 banks by assets with profitability ratios.';
+
+  useEffect(() => {
+    setBenchmarkSortField((current) => {
+      if (isDistrictPeerGroup && current === 'asset') {
+        return 'peerRank';
+      }
+      if (!isDistrictPeerGroup && current === 'peerRank') {
+        return 'asset';
+      }
+      return current;
+    });
+  }, [isDistrictPeerGroup]);
 
   const benchmarkSortedData = useMemo(() => {
     if (!benchmarkData.length) return [];
 
     const sorted = [...benchmarkData];
     sorted.sort((a, b) => {
-      const aValue = Number(a?.[benchmarkSortField]);
-      const bValue = Number(b?.[benchmarkSortField]);
-      const aHasValue = Number.isFinite(aValue);
-      const bHasValue = Number.isFinite(bValue);
+      const sortFields =
+        benchmarkSortField === 'peerRank' ? ['nim', 'roa', 'roe'] : [benchmarkSortField];
+      for (const field of sortFields) {
+        const aValue = Number(a?.[field]);
+        const bValue = Number(b?.[field]);
+        const aHasValue = Number.isFinite(aValue);
+        const bHasValue = Number.isFinite(bValue);
 
-      if (!aHasValue && !bHasValue) return 0;
-      if (!aHasValue) return 1;
-      if (!bHasValue) return -1;
+        if (!aHasValue && !bHasValue) {
+          continue;
+        }
+        if (!aHasValue) return 1;
+        if (!bHasValue) return -1;
 
-      return benchmarkSortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+        if (aValue === bValue) {
+          continue;
+        }
+
+        return benchmarkSortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      return 0;
     });
 
     return sorted;
@@ -1250,9 +1280,13 @@ export default function Home() {
       setBenchmarkLoading(true);
       setBenchmarkError(null);
       try {
-        const response = await fetch(
-          `${API_BASE}/benchmark?segment=${encodeURIComponent(selectedAssetSegment)}`,
-        );
+        const params = new URLSearchParams({
+          segment: selectedAssetSegment,
+        });
+        if (isDistrictPeerGroup && selectedDistrict) {
+          params.set('district', selectedDistrict);
+        }
+        const response = await fetch(`${API_BASE}/benchmark?${params.toString()}`);
         if (!response.ok) {
           throw new Error('Failed to load benchmark data');
         }
@@ -1272,7 +1306,9 @@ export default function Home() {
     benchmarkData.length,
     benchmarkLoading,
     benchmarkSegment,
+    isDistrictPeerGroup,
     selectedAssetSegment,
+    selectedDistrict,
   ]);
 
   useEffect(() => {
@@ -1324,9 +1360,13 @@ export default function Home() {
     const fetchSegmentBankCount = async () => {
       setSegmentBankCountError(null);
       try {
-        const response = await fetch(
-          `${API_BASE}/segment-bank-count?segment=${encodeURIComponent(selectedAssetSegment)}`,
-        );
+        const params = new URLSearchParams({
+          segment: selectedAssetSegment,
+        });
+        if (isDistrictPeerGroup && selectedDistrict) {
+          params.set('district', selectedDistrict);
+        }
+        const response = await fetch(`${API_BASE}/segment-bank-count?${params.toString()}`);
         if (!response.ok) {
           throw new Error('Failed to load peer group count');
         }
@@ -1339,7 +1379,7 @@ export default function Home() {
     };
 
     fetchSegmentBankCount();
-  }, [selectedAssetSegment]);
+  }, [isDistrictPeerGroup, selectedAssetSegment, selectedDistrict]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1521,9 +1561,11 @@ export default function Home() {
               <p className={styles.peerGroupCount}>
                 {segmentBankCountError
                   ? segmentBankCountError
-                  : `Number of Banks within Peer Group: ${segmentBankCount.toLocaleString(
-                      'en-US',
-                    )}`}
+                  : `Number of Banks within ${
+                      isDistrictPeerGroup && selectedDistrict
+                        ? `${selectedDistrict} `
+                        : ''
+                    }Peer Group: ${segmentBankCount.toLocaleString('en-US')}`}
               </p>
             )}
           </div>
@@ -1941,7 +1983,7 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>NIM</p>
+                      <p className={styles.metricName}>nIM</p>
                       {nimYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
@@ -2867,7 +2909,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>Net interest margin (NIM)</h4>
+                        <h4 className={styles.lineChartTitle}>Net interest margin (nIM)</h4>
                         <p className={styles.lineChartSubhead}>Interest income strength</p>
                       </div>
                       <div className={styles.lineChartBody}>
@@ -2915,7 +2957,7 @@ export default function Home() {
                             ))}
                           </div>
                         ) : (
-                          <p className={styles.status}>No NIM data available.</p>
+                          <p className={styles.status}>No nIM data available.</p>
                         )}
                       </div>
                       <div
@@ -4864,8 +4906,10 @@ export default function Home() {
                     value={benchmarkSortField}
                     onChange={(event) => setBenchmarkSortField(event.target.value)}
                   >
+                    <option value="peerRank">Peer rank (nIM, ROA, ROE)</option>
                     <option value="asset">Total assets</option>
                     <option value="dep">Total deposits</option>
+                    <option value="nim">nIM</option>
                     <option value="roa">ROA</option>
                     <option value="roe">ROE</option>
                   </select>
@@ -4910,6 +4954,7 @@ export default function Home() {
                           <th>State</th>
                           <th>Total Assets</th>
                           <th>Total Deposits</th>
+                          <th>nIM</th>
                           <th>ROA</th>
                           <th>ROE</th>
                         </tr>
@@ -4922,6 +4967,7 @@ export default function Home() {
                             <td>{bank.stateName ?? 'N/A'}</td>
                             <td>{formatNumber(bank.asset)}</td>
                             <td>{formatNumber(bank.dep)}</td>
+                            <td>{formatPercentage(bank.nim)}</td>
                             <td>{formatPercentage(bank.roa)}</td>
                             <td>{formatPercentage(bank.roe)}</td>
                           </tr>

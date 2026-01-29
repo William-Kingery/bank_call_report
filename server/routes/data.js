@@ -102,6 +102,8 @@ const FRB_DISTRICT_BY_NAME = Object.entries(FRB_DISTRICTS).reduce((acc, [key, va
 }, {});
 
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
+const isDistrictScopedRange = (range) =>
+  range?.max != null && range.max <= 50000000;
 const buildSegmentCaseStatement = () => {
   const cases = SEGMENT_RANGES.map((range) => {
     const conditions = [];
@@ -469,7 +471,8 @@ router.get('/charts', async (req, res) => {
          NAMEFULL AS nameFull,
          CITY AS city,
          STNAME AS stateName,
-         ZIP AS zipCode
+         ZIP AS zipCode,
+         FED AS fed
        FROM fdic_structure
        WHERE CERT = ?
        ORDER BY CALLYM DESC
@@ -477,7 +480,7 @@ router.get('/charts', async (req, res) => {
       [cert]
     );
 
-    const { nameFull, city, stateName, zipCode } = structureRows?.[0] ?? {};
+    const { nameFull, city, stateName, zipCode, fed } = structureRows?.[0] ?? {};
 
     if (!nameFull) {
       return res.status(404).json({ message: 'Bank not found' });
@@ -569,6 +572,7 @@ router.get('/charts', async (req, res) => {
       city,
       stateName,
       zipCode,
+      frbDistrict: getFrbDistrict(fed),
       points: seriesRows,
       latestRat: ratRows?.[0] ?? null,
     });
@@ -581,9 +585,15 @@ router.get('/charts', async (req, res) => {
 router.get('/benchmark', async (_req, res) => {
   try {
     const segment = _req.query.segment;
+    const district = _req.query.district;
     const range = getSegmentRange(segment);
     const conditions = [];
     const params = [];
+    const isDistrictScoped = isDistrictScopedRange(range);
+
+    if (isDistrictScoped && !district) {
+      return res.status(400).json({ message: 'Missing district parameter' });
+    }
 
     if (range) {
       if (range.min != null) {
@@ -596,6 +606,26 @@ router.get('/benchmark', async (_req, res) => {
       }
     }
 
+    if (isDistrictScoped && district) {
+      const fedCode = FRB_DISTRICT_BY_NAME[district];
+      if (!Number.isFinite(fedCode)) {
+        return res.status(400).json({ message: 'Invalid district parameter' });
+      }
+      conditions.push('s.FED = ?');
+      params.push(fedCode);
+    }
+
+    const orderClause = isDistrictScoped
+      ? `ORDER BY
+           (r.NIMY IS NULL) ASC,
+           r.NIMY DESC,
+           (r.ROA IS NULL) ASC,
+           r.ROA DESC,
+           (r.ROE IS NULL) ASC,
+           r.ROE DESC,
+           f.ASSET DESC`
+      : 'ORDER BY f.ASSET DESC';
+
     const [rows] = await pool.query(
       `SELECT
          s.NAMEFULL AS nameFull,
@@ -603,6 +633,7 @@ router.get('/benchmark', async (_req, res) => {
          s.STNAME AS stateName,
          f.ASSET AS asset,
          dep_fts.DEP AS dep,
+         r.NIMY AS nim,
          r.ROA AS roa,
          r.ROE AS roe
        FROM (
@@ -642,7 +673,7 @@ router.get('/benchmark', async (_req, res) => {
          ON r.CERT = latest_rat.CERT
          AND r.CALLYM = latest_rat.callym
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-       ORDER BY f.ASSET DESC
+       ${orderClause}
        LIMIT 10`
       ,
       params
@@ -696,10 +727,16 @@ router.get('/segment-liquidity', async (req, res) => {
 router.get('/segment-bank-count', async (req, res) => {
   try {
     const segment = req.query.segment;
+    const district = req.query.district;
     const range = getSegmentRange(segment);
+    const isDistrictScoped = isDistrictScopedRange(range);
 
     if (!range) {
       return res.status(400).json({ message: 'Invalid segment parameter' });
+    }
+
+    if (isDistrictScoped && !district) {
+      return res.status(400).json({ message: 'Missing district parameter' });
     }
 
     const conditions = ['f.ASSET IS NOT NULL'];
@@ -714,6 +751,15 @@ router.get('/segment-bank-count', async (req, res) => {
       params.push(range.max);
     }
 
+    if (isDistrictScoped && district) {
+      const fedCode = FRB_DISTRICT_BY_NAME[district];
+      if (!Number.isFinite(fedCode)) {
+        return res.status(400).json({ message: 'Invalid district parameter' });
+      }
+      conditions.push('s.FED = ?');
+      params.push(fedCode);
+    }
+
     const [rows] = await pool.query(
       `SELECT COUNT(*) AS bankCount
        FROM (
@@ -724,6 +770,15 @@ router.get('/segment-bank-count', async (req, res) => {
        JOIN fdic_fts f
          ON f.CERT = latest_fts.CERT
          AND f.CALLYM = latest_fts.callym
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}`,
       params,
     );
