@@ -919,6 +919,8 @@ export default function Home() {
   const priorTotalRbc = priorPoint?.rbcrwaj;
   const latestAgLoans = latestPoint?.LNAG;
   const latestCILoans = latestPoint?.LNCI;
+  const latestDepositoryLoans = latestPoint?.LNDEP;
+  const latestNonDepositoryLoans = latestPoint?.LNOTHER;
   const latestCreLoans = latestPoint?.LNCOMRE;
   const latestReLoans = latestPoint?.LNRE;
   const latestConsumerLoans = latestPoint?.LNCON;
@@ -1174,6 +1176,16 @@ export default function Home() {
         value: latestCILoans,
         color: '#f97316',
       },
+      {
+        label: 'Depository Loans',
+        value: latestDepositoryLoans,
+        color: '#ec4899',
+      },
+      {
+        label: 'Nondepository Loans',
+        value: latestNonDepositoryLoans,
+        color: '#14b8a6',
+      },
     ];
 
     const total = items.reduce((sum, item) => {
@@ -1210,7 +1222,14 @@ export default function Home() {
       items: itemsWithPercentages,
       gradient: `conic-gradient(${gradientStops})`,
     };
-  }, [latestAgLoans, latestCILoans, latestConsumerLoans, latestReLoans]);
+  }, [
+    latestAgLoans,
+    latestCILoans,
+    latestConsumerLoans,
+    latestDepositoryLoans,
+    latestNonDepositoryLoans,
+    latestReLoans,
+  ]);
 
   useEffect(() => {
     if (activeTab !== 'benchmark' || benchmarkLoading) {
@@ -2240,7 +2259,7 @@ export default function Home() {
                     <div
                       className={styles.loanMixChart}
                       role="img"
-                      aria-label="Loan mix pie chart for consumer, real estate, ag, and C&I loans"
+                      aria-label="Loan mix pie chart for consumer, real estate, ag, C&I, depository, and nondepository loans"
                       style={{ backgroundImage: loanMixData.gradient }}
                     />
                     <div className={styles.loanMixLegend}>
