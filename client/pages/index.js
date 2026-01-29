@@ -1983,7 +1983,7 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>NIM</p>
+                      <p className={styles.metricName}>nIM</p>
                       {nimYearTrend && (
                         <span
                           className={`${styles.yoyTrend} ${
@@ -2909,7 +2909,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>Net interest margin (NIM)</h4>
+                        <h4 className={styles.lineChartTitle}>Net interest margin (nIM)</h4>
                         <p className={styles.lineChartSubhead}>Interest income strength</p>
                       </div>
                       <div className={styles.lineChartBody}>
@@ -2957,7 +2957,7 @@ export default function Home() {
                             ))}
                           </div>
                         ) : (
-                          <p className={styles.status}>No NIM data available.</p>
+                          <p className={styles.status}>No nIM data available.</p>
                         )}
                       </div>
                       <div
