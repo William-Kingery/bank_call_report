@@ -727,6 +727,9 @@ const NationalAverages = () => {
                     <th>Liabilities</th>
                     <th>Deposits</th>
                     <th>Equity</th>
+                    <th>nIM</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -738,11 +741,14 @@ const NationalAverages = () => {
                       <td>{formatCurrency(Number(row.liabilities))}</td>
                       <td>{formatCurrency(Number(row.deposits))}</td>
                       <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
                     </tr>
                   ))}
                   {!regionSummaryRows.length ? (
                     <tr>
-                      <td colSpan={6}>No region summary data for the selected filters.</td>
+                      <td colSpan={9}>No region summary data for the selected filters.</td>
                     </tr>
                   ) : null}
                 </tbody>
@@ -774,6 +780,9 @@ const NationalAverages = () => {
                     <th>Liabilities</th>
                     <th>Deposits</th>
                     <th>Equity</th>
+                    <th>nIM</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -785,11 +794,14 @@ const NationalAverages = () => {
                       <td>{formatCurrency(Number(row.liabilities))}</td>
                       <td>{formatCurrency(Number(row.deposits))}</td>
                       <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
                     </tr>
                   ))}
                   {!segmentSummaryRows.length ? (
                     <tr>
-                      <td colSpan={6}>No asset range summary data for the selected filters.</td>
+                      <td colSpan={9}>No asset range summary data for the selected filters.</td>
                     </tr>
                   ) : null}
                 </tbody>
@@ -821,6 +833,9 @@ const NationalAverages = () => {
                     <th>Liabilities</th>
                     <th>Deposits</th>
                     <th>Equity</th>
+                    <th>nIM</th>
+                    <th>ROA</th>
+                    <th>ROE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -832,11 +847,14 @@ const NationalAverages = () => {
                       <td>{formatCurrency(Number(row.liabilities))}</td>
                       <td>{formatCurrency(Number(row.deposits))}</td>
                       <td>{formatCurrency(Number(row.equity))}</td>
+                      <td>{formatPercentage(Number(row.nim))}</td>
+                      <td>{formatPercentage(Number(row.roa))}</td>
+                      <td>{formatPercentage(Number(row.roe))}</td>
                     </tr>
                   ))}
                   {!districtSummaryRows.length ? (
                     <tr>
-                      <td colSpan={6}>No district summary data for the selected filters.</td>
+                      <td colSpan={9}>No district summary data for the selected filters.</td>
                     </tr>
                   ) : null}
                 </tbody>

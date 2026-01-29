@@ -190,7 +190,12 @@ const fetchStateSegmentSummary = async ({
        SUM(f.ASSET) AS assets,
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
-       SUM(f.EQ) AS equity
+       SUM(f.EQ) AS equity,
+       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -201,6 +206,9 @@ const fetchStateSegmentSummary = async ({
      JOIN fdic_structure s
        ON s.CERT = latest_structure.CERT
        AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
      GROUP BY s.STNAME, segment
      ORDER BY s.STNAME ASC`,
@@ -277,7 +285,18 @@ const fetchSegmentSummary = async ({
        SUM(f.ASSET) AS assets,
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
-       SUM(f.EQ) AS equity
+       SUM(f.EQ) AS equity,
+       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+       (SUM(COALESCE(c.INTINCQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -288,6 +307,9 @@ const fetchSegmentSummary = async ({
      JOIN fdic_structure s
        ON s.CERT = latest_structure.CERT
        AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
      GROUP BY segment`,
     params
@@ -358,7 +380,18 @@ const fetchDistrictSummary = async ({
        SUM(f.ASSET) AS assets,
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
-       SUM(f.EQ) AS equity
+       SUM(f.EQ) AS equity,
+       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
+       SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
+       SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
+       SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
+       (SUM(COALESCE(c.INTINCQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
+       SUM(COALESCE(c.NETINCQA, 0))
+         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -369,6 +402,9 @@ const fetchDistrictSummary = async ({
      JOIN fdic_structure s
        ON s.CERT = latest_structure.CERT
        AND s.CALLYM = latest_structure.callym
+     LEFT JOIN fdic_cdi c
+       ON c.CERT = f.CERT
+       AND c.CALLYM = f.CALLYM
      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
      GROUP BY s.FED
      ORDER BY s.FED ASC`,
@@ -908,6 +944,11 @@ router.get('/national-averages/region-summary', async (req, res) => {
       const deposits = Number(row.deposits) || 0;
       const liabilities = Number(row.liabilities) || 0;
       const equity = Number(row.equity) || 0;
+      const intincqa = Number(row.intincqa) || 0;
+      const eintxqa = Number(row.eintxqa) || 0;
+      const netincqa = Number(row.netincqa) || 0;
+      const ernast2 = Number(row.ernast2) || 0;
+      const eqtotcp = Number(row.eqtotcp) || 0;
 
       if (!regionMap.has(key)) {
         regionMap.set(key, {
@@ -918,6 +959,11 @@ router.get('/national-averages/region-summary', async (req, res) => {
           deposits: 0,
           liabilities: 0,
           equity: 0,
+          intincqa: 0,
+          eintxqa: 0,
+          netincqa: 0,
+          ernast2: 0,
+          eqtotcp: 0,
         });
       }
 
@@ -927,9 +973,24 @@ router.get('/national-averages/region-summary', async (req, res) => {
       summary.deposits += deposits;
       summary.liabilities += liabilities;
       summary.equity += equity;
+      summary.intincqa += intincqa;
+      summary.eintxqa += eintxqa;
+      summary.netincqa += netincqa;
+      summary.ernast2 += ernast2;
+      summary.eqtotcp += eqtotcp;
     });
 
     const results = Array.from(regionMap.values()).map((summary) => {
+      const nim = summary.ernast2
+        ? ((summary.intincqa - summary.eintxqa) / summary.ernast2) * 100
+        : null;
+      const roa = summary.ernast2
+        ? (summary.netincqa / summary.ernast2) * 100
+        : null;
+      const roe = summary.eqtotcp
+        ? (summary.netincqa / summary.eqtotcp) * 100
+        : null;
+
       return {
         region: summary.region,
         segment: summary.segment,
@@ -938,6 +999,9 @@ router.get('/national-averages/region-summary', async (req, res) => {
         deposits: summary.deposits,
         liabilities: summary.liabilities,
         equity: summary.equity,
+        nim,
+        roa,
+        roe,
       };
     });
 
