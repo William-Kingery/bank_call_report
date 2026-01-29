@@ -191,7 +191,7 @@ const fetchStateSegmentSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
        SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
        SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
        SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
@@ -286,12 +286,12 @@ const fetchSegmentSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
        SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
        SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
        SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
        SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
-       (SUM(COALESCE(c.INTINCQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+       (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
        SUM(COALESCE(c.NETINCQA, 0))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
@@ -381,12 +381,12 @@ const fetchDistrictSummary = async ({
        SUM(f.DEP) AS deposits,
        SUM(f.LIAB) AS liabilities,
        SUM(f.EQ) AS equity,
-       SUM(COALESCE(c.INTINCQA, 0)) AS intincqa,
+       SUM(COALESCE(c.INTINQA, 0)) AS intincqa,
        SUM(COALESCE(c.EINTXQA, 0)) AS eintxqa,
        SUM(COALESCE(c.NETINCQA, 0)) AS netincqa,
        SUM(COALESCE(c.ERNAST2, 0)) AS ernast2,
        SUM(COALESCE(c.EQTOTCP, 0)) AS eqtotcp,
-       (SUM(COALESCE(c.INTINCQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
+       (SUM(COALESCE(c.INTINQA, 0)) - SUM(COALESCE(c.EINTXQA, 0)))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS nim,
        SUM(COALESCE(c.NETINCQA, 0))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
