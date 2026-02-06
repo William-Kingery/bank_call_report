@@ -1837,43 +1837,6 @@ export default function Home() {
                   </div>
                   <div className={styles.metricCard}>
                     <div className={styles.metricNameRow}>
-                      <p className={styles.metricName}>Uninsured deposit ratio</p>
-                      {uninsuredDepositRatioYearTrend && (
-                        <span
-                          className={`${styles.yoyTrend} ${
-                            uninsuredDepositRatioYearTrend.direction === 'up'
-                              ? styles.trendUp
-                              : styles.trendDown
-                          }`}
-                          aria-label={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
-                          title={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
-                        >
-                          YoY {uninsuredDepositRatioYearTrend.direction === 'up' ? '▲' : '▼'}
-                        </span>
-                      )}
-                    </div>
-                    <div className={styles.metricValueRow}>
-                      <p className={styles.metricValue}>
-                        {formatPercentage(latestUninsuredDepositRatio)}
-                      </p>
-                      {uninsuredDepositRatioTrend && (
-                        <span
-                          className={`${styles.trendArrow} ${
-                            uninsuredDepositRatioTrend.direction === 'up'
-                              ? styles.trendUp
-                              : styles.trendDown
-                          }`}
-                          aria-label={uninsuredDepositRatioTrend.label}
-                          title={uninsuredDepositRatioTrend.label}
-                        >
-                          <span className={styles.qoqTrendText}>QoQ</span>
-                          {uninsuredDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.metricCard}>
-                    <div className={styles.metricNameRow}>
                       <p className={styles.metricName}>Loan to deposit ratio</p>
                       {loanDepositYearTrend && (
                         <span
@@ -3362,6 +3325,43 @@ export default function Home() {
                         >
                           <span className={styles.qoqTrendText}>QoQ</span>
                           {coreDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Uninsured deposit ratio</p>
+                      {uninsuredDepositRatioYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            uninsuredDepositRatioYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
+                          title={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
+                        >
+                          YoY {uninsuredDepositRatioYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestUninsuredDepositRatio)}
+                      </p>
+                      {uninsuredDepositRatioTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            uninsuredDepositRatioTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={uninsuredDepositRatioTrend.label}
+                          title={uninsuredDepositRatioTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {uninsuredDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
                     </div>
