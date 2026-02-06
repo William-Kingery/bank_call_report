@@ -118,6 +118,83 @@ const buildLineChartData = (series, columnWidth, valueSelector) => {
   };
 };
 
+const buildLineChartDataWithRange = (series, columnWidth, valueSelector, min, max) => {
+  const rawValues = series.map((point) => ({
+    label: point.label,
+    value: valueSelector(point),
+  }));
+  const numericValues = rawValues
+    .map((point) => point.value)
+    .filter((value) => Number.isFinite(value));
+  const resolvedMin = Number.isFinite(min)
+    ? min
+    : numericValues.length
+      ? Math.min(...numericValues)
+      : null;
+  const resolvedMax = Number.isFinite(max)
+    ? max
+    : numericValues.length
+      ? Math.max(...numericValues)
+      : null;
+  const range =
+    Number.isFinite(resolvedMax) && Number.isFinite(resolvedMin)
+      ? resolvedMax - resolvedMin
+      : 0;
+  const values = rawValues.map((point) => {
+    if (!Number.isFinite(point.value)) {
+      return { label: point.label, value: null, percentage: 0 };
+    }
+    return {
+      label: point.label,
+      value: point.value,
+      percentage: range === 0 ? 50 : ((point.value - resolvedMin) / range) * 100,
+    };
+  });
+  const height = 160;
+  const paddingTop = 18;
+  const paddingBottom = 18;
+  const rangeHeight = height - paddingTop - paddingBottom;
+  const width = Math.max(series.length * columnWidth, 320);
+  const points = values.map((point, index) => {
+    if (point.value == null) {
+      return null;
+    }
+    const x = index * columnWidth + columnWidth / 2;
+    const y = paddingTop + (1 - point.percentage / 100) * rangeHeight;
+    return {
+      x,
+      y,
+      label: point.label,
+      value: point.value,
+    };
+  });
+  const segments = [];
+  let current = [];
+  points.forEach((point) => {
+    if (!point) {
+      if (current.length > 1) {
+        segments.push(current);
+      }
+      current = [];
+      return;
+    }
+    current.push(point);
+  });
+  if (current.length > 1) {
+    segments.push(current);
+  }
+
+  return {
+    width,
+    height,
+    points,
+    segments,
+    min: resolvedMin,
+    max: resolvedMax,
+    hasData: numericValues.length > 0,
+  };
+};
+
 const buildQuarterSeries = (points, mapper) => {
   const grouped = new Map();
 
@@ -391,6 +468,8 @@ export default function Home() {
     return buildQuarterSeries(sortedPoints, (point) => {
       const coreDepositsValue = Number(point.coredep);
       const brokeredDepositsValue = Number(point.bro);
+      const brokeredInsuredValue = Number(point.broins);
+      const brokeredUninsuredValue = Number(point.bronins);
       const depositsValue = Number(point.dep);
       const loanDepositRatioValue = Number(point.lnlsdepr);
       const coreDepositRatio =
@@ -405,6 +484,12 @@ export default function Home() {
         coreDeposits: Number.isFinite(coreDepositsValue) ? coreDepositsValue : null,
         brokeredDeposits: Number.isFinite(brokeredDepositsValue)
           ? brokeredDepositsValue
+          : null,
+        brokeredInsuredDeposits: Number.isFinite(brokeredInsuredValue)
+          ? brokeredInsuredValue
+          : null,
+        brokeredUninsuredDeposits: Number.isFinite(brokeredUninsuredValue)
+          ? brokeredUninsuredValue
           : null,
         coreDepositRatio,
         loanDepositRatio: Number.isFinite(loanDepositRatioValue) ? loanDepositRatioValue : null,
@@ -582,6 +667,57 @@ export default function Home() {
         (point) => point.loanDepositRatio,
       ),
     [liquidityColumnWidth, liquidityViewSeries],
+  );
+
+  const brokeredCoverageRange = useMemo(() => {
+    const values = liquidityViewSeries
+      .flatMap((point) => [
+        Number(point?.brokeredInsuredDeposits),
+        Number(point?.brokeredUninsuredDeposits),
+      ])
+      .filter((value) => Number.isFinite(value));
+    if (!values.length) {
+      return { min: null, max: null, hasData: false };
+    }
+    return {
+      min: Math.min(...values),
+      max: Math.max(...values),
+      hasData: true,
+    };
+  }, [liquidityViewSeries]);
+
+  const brokeredInsuredChart = useMemo(
+    () =>
+      buildLineChartDataWithRange(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => point.brokeredInsuredDeposits,
+        brokeredCoverageRange.min,
+        brokeredCoverageRange.max,
+      ),
+    [
+      brokeredCoverageRange.max,
+      brokeredCoverageRange.min,
+      liquidityColumnWidth,
+      liquidityViewSeries,
+    ],
+  );
+
+  const brokeredUninsuredChart = useMemo(
+    () =>
+      buildLineChartDataWithRange(
+        liquidityViewSeries,
+        liquidityColumnWidth,
+        (point) => point.brokeredUninsuredDeposits,
+        brokeredCoverageRange.min,
+        brokeredCoverageRange.max,
+      ),
+    [
+      brokeredCoverageRange.max,
+      brokeredCoverageRange.min,
+      liquidityColumnWidth,
+      liquidityViewSeries,
+    ],
   );
 
   const segmentLoanDepositLookup = useMemo(() => {
@@ -3526,6 +3662,136 @@ export default function Home() {
                         {liquidityViewSeries.map((point) => (
                           <span key={`core-deposit-label-${point.label}`}>
                             {point.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>
+                          Brokered deposit coverage
+                        </h4>
+                        <p className={styles.lineChartSubhead}>
+                          Insured vs uninsured brokered deposits
+                        </p>
+                      </div>
+                      <div className={styles.chartLegendRow} aria-hidden="true">
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendBrokeredInsured}`}
+                          />
+                          <span className={styles.legendLabel}>Insured</span>
+                        </div>
+                        <div className={styles.legendItem}>
+                          <span
+                            className={`${styles.legendSwatch} ${styles.legendBrokeredUninsured}`}
+                          />
+                          <span className={styles.legendLabel}>Uninsured</span>
+                        </div>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        {brokeredCoverageRange.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatNumber(brokeredCoverageRange.max)}
+                          </span>
+                        )}
+                        {brokeredCoverageRange.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatNumber(brokeredCoverageRange.min)}
+                          </span>
+                        )}
+                        {brokeredCoverageRange.hasData ? (
+                          <div
+                            className={styles.ratioLineChartWrapper}
+                            style={{
+                              minWidth: getAxisMinWidth(
+                                liquidityViewSeries.length,
+                                liquidityColumnWidth,
+                              ),
+                            }}
+                          >
+                            <svg
+                              className={styles.ratioLineChart}
+                              role="img"
+                              aria-label="Insured and uninsured brokered deposits line chart"
+                              viewBox={`0 0 ${brokeredInsuredChart.width} ${brokeredInsuredChart.height}`}
+                              width={brokeredInsuredChart.width}
+                              height={brokeredInsuredChart.height}
+                              preserveAspectRatio="none"
+                            >
+                              {brokeredInsuredChart.segments.map((segment) => (
+                                <polyline
+                                  key={`brokered-insured-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                  className={`${styles.ratioLine} ${styles.ratioLineBrokeredInsured}`}
+                                  points={segment
+                                    .map((point) => `${point.x},${point.y}`)
+                                    .join(' ')}
+                                />
+                              ))}
+                              {brokeredInsuredChart.points.map((point) =>
+                                point ? (
+                                  <circle
+                                    key={`brokered-insured-dot-${point.label}`}
+                                    className={`${styles.ratioLineDot} ${styles.ratioLineBrokeredInsuredDot}`}
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r="4"
+                                  >
+                                    <title>
+                                      {`${point.label}: ${formatNumber(point.value)}`}
+                                    </title>
+                                  </circle>
+                                ) : null,
+                              )}
+                              {brokeredUninsuredChart.segments.map((segment) => (
+                                <polyline
+                                  key={`brokered-uninsured-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                  className={`${styles.ratioLine} ${styles.ratioLineBrokeredUninsured}`}
+                                  points={segment
+                                    .map((point) => `${point.x},${point.y}`)
+                                    .join(' ')}
+                                />
+                              ))}
+                              {brokeredUninsuredChart.points.map((point) =>
+                                point ? (
+                                  <circle
+                                    key={`brokered-uninsured-dot-${point.label}`}
+                                    className={`${styles.ratioLineDot} ${styles.ratioLineBrokeredUninsuredDot}`}
+                                    cx={point.x}
+                                    cy={point.y}
+                                    r="4"
+                                  >
+                                    <title>
+                                      {`${point.label}: ${formatNumber(point.value)}`}
+                                    </title>
+                                  </circle>
+                                ) : null,
+                              )}
+                            </svg>
+                          </div>
+                        ) : (
+                          <p className={styles.status}>
+                            No brokered deposit coverage data available.
+                          </p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.liquidityChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${liquidityViewSeries.length}, minmax(0, ${liquidityColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(
+                            liquidityViewSeries.length,
+                            liquidityColumnWidth,
+                          ),
+                        }}
+                      >
+                        {liquidityViewSeries.map((point) => (
+                          <span key={`brokered-coverage-label-${point.label}`}>
+                            {formatQuarterShortLabel(point.label)}
                           </span>
                         ))}
                       </div>

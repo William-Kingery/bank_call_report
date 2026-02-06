@@ -1228,6 +1228,24 @@
   stroke-width: 2.5;
 }
 
+.ratioLineBrokeredInsured {
+  stroke: #10b981;
+  filter: drop-shadow(0 6px 10px rgba(16, 185, 129, 0.3));
+}
+
+.ratioLineBrokeredInsuredDot {
+  stroke: #10b981;
+}
+
+.ratioLineBrokeredUninsured {
+  stroke: #f59e0b;
+  filter: drop-shadow(0 6px 10px rgba(245, 158, 11, 0.3));
+}
+
+.ratioLineBrokeredUninsuredDot {
+  stroke: #f59e0b;
+}
+
 .ratioLineAverage {
   stroke: #64748b;
   stroke-dasharray: 6 6;
@@ -1651,6 +1669,16 @@
 .legendBrokeredDeposits {
   background: linear-gradient(180deg, #f472b6, #db2777);
   box-shadow: 0 8px 18px rgba(219, 39, 119, 0.2);
+}
+
+.legendBrokeredInsured {
+  background: linear-gradient(180deg, #34d399, #059669);
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.2);
+}
+
+.legendBrokeredUninsured {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.2);
 }
 
 .legendCoreRatio {
