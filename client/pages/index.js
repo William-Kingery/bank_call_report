@@ -120,6 +120,15 @@ export default function Home() {
     };
   }, [filteredPoints]);
 
+  const liquiditySeries = useMemo(() => {
+    if (!filteredPoints.length) return [];
+
+    return filteredPoints.map((point) => ({
+      callym: point.callym,
+      value: point.loanToDepositRatio ?? point.lndep ?? null,
+    }));
+  }, [filteredPoints]);
+
   const maxTangibleEquity = useMemo(
     () => getMaxValue(capitalSeries.tangibleEquity),
     [capitalSeries]
@@ -137,6 +146,7 @@ export default function Home() {
     () => getMaxValue(capitalSeries.constructionLoans),
     [capitalSeries]
   );
+  const maxLoanToDeposit = useMemo(() => getMaxValue(liquiditySeries), [liquiditySeries]);
 
   const formattedLocation = useMemo(() => {
     if (!reportData) return null;
@@ -328,6 +338,17 @@ export default function Home() {
                 onClick={() => setActiveTab('capital')}
               >
                 Capital
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'liquidity'}
+                className={`${styles.tabButton} ${
+                  activeTab === 'liquidity' ? styles.tabButtonActive : ''
+                }`}
+                onClick={() => setActiveTab('liquidity')}
+              >
+                Liquidity
               </button>
             </div>
             <div className={styles.rangeControls} role="group" aria-label="Quarter range">
@@ -550,6 +571,27 @@ export default function Home() {
                       formatValue={formatPercentage}
                     />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'liquidity' && (
+              <div className={styles.tabPanel} role="tabpanel">
+                <div className={styles.latestHeader}>
+                  <div>
+                    <p className={styles.latestLabel}>Loan to deposit ratio</p>
+                    <p className={styles.latestQuarter}>Trend by quarter</p>
+                  </div>
+                  <p className={styles.latestHint}>Ratios shown are percentages</p>
+                </div>
+                <div className={styles.capitalCard}>
+                  <p className={styles.chartTitle}>Loan to Deposit Ratio trend</p>
+                  <ColumnChart
+                    series={liquiditySeries}
+                    maxValue={maxLoanToDeposit}
+                    formatLabel={formatQuarterLabel}
+                    formatValue={formatPercentage}
+                  />
                 </div>
               </div>
             )}
