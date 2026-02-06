@@ -1124,6 +1124,7 @@
   height: 100%;
   display: flex;
   align-items: flex-end;
+  position: relative;
 }
 
 .columnChartBar {
@@ -1192,6 +1193,14 @@
 
 .stackedSegmentBrokered {
   background: linear-gradient(180deg, #f472b6, #db2777);
+}
+
+.stackedSegmentBrokeredInsured {
+  background: linear-gradient(180deg, #34d399, #059669);
+}
+
+.stackedSegmentBrokeredUninsured {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
 }
 
 .ratioLineChartWrapper {
@@ -1613,6 +1622,27 @@
   text-align: center;
 }
 
+.chartHoverTooltip {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #fff;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+
+.columnChartBarWrapper:hover .chartHoverTooltip {
+  opacity: 1;
+}
+
 
 .equityValue {
   color: var(--terminal-accent);
@@ -1651,6 +1681,16 @@
 .legendBrokeredDeposits {
   background: linear-gradient(180deg, #f472b6, #db2777);
   box-shadow: 0 8px 18px rgba(219, 39, 119, 0.2);
+}
+
+.legendBrokeredInsured {
+  background: linear-gradient(180deg, #34d399, #059669);
+  box-shadow: 0 8px 18px rgba(5, 150, 105, 0.2);
+}
+
+.legendBrokeredUninsured {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.2);
 }
 
 .legendCoreRatio {
