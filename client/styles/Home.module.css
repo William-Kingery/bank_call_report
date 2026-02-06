@@ -1194,6 +1194,14 @@
   background: linear-gradient(180deg, #f472b6, #db2777);
 }
 
+.stackedSegmentBrokeredInsured {
+  background: linear-gradient(180deg, #34d399, #059669);
+}
+
+.stackedSegmentBrokeredUninsured {
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+}
+
 .ratioLineChartWrapper {
   height: 100%;
   padding: 0.95rem 0.9rem 0.7rem 0;
@@ -1226,24 +1234,6 @@
   fill: #fff;
   stroke: #2563eb;
   stroke-width: 2.5;
-}
-
-.ratioLineBrokeredInsured {
-  stroke: #10b981;
-  filter: drop-shadow(0 6px 10px rgba(16, 185, 129, 0.3));
-}
-
-.ratioLineBrokeredInsuredDot {
-  stroke: #10b981;
-}
-
-.ratioLineBrokeredUninsured {
-  stroke: #f59e0b;
-  filter: drop-shadow(0 6px 10px rgba(245, 158, 11, 0.3));
-}
-
-.ratioLineBrokeredUninsuredDot {
-  stroke: #f59e0b;
 }
 
 .ratioLineAverage {

@@ -118,83 +118,6 @@ const buildLineChartData = (series, columnWidth, valueSelector) => {
   };
 };
 
-const buildLineChartDataWithRange = (series, columnWidth, valueSelector, min, max) => {
-  const rawValues = series.map((point) => ({
-    label: point.label,
-    value: valueSelector(point),
-  }));
-  const numericValues = rawValues
-    .map((point) => point.value)
-    .filter((value) => Number.isFinite(value));
-  const resolvedMin = Number.isFinite(min)
-    ? min
-    : numericValues.length
-      ? Math.min(...numericValues)
-      : null;
-  const resolvedMax = Number.isFinite(max)
-    ? max
-    : numericValues.length
-      ? Math.max(...numericValues)
-      : null;
-  const range =
-    Number.isFinite(resolvedMax) && Number.isFinite(resolvedMin)
-      ? resolvedMax - resolvedMin
-      : 0;
-  const values = rawValues.map((point) => {
-    if (!Number.isFinite(point.value)) {
-      return { label: point.label, value: null, percentage: 0 };
-    }
-    return {
-      label: point.label,
-      value: point.value,
-      percentage: range === 0 ? 50 : ((point.value - resolvedMin) / range) * 100,
-    };
-  });
-  const height = 160;
-  const paddingTop = 18;
-  const paddingBottom = 18;
-  const rangeHeight = height - paddingTop - paddingBottom;
-  const width = Math.max(series.length * columnWidth, 320);
-  const points = values.map((point, index) => {
-    if (point.value == null) {
-      return null;
-    }
-    const x = index * columnWidth + columnWidth / 2;
-    const y = paddingTop + (1 - point.percentage / 100) * rangeHeight;
-    return {
-      x,
-      y,
-      label: point.label,
-      value: point.value,
-    };
-  });
-  const segments = [];
-  let current = [];
-  points.forEach((point) => {
-    if (!point) {
-      if (current.length > 1) {
-        segments.push(current);
-      }
-      current = [];
-      return;
-    }
-    current.push(point);
-  });
-  if (current.length > 1) {
-    segments.push(current);
-  }
-
-  return {
-    width,
-    height,
-    points,
-    segments,
-    min: resolvedMin,
-    max: resolvedMax,
-    hasData: numericValues.length > 0,
-  };
-};
-
 const buildQuarterSeries = (points, mapper) => {
   const grouped = new Map();
 
@@ -669,56 +592,42 @@ export default function Home() {
     [liquidityColumnWidth, liquidityViewSeries],
   );
 
-  const brokeredCoverageRange = useMemo(() => {
-    const values = liquidityViewSeries
-      .flatMap((point) => [
-        Number(point?.brokeredInsuredDeposits),
-        Number(point?.brokeredUninsuredDeposits),
-      ])
+  const brokeredCoverageStackedData = useMemo(() => {
+    const values = liquidityViewSeries.map((point) => {
+      const insuredValue = Number(point?.brokeredInsuredDeposits);
+      const uninsuredValue = Number(point?.brokeredUninsuredDeposits);
+      const insuredDeposits = Number.isFinite(insuredValue) ? insuredValue : null;
+      const uninsuredDeposits = Number.isFinite(uninsuredValue) ? uninsuredValue : null;
+      const total = (insuredDeposits ?? 0) + (uninsuredDeposits ?? 0);
+      const hasAnyValue = insuredDeposits != null || uninsuredDeposits != null;
+
+      return {
+        label: point.label,
+        insuredDeposits,
+        uninsuredDeposits,
+        total: Number.isFinite(total) && hasAnyValue ? total : null,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
       .filter((value) => Number.isFinite(value));
-    if (!values.length) {
-      return { min: null, max: null, hasData: false };
-    }
+    const max = totals.length ? Math.max(...totals) : 0;
+
     return {
-      min: Math.min(...values),
-      max: Math.max(...values),
-      hasData: true,
+      values: values.map((point) => ({
+        ...point,
+        insuredDepositsPercent:
+          point.insuredDeposits != null && max > 0 ? (point.insuredDeposits / max) * 100 : 0,
+        uninsuredDepositsPercent:
+          point.uninsuredDeposits != null && max > 0
+            ? (point.uninsuredDeposits / max) * 100
+            : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
     };
   }, [liquidityViewSeries]);
-
-  const brokeredInsuredChart = useMemo(
-    () =>
-      buildLineChartDataWithRange(
-        liquidityViewSeries,
-        liquidityColumnWidth,
-        (point) => point.brokeredInsuredDeposits,
-        brokeredCoverageRange.min,
-        brokeredCoverageRange.max,
-      ),
-    [
-      brokeredCoverageRange.max,
-      brokeredCoverageRange.min,
-      liquidityColumnWidth,
-      liquidityViewSeries,
-    ],
-  );
-
-  const brokeredUninsuredChart = useMemo(
-    () =>
-      buildLineChartDataWithRange(
-        liquidityViewSeries,
-        liquidityColumnWidth,
-        (point) => point.brokeredUninsuredDeposits,
-        brokeredCoverageRange.min,
-        brokeredCoverageRange.max,
-      ),
-    [
-      brokeredCoverageRange.max,
-      brokeredCoverageRange.min,
-      liquidityColumnWidth,
-      liquidityViewSeries,
-    ],
-  );
 
   const segmentLoanDepositLookup = useMemo(() => {
     const lookup = new Map();
@@ -3694,84 +3603,57 @@ export default function Home() {
                       </div>
                       <div className={styles.lineChartBody}>
                         <span className={styles.lineChartYAxis}>Thousands</span>
-                        {brokeredCoverageRange.max != null && (
+                        {brokeredCoverageStackedData.max > 0 && (
                           <span className={styles.lineChartTick} style={{ top: '12%' }}>
-                            {formatNumber(brokeredCoverageRange.max)}
+                            {formatNumber(brokeredCoverageStackedData.max)}
                           </span>
                         )}
-                        {brokeredCoverageRange.min != null && (
+                        {brokeredCoverageStackedData.max > 0 && (
                           <span className={styles.lineChartTick} style={{ top: '88%' }}>
-                            {formatNumber(brokeredCoverageRange.min)}
+                            0
                           </span>
                         )}
-                        {brokeredCoverageRange.hasData ? (
+                        {brokeredCoverageStackedData.hasData ? (
                           <div
-                            className={styles.ratioLineChartWrapper}
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Insured and uninsured brokered deposits stacked column chart"
                             style={{
+                              gridTemplateColumns: `repeat(${liquidityViewSeries.length}, minmax(0, ${liquidityColumnWidth}px))`,
                               minWidth: getAxisMinWidth(
                                 liquidityViewSeries.length,
                                 liquidityColumnWidth,
                               ),
                             }}
                           >
-                            <svg
-                              className={styles.ratioLineChart}
-                              role="img"
-                              aria-label="Insured and uninsured brokered deposits line chart"
-                              viewBox={`0 0 ${brokeredInsuredChart.width} ${brokeredInsuredChart.height}`}
-                              width={brokeredInsuredChart.width}
-                              height={brokeredInsuredChart.height}
-                              preserveAspectRatio="none"
-                            >
-                              {brokeredInsuredChart.segments.map((segment) => (
-                                <polyline
-                                  key={`brokered-insured-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                  className={`${styles.ratioLine} ${styles.ratioLineBrokeredInsured}`}
-                                  points={segment
-                                    .map((point) => `${point.x},${point.y}`)
-                                    .join(' ')}
-                                />
-                              ))}
-                              {brokeredInsuredChart.points.map((point) =>
-                                point ? (
-                                  <circle
-                                    key={`brokered-insured-dot-${point.label}`}
-                                    className={`${styles.ratioLineDot} ${styles.ratioLineBrokeredInsuredDot}`}
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="4"
-                                  >
-                                    <title>
-                                      {`${point.label}: ${formatNumber(point.value)}`}
-                                    </title>
-                                  </circle>
-                                ) : null,
-                              )}
-                              {brokeredUninsuredChart.segments.map((segment) => (
-                                <polyline
-                                  key={`brokered-uninsured-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                  className={`${styles.ratioLine} ${styles.ratioLineBrokeredUninsured}`}
-                                  points={segment
-                                    .map((point) => `${point.x},${point.y}`)
-                                    .join(' ')}
-                                />
-                              ))}
-                              {brokeredUninsuredChart.points.map((point) =>
-                                point ? (
-                                  <circle
-                                    key={`brokered-uninsured-dot-${point.label}`}
-                                    className={`${styles.ratioLineDot} ${styles.ratioLineBrokeredUninsuredDot}`}
-                                    cx={point.x}
-                                    cy={point.y}
-                                    r="4"
-                                  >
-                                    <title>
-                                      {`${point.label}: ${formatNumber(point.value)}`}
-                                    </title>
-                                  </circle>
-                                ) : null,
-                              )}
-                            </svg>
+                            {brokeredCoverageStackedData.values.map((point) => (
+                              <div
+                                key={`brokered-coverage-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.total == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: Insured ${formatNumber(
+                                        point.insuredDeposits,
+                                      )} | Uninsured ${formatNumber(point.uninsuredDeposits)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.stackedColumnBar} ${
+                                    point.total == null ? styles.stackedColumnBarEmpty : ''
+                                  }`}
+                                >
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentBrokeredUninsured}`}
+                                    style={{ height: `${point.uninsuredDepositsPercent}%` }}
+                                  />
+                                  <div
+                                    className={`${styles.stackedSegment} ${styles.stackedSegmentBrokeredInsured}`}
+                                    style={{ height: `${point.insuredDepositsPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <p className={styles.status}>
