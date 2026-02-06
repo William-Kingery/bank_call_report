@@ -636,9 +636,12 @@ router.get('/benchmark', async (_req, res) => {
          s.STNAME AS stateName,
          f.ASSET AS asset,
          dep_fts.DEP AS dep,
+         COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
+         c.COREDEP AS coredep,
          r.NIMY AS nim,
          r.ROA AS roa,
-         r.ROE AS roe
+         r.ROE AS roe,
+         r.LNLSDEPR AS lnlsdepr
        FROM (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_fts
@@ -675,6 +678,15 @@ router.get('/benchmark', async (_req, res) => {
        LEFT JOIN fdic_rat r
          ON r.CERT = latest_rat.CERT
          AND r.CALLYM = latest_rat.callym
+       LEFT JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_cdi
+         GROUP BY CERT
+       ) latest_cdi
+         ON latest_cdi.CERT = f.CERT
+       LEFT JOIN fdic_cdi c
+         ON c.CERT = latest_cdi.CERT
+         AND c.CALLYM = latest_cdi.callym
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ${orderClause}
        LIMIT 10`

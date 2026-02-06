@@ -1301,7 +1301,11 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    if (activeTab !== 'benchmark' || benchmarkLoading) {
+    if (activeTab !== 'benchmark' && activeTab !== 'benchmark-liquidity') {
+      return;
+    }
+
+    if (benchmarkLoading) {
       return;
     }
 
@@ -1652,6 +1656,17 @@ export default function Home() {
               onClick={() => setActiveTab('benchmark')}
             >
               Benchmark
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'benchmark-liquidity'}
+              className={`${styles.tabButton} ${
+                activeTab === 'benchmark-liquidity' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('benchmark-liquidity')}
+            >
+              Liquidity Benchmark
             </button>
           </div>
 
@@ -5248,6 +5263,61 @@ export default function Home() {
                         ))}
                       </svg>
                     </div>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'benchmark-liquidity' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.benchmarkCard}>
+                <div className={styles.benchmarkHeader}>
+                  <div>
+                    <h3 className={styles.benchmarkTitle}>Liquidity Benchmark</h3>
+                    <p className={styles.benchmarkSubtitle}>{benchmarkSubtitle}</p>
+                  </div>
+                  <p className={styles.benchmarkHint}>
+                    Deposit values are reported in thousands.
+                  </p>
+                </div>
+
+                {benchmarkLoading && (
+                  <p className={styles.status}>Loading benchmark data...</p>
+                )}
+                {benchmarkError && (
+                  <p className={styles.error}>Error: {benchmarkError}</p>
+                )}
+
+                {!benchmarkLoading && !benchmarkError && (
+                  <div className={styles.benchmarkTableWrapper}>
+                    <table className={styles.benchmarkTable}>
+                      <thead>
+                        <tr>
+                          <th>Bank Name</th>
+                          <th>Total Deposits</th>
+                          <th>Loan to Deposit Ratio</th>
+                          <th>Core Deposit Ratio</th>
+                          <th>Uninsured Deposit Ratio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {benchmarkSortedData.map((bank) => (
+                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                            <td className={styles.benchmarkBank}>{bank.nameFull}</td>
+                            <td>{formatNumber(bank.dep)}</td>
+                            <td>{formatPercentage(bank.lnlsdepr)}</td>
+                            <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
+                            <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {benchmarkData.length === 0 && (
+                      <p className={styles.benchmarkEmpty}>
+                        No benchmark data is available right now.
+                      </p>
+                    )}
                   </div>
                 )}
               </section>
