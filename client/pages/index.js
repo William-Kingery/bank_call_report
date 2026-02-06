@@ -3489,6 +3489,13 @@ export default function Home() {
                                         )} | Brokered ${formatNumber(point.brokeredDeposits)}`
                                   }
                                 >
+                                  <span className={styles.chartHoverTooltip}>
+                                    {point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: Core ${formatNumber(
+                                          point.coreDeposits,
+                                        )} | Brokered ${formatNumber(point.brokeredDeposits)}`}
+                                  </span>
                                   <div
                                     className={`${styles.stackedColumnBar} ${
                                       point.total == null ? styles.stackedColumnBarEmpty : ''
