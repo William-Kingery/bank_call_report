@@ -235,6 +235,8 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+  const formatScore = (value) =>
+    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
@@ -5299,6 +5301,7 @@ export default function Home() {
                           <th>Loan to Deposit Ratio</th>
                           <th>Core Deposit Ratio</th>
                           <th>Uninsured Deposit Ratio</th>
+                          <th>Funding Structure Score</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -5309,6 +5312,7 @@ export default function Home() {
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
+                            <td>{formatScore(bank.fundingStructureScore)}</td>
                           </tr>
                         ))}
                       </tbody>

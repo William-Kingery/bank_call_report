@@ -630,7 +630,70 @@ router.get('/benchmark', async (_req, res) => {
       : 'ORDER BY f.ASSET DESC';
 
     const [rows] = await pool.query(
-      `SELECT
+      `WITH lnlsdepr_ranked AS (
+         SELECT
+           r.CALLYM AS callym,
+           s.FED AS fed,
+           r.LNLSDEPR AS value,
+           ROW_NUMBER() OVER (PARTITION BY r.CALLYM, s.FED ORDER BY r.LNLSDEPR) AS rn,
+           COUNT(*) OVER (PARTITION BY r.CALLYM, s.FED) AS cnt
+         FROM fdic_rat r
+         JOIN fdic_structure s
+           ON s.CERT = r.CERT AND s.CALLYM = r.CALLYM
+         WHERE r.LNLSDEPR IS NOT NULL
+       ),
+       lnlsdepr_medians AS (
+         SELECT
+           callym,
+           fed,
+           AVG(value) AS median_lnlsdepr
+         FROM lnlsdepr_ranked
+         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
+         GROUP BY callym, fed
+       ),
+       coredep_ranked AS (
+         SELECT
+           c.CALLYM AS callym,
+           s.FED AS fed,
+           c.COREDEP AS value,
+           ROW_NUMBER() OVER (PARTITION BY c.CALLYM, s.FED ORDER BY c.COREDEP) AS rn,
+           COUNT(*) OVER (PARTITION BY c.CALLYM, s.FED) AS cnt
+         FROM fdic_cdi c
+         JOIN fdic_structure s
+           ON s.CERT = c.CERT AND s.CALLYM = c.CALLYM
+         WHERE c.COREDEP IS NOT NULL
+       ),
+       coredep_medians AS (
+         SELECT
+           callym,
+           fed,
+           AVG(value) AS median_coredep
+         FROM coredep_ranked
+         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
+         GROUP BY callym, fed
+       ),
+       depuna_ranked AS (
+         SELECT
+           f.CALLYM AS callym,
+           s.FED AS fed,
+           f.DEPUNA AS value,
+           ROW_NUMBER() OVER (PARTITION BY f.CALLYM, s.FED ORDER BY f.DEPUNA) AS rn,
+           COUNT(*) OVER (PARTITION BY f.CALLYM, s.FED) AS cnt
+         FROM fdic_fts f
+         JOIN fdic_structure s
+           ON s.CERT = f.CERT AND s.CALLYM = f.CALLYM
+         WHERE f.DEPUNA IS NOT NULL
+       ),
+       depuna_medians AS (
+         SELECT
+           callym,
+           fed,
+           AVG(value) AS median_depuna
+         FROM depuna_ranked
+         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
+         GROUP BY callym, fed
+       )
+       SELECT
          s.NAMEFULL AS nameFull,
          s.CITY AS city,
          s.STNAME AS stateName,
@@ -641,7 +704,54 @@ router.get('/benchmark', async (_req, res) => {
          r.NIMY AS nim,
          r.ROA AS roa,
          r.ROE AS roe,
-         r.LNLSDEPR AS lnlsdepr
+         r.LNLSDEPR AS lnlsdepr,
+         lnlsdepr_medians.median_lnlsdepr AS median_lnlsdepr,
+         coredep_medians.median_coredep AS median_coredep,
+         depuna_medians.median_depuna AS median_depuna,
+         CASE
+           WHEN r.LNLSDEPR IS NOT NULL
+             AND lnlsdepr_medians.median_lnlsdepr IS NOT NULL
+             AND r.LNLSDEPR < lnlsdepr_medians.median_lnlsdepr
+             THEN 5
+           ELSE 1
+         END AS lnlsdepr_score,
+         CASE
+           WHEN c.COREDEP IS NOT NULL
+             AND coredep_medians.median_coredep IS NOT NULL
+             AND c.COREDEP > coredep_medians.median_coredep
+             THEN 5
+           ELSE 1
+         END AS coredep_score,
+         CASE
+           WHEN COALESCE(dep_fts.DEPUNA, f.DEPUNA) IS NOT NULL
+             AND depuna_medians.median_depuna IS NOT NULL
+             AND COALESCE(dep_fts.DEPUNA, f.DEPUNA) < depuna_medians.median_depuna
+             THEN 5
+           ELSE 1
+         END AS depuna_score,
+         (
+           CASE
+             WHEN r.LNLSDEPR IS NOT NULL
+               AND lnlsdepr_medians.median_lnlsdepr IS NOT NULL
+               AND r.LNLSDEPR < lnlsdepr_medians.median_lnlsdepr
+               THEN 5
+             ELSE 1
+           END
+           + CASE
+             WHEN c.COREDEP IS NOT NULL
+               AND coredep_medians.median_coredep IS NOT NULL
+               AND c.COREDEP > coredep_medians.median_coredep
+               THEN 5
+             ELSE 1
+           END
+           + CASE
+             WHEN COALESCE(dep_fts.DEPUNA, f.DEPUNA) IS NOT NULL
+               AND depuna_medians.median_depuna IS NOT NULL
+               AND COALESCE(dep_fts.DEPUNA, f.DEPUNA) < depuna_medians.median_depuna
+               THEN 5
+             ELSE 1
+           END
+         ) / 3 AS fundingStructureScore
        FROM (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_fts
@@ -687,6 +797,15 @@ router.get('/benchmark', async (_req, res) => {
        LEFT JOIN fdic_cdi c
          ON c.CERT = latest_cdi.CERT
          AND c.CALLYM = latest_cdi.callym
+       LEFT JOIN lnlsdepr_medians
+         ON lnlsdepr_medians.callym = f.CALLYM
+         AND lnlsdepr_medians.fed = s.FED
+       LEFT JOIN coredep_medians
+         ON coredep_medians.callym = f.CALLYM
+         AND coredep_medians.fed = s.FED
+       LEFT JOIN depuna_medians
+         ON depuna_medians.callym = f.CALLYM
+         AND depuna_medians.fed = s.FED
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ${orderClause}
        LIMIT 10`
