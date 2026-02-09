@@ -104,14 +104,14 @@ const FRB_DISTRICT_BY_NAME = Object.entries(FRB_DISTRICTS).reduce((acc, [key, va
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
 const isDistrictScopedRange = (range) =>
   range?.max != null && range.max <= 50000000;
-const buildSegmentCaseStatement = () => {
+const buildSegmentCaseStatement = (assetField = 'f.ASSET') => {
   const cases = SEGMENT_RANGES.map((range) => {
     const conditions = [];
     if (range.min != null) {
-      conditions.push(`f.ASSET >= ${range.min}`);
+      conditions.push(`${assetField} >= ${range.min}`);
     }
     if (range.max != null) {
-      conditions.push(`f.ASSET < ${range.max}`);
+      conditions.push(`${assetField} < ${range.max}`);
     }
     return `WHEN ${conditions.join(' AND ')} THEN '${range.label}'`;
   });
@@ -502,6 +502,7 @@ router.get('/charts', async (req, res) => {
          f.LNCON AS LNCON,
          f.EQ AS eq,
          f.DEP AS dep,
+         f.DEPUNA AS depuna,
          f.LNLSGR AS lnlsgr,
          c.NPERF AS nperf,
          c.DRLNLSQ AS DRLNLSQ,
@@ -589,6 +590,7 @@ router.get('/benchmark', async (_req, res) => {
     const segment = _req.query.segment;
     const district = _req.query.district;
     const range = getSegmentRange(segment);
+    const segmentCase = buildSegmentCaseStatement('f.ASSET');
     const conditions = [];
     const params = [];
     const isDistrictScoped = isDistrictScopedRange(range);
@@ -599,11 +601,11 @@ router.get('/benchmark', async (_req, res) => {
 
     if (range) {
       if (range.min != null) {
-        conditions.push('f.ASSET >= ?');
+        conditions.push('latest_base.asset >= ?');
         params.push(range.min);
       }
       if (range.max != null) {
-        conditions.push('f.ASSET < ?');
+        conditions.push('latest_base.asset < ?');
         params.push(range.max);
       }
     }
@@ -613,67 +615,204 @@ router.get('/benchmark', async (_req, res) => {
       if (!Number.isFinite(fedCode)) {
         return res.status(400).json({ message: 'Invalid district parameter' });
       }
-      conditions.push('s.FED = ?');
+      conditions.push('latest_base.fed = ?');
       params.push(fedCode);
     }
 
     const orderClause = isDistrictScoped
       ? `ORDER BY
-           (r.NIMY IS NULL) ASC,
-           r.NIMY DESC,
-           (r.ROA IS NULL) ASC,
-           r.ROA DESC,
-           (r.ROE IS NULL) ASC,
-           r.ROE DESC,
-           f.ASSET DESC`
-      : 'ORDER BY f.ASSET DESC';
+           (latest_base.nim IS NULL) ASC,
+           latest_base.nim DESC,
+           (latest_base.roa IS NULL) ASC,
+           latest_base.roa DESC,
+           (latest_base.roe IS NULL) ASC,
+           latest_base.roe DESC,
+           latest_base.asset DESC`
+      : 'ORDER BY latest_base.asset DESC';
 
     const [rows] = await pool.query(
-      `SELECT
-         s.NAMEFULL AS nameFull,
-         s.CITY AS city,
-         s.STNAME AS stateName,
-         f.ASSET AS asset,
-         dep_fts.DEP AS dep,
-         r.NIMY AS nim,
-         r.ROA AS roa,
-         r.ROE AS roe
-       FROM (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         GROUP BY CERT
-       ) latest_fts
-       JOIN fdic_fts f
-         ON f.CERT = latest_fts.CERT
-         AND f.CALLYM = latest_fts.callym
-       JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_structure
-         GROUP BY CERT
-       ) latest_structure
-         ON latest_structure.CERT = f.CERT
-       JOIN fdic_structure s
-         ON s.CERT = latest_structure.CERT
-         AND s.CALLYM = latest_structure.callym
-       LEFT JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         WHERE DEP IS NOT NULL
-         GROUP BY CERT
-       ) latest_dep
-         ON latest_dep.CERT = f.CERT
-       LEFT JOIN fdic_fts dep_fts
-         ON dep_fts.CERT = latest_dep.CERT
-         AND dep_fts.CALLYM = latest_dep.callym
-       LEFT JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_rat
-         GROUP BY CERT
-       ) latest_rat
-         ON latest_rat.CERT = f.CERT
-       LEFT JOIN fdic_rat r
-         ON r.CERT = latest_rat.CERT
-         AND r.CALLYM = latest_rat.callym
+      `WITH latest_base AS (
+         SELECT
+           f.CERT AS cert,
+           f.CALLYM AS callym,
+           f.ASSET AS asset,
+           ${segmentCase} AS segment,
+           s.NAMEFULL AS nameFull,
+           s.CITY AS city,
+           s.STNAME AS stateName,
+           s.FED AS fed,
+           dep_fts.DEP AS dep,
+           COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
+           c.COREDEP AS coredep,
+           r.NIMY AS nim,
+           r.ROA AS roa,
+           r.ROE AS roe,
+           r.LNLSDEPR AS lnlsdepr
+         FROM (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_fts
+           GROUP BY CERT
+         ) latest_fts
+         JOIN fdic_fts f
+           ON f.CERT = latest_fts.CERT
+           AND f.CALLYM = latest_fts.callym
+         JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_structure
+           GROUP BY CERT
+         ) latest_structure
+           ON latest_structure.CERT = f.CERT
+         JOIN fdic_structure s
+           ON s.CERT = latest_structure.CERT
+           AND s.CALLYM = latest_structure.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_fts
+           WHERE DEP IS NOT NULL
+           GROUP BY CERT
+         ) latest_dep
+           ON latest_dep.CERT = f.CERT
+         LEFT JOIN fdic_fts dep_fts
+           ON dep_fts.CERT = latest_dep.CERT
+           AND dep_fts.CALLYM = latest_dep.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_rat
+           GROUP BY CERT
+         ) latest_rat
+           ON latest_rat.CERT = f.CERT
+         LEFT JOIN fdic_rat r
+           ON r.CERT = latest_rat.CERT
+           AND r.CALLYM = latest_rat.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_cdi
+           GROUP BY CERT
+         ) latest_cdi
+           ON latest_cdi.CERT = f.CERT
+         LEFT JOIN fdic_cdi c
+           ON c.CERT = latest_cdi.CERT
+           AND c.CALLYM = latest_cdi.callym
+       ),
+       lnlsdepr_ranked AS (
+         SELECT
+           cert,
+           callym,
+           fed,
+           segment,
+           lnlsdepr,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY lnlsdepr
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE lnlsdepr IS NOT NULL
+       ),
+       coredep_ranked AS (
+         SELECT
+           cert,
+           callym,
+           fed,
+           segment,
+           coredep,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY coredep
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE coredep IS NOT NULL
+       ),
+       depuna_ranked AS (
+         SELECT
+           cert,
+           callym,
+           fed,
+           segment,
+           depuna,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY depuna
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE depuna IS NOT NULL
+       )
+       SELECT
+         latest_base.nameFull AS nameFull,
+         latest_base.city AS city,
+         latest_base.stateName AS stateName,
+         latest_base.asset AS asset,
+         latest_base.dep AS dep,
+         latest_base.depuna AS depuna,
+         latest_base.coredep AS coredep,
+         latest_base.nim AS nim,
+         latest_base.roa AS roa,
+         latest_base.roe AS roe,
+         latest_base.lnlsdepr AS lnlsdepr,
+         CASE
+           WHEN lnlsdepr_ranked.cnt > 1
+             THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+           WHEN lnlsdepr_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS lnlsdepr_rank_score,
+         CASE
+           WHEN coredep_ranked.cnt > 1
+             THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+           WHEN coredep_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS coredep_rank_score,
+         CASE
+           WHEN depuna_ranked.cnt > 1
+             THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+           WHEN depuna_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS depuna_rank_score,
+         (
+           (
+             COALESCE(
+               CASE
+                 WHEN lnlsdepr_ranked.cnt > 1
+                   THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+                 WHEN lnlsdepr_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN coredep_ranked.cnt > 1
+                   THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+                 WHEN coredep_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN depuna_ranked.cnt > 1
+                   THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+                 WHEN depuna_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+           ) / 3
+         ) * 5 AS fundingStructureScore
+       FROM latest_base
+       LEFT JOIN lnlsdepr_ranked
+         ON lnlsdepr_ranked.cert = latest_base.cert
+       LEFT JOIN coredep_ranked
+         ON coredep_ranked.cert = latest_base.cert
+       LEFT JOIN depuna_ranked
+         ON depuna_ranked.cert = latest_base.cert
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ${orderClause}
        LIMIT 10`

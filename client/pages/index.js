@@ -235,6 +235,8 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+  const formatScore = (value) =>
+    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
@@ -951,13 +953,23 @@ export default function Home() {
     }
     return (coreValue / depositValue) * 100;
   };
+  const getUninsuredDepositRatio = (point) => {
+    const uninsuredValue = Number(point?.depuna);
+    const depositValue = Number(point?.dep);
+    if (!Number.isFinite(uninsuredValue) || !Number.isFinite(depositValue) || depositValue === 0) {
+      return null;
+    }
+    return (uninsuredValue / depositValue) * 100;
+  };
   const latestCoreDepositRatio = getCoreDepositRatio(latestPoint);
+  const latestUninsuredDepositRatio = getUninsuredDepositRatio(latestPoint);
   const priorLiabilities = getLiabilitiesValue(priorPoint);
   const priorRwa = priorPoint?.rwa;
   const priorLoanDepositRatio = priorPoint?.lnlsdepr;
   const priorCoreDeposits = priorPoint?.coredep;
   const priorBrokeredDeposits = priorPoint?.bro;
   const priorCoreDepositRatio = getCoreDepositRatio(priorPoint);
+  const priorUninsuredDepositRatio = getUninsuredDepositRatio(priorPoint);
   const priorInterestIncome = priorPoint?.INTINCY;
   const priorInterestExpense = priorPoint?.INTEXPY;
   const priorNim = priorPoint?.nimy;
@@ -1054,6 +1066,11 @@ export default function Home() {
     priorCoreDepositRatio,
     'prior quarter',
   );
+  const uninsuredDepositRatioTrend = getMetricTrend(
+    latestUninsuredDepositRatio,
+    priorUninsuredDepositRatio,
+    'prior quarter',
+  );
   const nimYearTrend = getMetricTrend(latestNim, yearAgoPoint?.nimy, 'prior year');
   const roaYearTrend = getMetricTrend(latestPoint?.roa, yearAgoPoint?.roa, 'prior year');
   const roeYearTrend = getMetricTrend(latestPoint?.roe, yearAgoPoint?.roe, 'prior year');
@@ -1102,6 +1119,11 @@ export default function Home() {
   const coreDepositRatioYearTrend = getMetricTrend(
     latestCoreDepositRatio,
     getCoreDepositRatio(yearAgoPoint),
+    'prior year',
+  );
+  const uninsuredDepositRatioYearTrend = getMetricTrend(
+    latestUninsuredDepositRatio,
+    getUninsuredDepositRatio(yearAgoPoint),
     'prior year',
   );
 
@@ -1281,7 +1303,11 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    if (activeTab !== 'benchmark' || benchmarkLoading) {
+    if (activeTab !== 'benchmark' && activeTab !== 'benchmark-liquidity') {
+      return;
+    }
+
+    if (benchmarkLoading) {
       return;
     }
 
@@ -1632,6 +1658,17 @@ export default function Home() {
               onClick={() => setActiveTab('benchmark')}
             >
               Benchmark
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'benchmark-liquidity'}
+              className={`${styles.tabButton} ${
+                activeTab === 'benchmark-liquidity' ? styles.tabButtonActive : ''
+              }`}
+              onClick={() => setActiveTab('benchmark-liquidity')}
+            >
+              Liquidity Benchmark
             </button>
           </div>
 
@@ -3305,6 +3342,43 @@ export default function Home() {
                         >
                           <span className={styles.qoqTrendText}>QoQ</span>
                           {coreDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.metricCard}>
+                    <div className={styles.metricNameRow}>
+                      <p className={styles.metricName}>Uninsured deposit ratio</p>
+                      {uninsuredDepositRatioYearTrend && (
+                        <span
+                          className={`${styles.yoyTrend} ${
+                            uninsuredDepositRatioYearTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
+                          title={`Year over year change: ${uninsuredDepositRatioYearTrend.label}`}
+                        >
+                          YoY {uninsuredDepositRatioYearTrend.direction === 'up' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </div>
+                    <div className={styles.metricValueRow}>
+                      <p className={styles.metricValue}>
+                        {formatPercentage(latestUninsuredDepositRatio)}
+                      </p>
+                      {uninsuredDepositRatioTrend && (
+                        <span
+                          className={`${styles.trendArrow} ${
+                            uninsuredDepositRatioTrend.direction === 'up'
+                              ? styles.trendUp
+                              : styles.trendDown
+                          }`}
+                          aria-label={uninsuredDepositRatioTrend.label}
+                          title={uninsuredDepositRatioTrend.label}
+                        >
+                          <span className={styles.qoqTrendText}>QoQ</span>
+                          {uninsuredDepositRatioTrend.direction === 'up' ? '▲' : '▼'}
                         </span>
                       )}
                     </div>
@@ -5191,6 +5265,63 @@ export default function Home() {
                         ))}
                       </svg>
                     </div>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'benchmark-liquidity' && (
+            <div className={styles.tabPanel} role="tabpanel">
+              <section className={styles.benchmarkCard}>
+                <div className={styles.benchmarkHeader}>
+                  <div>
+                    <h3 className={styles.benchmarkTitle}>Liquidity Benchmark</h3>
+                    <p className={styles.benchmarkSubtitle}>{benchmarkSubtitle}</p>
+                  </div>
+                  <p className={styles.benchmarkHint}>
+                    Deposit values are reported in thousands.
+                  </p>
+                </div>
+
+                {benchmarkLoading && (
+                  <p className={styles.status}>Loading benchmark data...</p>
+                )}
+                {benchmarkError && (
+                  <p className={styles.error}>Error: {benchmarkError}</p>
+                )}
+
+                {!benchmarkLoading && !benchmarkError && (
+                  <div className={styles.benchmarkTableWrapper}>
+                    <table className={styles.benchmarkTable}>
+                      <thead>
+                        <tr>
+                          <th>Bank Name</th>
+                          <th>Total Deposits</th>
+                          <th>Loan to Deposit Ratio</th>
+                          <th>Core Deposit Ratio</th>
+                          <th>Uninsured Deposit Ratio</th>
+                          <th>Funding Structure Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {benchmarkSortedData.map((bank) => (
+                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                            <td className={styles.benchmarkBank}>{bank.nameFull}</td>
+                            <td>{formatNumber(bank.dep)}</td>
+                            <td>{formatPercentage(bank.lnlsdepr)}</td>
+                            <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
+                            <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
+                            <td>{formatScore(bank.fundingStructureScore)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {benchmarkData.length === 0 && (
+                      <p className={styles.benchmarkEmpty}>
+                        No benchmark data is available right now.
+                      </p>
+                    )}
                   </div>
                 )}
               </section>
