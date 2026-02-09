@@ -104,14 +104,14 @@ const FRB_DISTRICT_BY_NAME = Object.entries(FRB_DISTRICTS).reduce((acc, [key, va
 const getSegmentRange = (segment) => segmentRanges[segment] ?? null;
 const isDistrictScopedRange = (range) =>
   range?.max != null && range.max <= 50000000;
-const buildSegmentCaseStatement = () => {
+const buildSegmentCaseStatement = (assetField = 'f.ASSET') => {
   const cases = SEGMENT_RANGES.map((range) => {
     const conditions = [];
     if (range.min != null) {
-      conditions.push(`f.ASSET >= ${range.min}`);
+      conditions.push(`${assetField} >= ${range.min}`);
     }
     if (range.max != null) {
-      conditions.push(`f.ASSET < ${range.max}`);
+      conditions.push(`${assetField} < ${range.max}`);
     }
     return `WHEN ${conditions.join(' AND ')} THEN '${range.label}'`;
   });
@@ -590,6 +590,7 @@ router.get('/benchmark', async (_req, res) => {
     const segment = _req.query.segment;
     const district = _req.query.district;
     const range = getSegmentRange(segment);
+    const segmentCase = buildSegmentCaseStatement('f.ASSET');
     const conditions = [];
     const params = [];
     const isDistrictScoped = isDistrictScopedRange(range);
@@ -600,11 +601,11 @@ router.get('/benchmark', async (_req, res) => {
 
     if (range) {
       if (range.min != null) {
-        conditions.push('f.ASSET >= ?');
+        conditions.push('latest_base.asset >= ?');
         params.push(range.min);
       }
       if (range.max != null) {
-        conditions.push('f.ASSET < ?');
+        conditions.push('latest_base.asset < ?');
         params.push(range.max);
       }
     }
@@ -614,198 +615,204 @@ router.get('/benchmark', async (_req, res) => {
       if (!Number.isFinite(fedCode)) {
         return res.status(400).json({ message: 'Invalid district parameter' });
       }
-      conditions.push('s.FED = ?');
+      conditions.push('latest_base.fed = ?');
       params.push(fedCode);
     }
 
     const orderClause = isDistrictScoped
       ? `ORDER BY
-           (r.NIMY IS NULL) ASC,
-           r.NIMY DESC,
-           (r.ROA IS NULL) ASC,
-           r.ROA DESC,
-           (r.ROE IS NULL) ASC,
-           r.ROE DESC,
-           f.ASSET DESC`
-      : 'ORDER BY f.ASSET DESC';
+           (latest_base.nim IS NULL) ASC,
+           latest_base.nim DESC,
+           (latest_base.roa IS NULL) ASC,
+           latest_base.roa DESC,
+           (latest_base.roe IS NULL) ASC,
+           latest_base.roe DESC,
+           latest_base.asset DESC`
+      : 'ORDER BY latest_base.asset DESC';
 
     const [rows] = await pool.query(
-      `WITH lnlsdepr_ranked AS (
+      `WITH latest_base AS (
          SELECT
-           r.CALLYM AS callym,
+           f.CERT AS cert,
+           f.CALLYM AS callym,
+           f.ASSET AS asset,
+           ${segmentCase} AS segment,
+           s.NAMEFULL AS nameFull,
+           s.CITY AS city,
+           s.STNAME AS stateName,
            s.FED AS fed,
-           r.LNLSDEPR AS value,
-           ROW_NUMBER() OVER (PARTITION BY r.CALLYM, s.FED ORDER BY r.LNLSDEPR) AS rn,
-           COUNT(*) OVER (PARTITION BY r.CALLYM, s.FED) AS cnt
-         FROM fdic_rat r
+           dep_fts.DEP AS dep,
+           COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
+           c.COREDEP AS coredep,
+           r.NIMY AS nim,
+           r.ROA AS roa,
+           r.ROE AS roe,
+           r.LNLSDEPR AS lnlsdepr
+         FROM (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_fts
+           GROUP BY CERT
+         ) latest_fts
+         JOIN fdic_fts f
+           ON f.CERT = latest_fts.CERT
+           AND f.CALLYM = latest_fts.callym
+         JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_structure
+           GROUP BY CERT
+         ) latest_structure
+           ON latest_structure.CERT = f.CERT
          JOIN fdic_structure s
-           ON s.CERT = r.CERT AND s.CALLYM = r.CALLYM
-         WHERE r.LNLSDEPR IS NOT NULL
+           ON s.CERT = latest_structure.CERT
+           AND s.CALLYM = latest_structure.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_fts
+           WHERE DEP IS NOT NULL
+           GROUP BY CERT
+         ) latest_dep
+           ON latest_dep.CERT = f.CERT
+         LEFT JOIN fdic_fts dep_fts
+           ON dep_fts.CERT = latest_dep.CERT
+           AND dep_fts.CALLYM = latest_dep.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_rat
+           GROUP BY CERT
+         ) latest_rat
+           ON latest_rat.CERT = f.CERT
+         LEFT JOIN fdic_rat r
+           ON r.CERT = latest_rat.CERT
+           AND r.CALLYM = latest_rat.callym
+         LEFT JOIN (
+           SELECT CERT, MAX(CALLYM) AS callym
+           FROM fdic_cdi
+           GROUP BY CERT
+         ) latest_cdi
+           ON latest_cdi.CERT = f.CERT
+         LEFT JOIN fdic_cdi c
+           ON c.CERT = latest_cdi.CERT
+           AND c.CALLYM = latest_cdi.callym
        ),
-       lnlsdepr_medians AS (
+       lnlsdepr_ranked AS (
          SELECT
+           cert,
            callym,
            fed,
-           AVG(value) AS median_lnlsdepr
-         FROM lnlsdepr_ranked
-         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
-         GROUP BY callym, fed
+           segment,
+           lnlsdepr,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY lnlsdepr
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE lnlsdepr IS NOT NULL
        ),
        coredep_ranked AS (
          SELECT
-           c.CALLYM AS callym,
-           s.FED AS fed,
-           c.COREDEP AS value,
-           ROW_NUMBER() OVER (PARTITION BY c.CALLYM, s.FED ORDER BY c.COREDEP) AS rn,
-           COUNT(*) OVER (PARTITION BY c.CALLYM, s.FED) AS cnt
-         FROM fdic_cdi c
-         JOIN fdic_structure s
-           ON s.CERT = c.CERT AND s.CALLYM = c.CALLYM
-         WHERE c.COREDEP IS NOT NULL
-       ),
-       coredep_medians AS (
-         SELECT
+           cert,
            callym,
            fed,
-           AVG(value) AS median_coredep
-         FROM coredep_ranked
-         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
-         GROUP BY callym, fed
+           segment,
+           coredep,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY coredep
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE coredep IS NOT NULL
        ),
        depuna_ranked AS (
          SELECT
-           f.CALLYM AS callym,
-           s.FED AS fed,
-           f.DEPUNA AS value,
-           ROW_NUMBER() OVER (PARTITION BY f.CALLYM, s.FED ORDER BY f.DEPUNA) AS rn,
-           COUNT(*) OVER (PARTITION BY f.CALLYM, s.FED) AS cnt
-         FROM fdic_fts f
-         JOIN fdic_structure s
-           ON s.CERT = f.CERT AND s.CALLYM = f.CALLYM
-         WHERE f.DEPUNA IS NOT NULL
-       ),
-       depuna_medians AS (
-         SELECT
+           cert,
            callym,
            fed,
-           AVG(value) AS median_depuna
-         FROM depuna_ranked
-         WHERE rn IN (FLOOR((cnt + 1) / 2), FLOOR((cnt + 2) / 2))
-         GROUP BY callym, fed
+           segment,
+           depuna,
+           ROW_NUMBER() OVER (
+             PARTITION BY callym, fed, segment
+             ORDER BY depuna
+           ) AS rn,
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+         FROM latest_base
+         WHERE depuna IS NOT NULL
        )
        SELECT
-         s.NAMEFULL AS nameFull,
-         s.CITY AS city,
-         s.STNAME AS stateName,
-         f.ASSET AS asset,
-         dep_fts.DEP AS dep,
-         COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
-         c.COREDEP AS coredep,
-         r.NIMY AS nim,
-         r.ROA AS roa,
-         r.ROE AS roe,
-         r.LNLSDEPR AS lnlsdepr,
-         lnlsdepr_medians.median_lnlsdepr AS median_lnlsdepr,
-         coredep_medians.median_coredep AS median_coredep,
-         depuna_medians.median_depuna AS median_depuna,
+         latest_base.nameFull AS nameFull,
+         latest_base.city AS city,
+         latest_base.stateName AS stateName,
+         latest_base.asset AS asset,
+         latest_base.dep AS dep,
+         latest_base.depuna AS depuna,
+         latest_base.coredep AS coredep,
+         latest_base.nim AS nim,
+         latest_base.roa AS roa,
+         latest_base.roe AS roe,
+         latest_base.lnlsdepr AS lnlsdepr,
          CASE
-           WHEN r.LNLSDEPR IS NOT NULL
-             AND lnlsdepr_medians.median_lnlsdepr IS NOT NULL
-             AND r.LNLSDEPR < lnlsdepr_medians.median_lnlsdepr
-             THEN 5
-           ELSE 1
-         END AS lnlsdepr_score,
+           WHEN lnlsdepr_ranked.cnt > 1
+             THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+           WHEN lnlsdepr_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS lnlsdepr_rank_score,
          CASE
-           WHEN c.COREDEP IS NOT NULL
-             AND coredep_medians.median_coredep IS NOT NULL
-             AND c.COREDEP > coredep_medians.median_coredep
-             THEN 5
-           ELSE 1
-         END AS coredep_score,
+           WHEN coredep_ranked.cnt > 1
+             THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+           WHEN coredep_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS coredep_rank_score,
          CASE
-           WHEN COALESCE(dep_fts.DEPUNA, f.DEPUNA) IS NOT NULL
-             AND depuna_medians.median_depuna IS NOT NULL
-             AND COALESCE(dep_fts.DEPUNA, f.DEPUNA) < depuna_medians.median_depuna
-             THEN 5
-           ELSE 1
-         END AS depuna_score,
+           WHEN depuna_ranked.cnt > 1
+             THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+           WHEN depuna_ranked.cnt = 1
+             THEN 1
+           ELSE NULL
+         END AS depuna_rank_score,
          (
-           CASE
-             WHEN r.LNLSDEPR IS NOT NULL
-               AND lnlsdepr_medians.median_lnlsdepr IS NOT NULL
-               AND r.LNLSDEPR < lnlsdepr_medians.median_lnlsdepr
-               THEN 5
-             ELSE 1
-           END
-           + CASE
-             WHEN c.COREDEP IS NOT NULL
-               AND coredep_medians.median_coredep IS NOT NULL
-               AND c.COREDEP > coredep_medians.median_coredep
-               THEN 5
-             ELSE 1
-           END
-           + CASE
-             WHEN COALESCE(dep_fts.DEPUNA, f.DEPUNA) IS NOT NULL
-               AND depuna_medians.median_depuna IS NOT NULL
-               AND COALESCE(dep_fts.DEPUNA, f.DEPUNA) < depuna_medians.median_depuna
-               THEN 5
-             ELSE 1
-           END
-         ) / 3 AS fundingStructureScore
-       FROM (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         GROUP BY CERT
-       ) latest_fts
-       JOIN fdic_fts f
-         ON f.CERT = latest_fts.CERT
-         AND f.CALLYM = latest_fts.callym
-       JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_structure
-         GROUP BY CERT
-       ) latest_structure
-         ON latest_structure.CERT = f.CERT
-       JOIN fdic_structure s
-         ON s.CERT = latest_structure.CERT
-         AND s.CALLYM = latest_structure.callym
-       LEFT JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         WHERE DEP IS NOT NULL
-         GROUP BY CERT
-       ) latest_dep
-         ON latest_dep.CERT = f.CERT
-       LEFT JOIN fdic_fts dep_fts
-         ON dep_fts.CERT = latest_dep.CERT
-         AND dep_fts.CALLYM = latest_dep.callym
-       LEFT JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_rat
-         GROUP BY CERT
-       ) latest_rat
-         ON latest_rat.CERT = f.CERT
-       LEFT JOIN fdic_rat r
-         ON r.CERT = latest_rat.CERT
-         AND r.CALLYM = latest_rat.callym
-       LEFT JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_cdi
-         GROUP BY CERT
-       ) latest_cdi
-         ON latest_cdi.CERT = f.CERT
-       LEFT JOIN fdic_cdi c
-         ON c.CERT = latest_cdi.CERT
-         AND c.CALLYM = latest_cdi.callym
-       LEFT JOIN lnlsdepr_medians
-         ON lnlsdepr_medians.callym = f.CALLYM
-         AND lnlsdepr_medians.fed = s.FED
-       LEFT JOIN coredep_medians
-         ON coredep_medians.callym = f.CALLYM
-         AND coredep_medians.fed = s.FED
-       LEFT JOIN depuna_medians
-         ON depuna_medians.callym = f.CALLYM
-         AND depuna_medians.fed = s.FED
+           (
+             COALESCE(
+               CASE
+                 WHEN lnlsdepr_ranked.cnt > 1
+                   THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+                 WHEN lnlsdepr_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN coredep_ranked.cnt > 1
+                   THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+                 WHEN coredep_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN depuna_ranked.cnt > 1
+                   THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+                 WHEN depuna_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+           ) / 3
+         ) * 5 AS fundingStructureScore
+       FROM latest_base
+       LEFT JOIN lnlsdepr_ranked
+         ON lnlsdepr_ranked.cert = latest_base.cert
+       LEFT JOIN coredep_ranked
+         ON coredep_ranked.cert = latest_base.cert
+       LEFT JOIN depuna_ranked
+         ON depuna_ranked.cert = latest_base.cert
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ${orderClause}
        LIMIT 10`
