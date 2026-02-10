@@ -780,39 +780,37 @@ router.get('/benchmark', async (_req, res) => {
            ELSE NULL
          END AS depuna_rank_score,
          (
-           (
-             COALESCE(
-               CASE
-                 WHEN lnlsdepr_ranked.cnt > 1
-                   THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
-                 WHEN lnlsdepr_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
-             )
-             + COALESCE(
-               CASE
-                 WHEN coredep_ranked.cnt > 1
-                   THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
-                 WHEN coredep_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
-             )
-             + COALESCE(
-               CASE
-                 WHEN depuna_ranked.cnt > 1
-                   THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
-                 WHEN depuna_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
-             )
-           ) / 3
-         ) * 5 AS fundingStructureScore
+           COALESCE(
+             CASE
+               WHEN lnlsdepr_ranked.cnt > 1
+                 THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+               WHEN lnlsdepr_ranked.cnt = 1
+                 THEN 1
+               ELSE NULL
+             END,
+             0
+           )
+           + COALESCE(
+             CASE
+               WHEN coredep_ranked.cnt > 1
+                 THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+               WHEN coredep_ranked.cnt = 1
+                 THEN 1
+               ELSE NULL
+             END,
+             0
+           )
+           + COALESCE(
+             CASE
+               WHEN depuna_ranked.cnt > 1
+                 THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+               WHEN depuna_ranked.cnt = 1
+                 THEN 1
+               ELSE NULL
+             END,
+             0
+           )
+         ) AS fundingStructureScore
        FROM latest_base
        LEFT JOIN lnlsdepr_ranked
          ON lnlsdepr_ranked.cert = latest_base.cert
