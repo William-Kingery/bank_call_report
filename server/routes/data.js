@@ -641,6 +641,10 @@ router.get('/benchmark', async (_req, res) => {
            s.CITY AS city,
            s.STNAME AS stateName,
            s.FED AS fed,
+           CASE
+             WHEN f.ASSET >= 50000000 THEN 'ALL'
+             ELSE CAST(s.FED AS CHAR)
+           END AS fedGroup,
            dep_fts.DEP AS dep,
            COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
            c.COREDEP AS coredep,
@@ -698,14 +702,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fed,
+           fedGroup,
            assetSegment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, assetSegment
+             PARTITION BY callym, assetSegment, fedGroup
              ORDER BY lnlsdepr
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
          FROM latest_base
          WHERE lnlsdepr IS NOT NULL
        ),
@@ -713,14 +717,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fed,
+           fedGroup,
            assetSegment,
            coredep,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, assetSegment
+             PARTITION BY callym, assetSegment, fedGroup
              ORDER BY coredep
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
          FROM latest_base
          WHERE coredep IS NOT NULL
        ),
@@ -728,14 +732,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fed,
+           fedGroup,
            assetSegment,
            depuna,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, assetSegment
+             PARTITION BY callym, assetSegment, fedGroup
              ORDER BY depuna
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
          FROM latest_base
          WHERE depuna IS NOT NULL
        )
