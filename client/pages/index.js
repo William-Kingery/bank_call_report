@@ -236,7 +236,7 @@ export default function Home() {
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
   const formatScore = (value) =>
-    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
+    value === null || value === undefined ? 'N/A' : Math.round(value).toString();
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
