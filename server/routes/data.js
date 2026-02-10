@@ -636,15 +636,11 @@ router.get('/benchmark', async (_req, res) => {
            f.CERT AS cert,
            f.CALLYM AS callym,
            f.ASSET AS asset,
-           ${segmentCase} AS assetSegment,
+           ${segmentCase} AS segment,
            s.NAMEFULL AS nameFull,
            s.CITY AS city,
            s.STNAME AS stateName,
            s.FED AS fed,
-           CASE
-             WHEN f.ASSET >= 50000000 THEN 'ALL'
-             ELSE CAST(s.FED AS CHAR)
-           END AS fedGroup,
            dep_fts.DEP AS dep,
            COALESCE(dep_fts.DEPUNA, f.DEPUNA) AS depuna,
            c.COREDEP AS coredep,
@@ -702,14 +698,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fedGroup,
-           assetSegment,
+           fed,
+           segment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, assetSegment, fedGroup
+             PARTITION BY callym, fed, segment
              ORDER BY lnlsdepr
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
          FROM latest_base
          WHERE lnlsdepr IS NOT NULL
        ),
@@ -717,14 +713,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fedGroup,
-           assetSegment,
+           fed,
+           segment,
            coredep,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, assetSegment, fedGroup
-             ORDER BY coredep DESC
+             PARTITION BY callym, fed, segment
+             ORDER BY coredep
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
          FROM latest_base
          WHERE coredep IS NOT NULL
        ),
@@ -732,14 +728,14 @@ router.get('/benchmark', async (_req, res) => {
          SELECT
            cert,
            callym,
-           fedGroup,
-           assetSegment,
+           fed,
+           segment,
            depuna,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, assetSegment, fedGroup
+             PARTITION BY callym, fed, segment
              ORDER BY depuna
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
          FROM latest_base
          WHERE depuna IS NOT NULL
        )
@@ -755,9 +751,6 @@ router.get('/benchmark', async (_req, res) => {
          latest_base.roa AS roa,
          latest_base.roe AS roe,
          latest_base.lnlsdepr AS lnlsdepr,
-         lnlsdepr_ranked.rn AS lnlsdepr_rank,
-         coredep_ranked.rn AS coredep_rank,
-         depuna_ranked.rn AS depuna_rank,
          CASE
            WHEN lnlsdepr_ranked.cnt > 1
              THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
@@ -780,10 +773,39 @@ router.get('/benchmark', async (_req, res) => {
            ELSE NULL
          END AS depuna_rank_score,
          (
-           COALESCE(lnlsdepr_ranked.rn, 0)
-           + COALESCE(coredep_ranked.rn, 0)
-           + COALESCE(depuna_ranked.rn, 0)
-         ) AS fundingStructureScore
+           (
+             COALESCE(
+               CASE
+                 WHEN lnlsdepr_ranked.cnt > 1
+                   THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
+                 WHEN lnlsdepr_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN coredep_ranked.cnt > 1
+                   THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+                 WHEN coredep_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+             + COALESCE(
+               CASE
+                 WHEN depuna_ranked.cnt > 1
+                   THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
+                 WHEN depuna_ranked.cnt = 1
+                   THEN 1
+                 ELSE NULL
+               END,
+               0
+             )
+           ) / 3
+         ) * 5 AS fundingStructureScore
        FROM latest_base
        LEFT JOIN lnlsdepr_ranked
          ON lnlsdepr_ranked.cert = latest_base.cert

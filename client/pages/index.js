@@ -236,7 +236,7 @@ export default function Home() {
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
   const formatScore = (value) =>
-    value === null || value === undefined ? 'N/A' : Math.round(value).toString();
+    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
@@ -5288,10 +5288,7 @@ export default function Home() {
                 </div>
 
                 {benchmarkLoading && (
-                  <p className={`${styles.status} ${styles.loadingRow}`}>
-                    <span className={styles.spinner} aria-hidden="true" />
-                    Loading benchmark data...
-                  </p>
+                  <p className={styles.status}>Loading benchmark data...</p>
                 )}
                 {benchmarkError && (
                   <p className={styles.error}>Error: {benchmarkError}</p>
@@ -5305,11 +5302,8 @@ export default function Home() {
                           <th>Bank Name</th>
                           <th>Total Deposits</th>
                           <th>Loan to Deposit Ratio</th>
-                          <th>Loan to Deposit Rank</th>
                           <th>Core Deposit Ratio</th>
-                          <th>Core Deposits Rank</th>
                           <th>Uninsured Deposit Ratio</th>
-                          <th>Uninsured Deposits Rank</th>
                           <th>Funding Structure Score</th>
                         </tr>
                       </thead>
@@ -5319,11 +5313,8 @@ export default function Home() {
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
-                            <td>{formatNumber(bank.lnlsdepr_rank)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
-                            <td>{formatNumber(bank.coredep_rank)}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
-                            <td>{formatNumber(bank.depuna_rank)}</td>
                             <td>{formatScore(bank.fundingStructureScore)}</td>
                           </tr>
                         ))}
