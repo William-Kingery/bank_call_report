@@ -5069,7 +5069,10 @@ export default function Home() {
                 </div>
 
                 {benchmarkLoading && (
-                  <p className={styles.status}>Loading benchmark data...</p>
+                  <p className={`${styles.status} ${styles.loadingRow}`}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Loading benchmark data...
+                  </p>
                 )}
                 {benchmarkError && (
                   <p className={styles.error}>Error: {benchmarkError}</p>
@@ -5285,7 +5288,10 @@ export default function Home() {
                 </div>
 
                 {benchmarkLoading && (
-                  <p className={styles.status}>Loading benchmark data...</p>
+                  <p className={`${styles.status} ${styles.loadingRow}`}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Loading benchmark data...
+                  </p>
                 )}
                 {benchmarkError && (
                   <p className={styles.error}>Error: {benchmarkError}</p>
