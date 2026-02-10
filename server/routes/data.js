@@ -636,7 +636,7 @@ router.get('/benchmark', async (_req, res) => {
            f.CERT AS cert,
            f.CALLYM AS callym,
            f.ASSET AS asset,
-           ${segmentCase} AS segment,
+           ${segmentCase} AS assetSegment,
            s.NAMEFULL AS nameFull,
            s.CITY AS city,
            s.STNAME AS stateName,
@@ -699,13 +699,13 @@ router.get('/benchmark', async (_req, res) => {
            cert,
            callym,
            fed,
-           segment,
+           assetSegment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym, fed, assetSegment
              ORDER BY lnlsdepr
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
          FROM latest_base
          WHERE lnlsdepr IS NOT NULL
        ),
@@ -714,13 +714,13 @@ router.get('/benchmark', async (_req, res) => {
            cert,
            callym,
            fed,
-           segment,
+           assetSegment,
            coredep,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym, fed, assetSegment
              ORDER BY coredep
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
          FROM latest_base
          WHERE coredep IS NOT NULL
        ),
@@ -729,13 +729,13 @@ router.get('/benchmark', async (_req, res) => {
            cert,
            callym,
            fed,
-           segment,
+           assetSegment,
            depuna,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym, fed, assetSegment
              ORDER BY depuna
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
+           COUNT(*) OVER (PARTITION BY callym, fed, assetSegment) AS cnt
          FROM latest_base
          WHERE depuna IS NOT NULL
        )
