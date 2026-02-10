@@ -5313,11 +5313,11 @@ export default function Home() {
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
-                            <td>{formatScore(bank.lnlsdepr_rank_score)}</td>
+                            <td>{formatNumber(bank.lnlsdepr_rank)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
-                            <td>{formatScore(bank.coredep_rank_score)}</td>
+                            <td>{formatNumber(bank.coredep_rank)}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
-                            <td>{formatScore(bank.depuna_rank_score)}</td>
+                            <td>{formatNumber(bank.depuna_rank)}</td>
                             <td>{formatScore(bank.fundingStructureScore)}</td>
                           </tr>
                         ))}

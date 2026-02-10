@@ -722,7 +722,7 @@ router.get('/benchmark', async (_req, res) => {
            coredep,
            ROW_NUMBER() OVER (
              PARTITION BY callym, assetSegment, fedGroup
-             ORDER BY coredep
+             ORDER BY coredep DESC
            ) AS rn,
            COUNT(*) OVER (PARTITION BY callym, assetSegment, fedGroup) AS cnt
          FROM latest_base
@@ -755,6 +755,9 @@ router.get('/benchmark', async (_req, res) => {
          latest_base.roa AS roa,
          latest_base.roe AS roe,
          latest_base.lnlsdepr AS lnlsdepr,
+         lnlsdepr_ranked.rn AS lnlsdepr_rank,
+         coredep_ranked.rn AS coredep_rank,
+         depuna_ranked.rn AS depuna_rank,
          CASE
            WHEN lnlsdepr_ranked.cnt > 1
              THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
