@@ -1557,6 +1557,14 @@ export default function Home() {
 
       {selectedCert && selectedName && !loading && (
         <section className={styles.selectionSummary}>
+          {activeTab === 'benchmark-liquidity' && benchmarkLoading && (
+            <div className={styles.selectionLoadingOverlay} role="status" aria-live="polite">
+              <span className={`${styles.spinner} ${styles.selectionSpinner}`} aria-hidden="true" />
+              <span className={styles.selectionLoadingText}>
+                Processing funding structure score...
+              </span>
+            </div>
+          )}
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
@@ -5288,7 +5296,10 @@ export default function Home() {
                 </div>
 
                 {benchmarkLoading && (
-                  <p className={styles.status}>Loading benchmark data...</p>
+                  <p className={`${styles.status} ${styles.loadingRow}`}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Loading benchmark data...
+                  </p>
                 )}
                 {benchmarkError && (
                   <p className={styles.error}>Error: {benchmarkError}</p>
