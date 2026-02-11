@@ -765,12 +765,24 @@ router.get('/benchmark', async (_req, res) => {
            ELSE NULL
          END AS lnlsdepr_rank_score,
          CASE
+           WHEN coredep_ranked.cnt > 0
+             THEN coredep_ranked.rn
+           ELSE NULL
+         END AS coredep_rank,
+         coredep_ranked.cnt AS coredep_rank_total,
+         CASE
            WHEN coredep_ranked.cnt > 1
              THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
            WHEN coredep_ranked.cnt = 1
              THEN 1
            ELSE NULL
          END AS coredep_rank_score,
+         CASE
+           WHEN depuna_ranked.cnt > 0
+             THEN (depuna_ranked.cnt - depuna_ranked.rn + 1)
+           ELSE NULL
+         END AS depuna_rank,
+         depuna_ranked.cnt AS depuna_rank_total,
          CASE
            WHEN depuna_ranked.cnt > 1
              THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
@@ -820,8 +832,7 @@ router.get('/benchmark', async (_req, res) => {
        LEFT JOIN depuna_ranked
          ON depuna_ranked.cert = latest_base.cert
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
-       ${orderClause}
-       LIMIT 10`
+       ${orderClause}`
       ,
       params
     );

@@ -5328,7 +5328,9 @@ export default function Home() {
                           <th>Loan to Deposit Ratio</th>
                           <th>Loan to Deposit Rank</th>
                           <th>Core Deposit Ratio</th>
+                          <th>Core Deposit Rank</th>
                           <th>Uninsured Deposit Ratio</th>
+                          <th>Uninsured Deposit Rank</th>
                           <th>Funding Structure Score</th>
                         </tr>
                       </thead>
@@ -5340,7 +5342,9 @@ export default function Home() {
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
                             <td>{formatRank(bank.lnlsdepr_rank, bank.lnlsdepr_rank_total)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
+                            <td>{formatRank(bank.coredep_rank, bank.coredep_rank_total)}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
+                            <td>{formatRank(bank.depuna_rank, bank.depuna_rank_total)}</td>
                             <td>{formatScore(bank.fundingStructureScore)}</td>
                           </tr>
                         ))}
