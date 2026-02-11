@@ -752,6 +752,12 @@ router.get('/benchmark', async (_req, res) => {
          latest_base.roe AS roe,
          latest_base.lnlsdepr AS lnlsdepr,
          CASE
+           WHEN lnlsdepr_ranked.cnt > 0
+             THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn + 1)
+           ELSE NULL
+         END AS lnlsdepr_rank,
+         lnlsdepr_ranked.cnt AS lnlsdepr_rank_total,
+         CASE
            WHEN lnlsdepr_ranked.cnt > 1
              THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
            WHEN lnlsdepr_ranked.cnt = 1

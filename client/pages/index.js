@@ -237,6 +237,19 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
   const formatScore = (value) =>
     value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
+  const formatRank = (rank, total) => {
+    if (rank === null || rank === undefined || total === null || total === undefined) {
+      return 'N/A';
+    }
+
+    const rankValue = Number(rank);
+    const totalValue = Number(total);
+    if (!Number.isFinite(rankValue) || !Number.isFinite(totalValue) || totalValue <= 0) {
+      return 'N/A';
+    }
+
+    return `${rankValue.toLocaleString('en-US')} / ${totalValue.toLocaleString('en-US')}`;
+  };
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
@@ -5313,6 +5326,7 @@ export default function Home() {
                           <th>Bank Name</th>
                           <th>Total Deposits</th>
                           <th>Loan to Deposit Ratio</th>
+                          <th>Loan to Deposit Rank</th>
                           <th>Core Deposit Ratio</th>
                           <th>Uninsured Deposit Ratio</th>
                           <th>Funding Structure Score</th>
@@ -5324,6 +5338,7 @@ export default function Home() {
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
+                            <td>{formatRank(bank.lnlsdepr_rank, bank.lnlsdepr_rank_total)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
                             <td>{formatScore(bank.fundingStructureScore)}</td>
