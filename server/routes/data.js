@@ -753,7 +753,7 @@ router.get('/benchmark', async (_req, res) => {
          latest_base.lnlsdepr AS lnlsdepr,
          CASE
            WHEN lnlsdepr_ranked.cnt > 0
-             THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn + 1)
+             THEN lnlsdepr_ranked.rn
            ELSE NULL
          END AS lnlsdepr_rank,
          lnlsdepr_ranked.cnt AS lnlsdepr_rank_total,
@@ -766,7 +766,7 @@ router.get('/benchmark', async (_req, res) => {
          END AS lnlsdepr_rank_score,
          CASE
            WHEN coredep_ranked.cnt > 0
-             THEN coredep_ranked.rn
+             THEN (coredep_ranked.cnt - coredep_ranked.rn + 1)
            ELSE NULL
          END AS coredep_rank,
          coredep_ranked.cnt AS coredep_rank_total,
@@ -779,7 +779,7 @@ router.get('/benchmark', async (_req, res) => {
          END AS coredep_rank_score,
          CASE
            WHEN depuna_ranked.cnt > 0
-             THEN (depuna_ranked.cnt - depuna_ranked.rn + 1)
+             THEN depuna_ranked.rn
            ELSE NULL
          END AS depuna_rank,
          depuna_ranked.cnt AS depuna_rank_total,
@@ -790,40 +790,17 @@ router.get('/benchmark', async (_req, res) => {
              THEN 1
            ELSE NULL
          END AS depuna_rank_score,
-         (
-           (
-             COALESCE(
-               CASE
-                 WHEN lnlsdepr_ranked.cnt > 1
-                   THEN (lnlsdepr_ranked.cnt - lnlsdepr_ranked.rn) / (lnlsdepr_ranked.cnt - 1)
-                 WHEN lnlsdepr_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
+         CASE
+           WHEN lnlsdepr_ranked.cnt > 0
+             AND coredep_ranked.cnt > 0
+             AND depuna_ranked.cnt > 0
+             THEN (
+               lnlsdepr_ranked.rn
+               + (coredep_ranked.cnt - coredep_ranked.rn + 1)
+               + depuna_ranked.rn
              )
-             + COALESCE(
-               CASE
-                 WHEN coredep_ranked.cnt > 1
-                   THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
-                 WHEN coredep_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
-             )
-             + COALESCE(
-               CASE
-                 WHEN depuna_ranked.cnt > 1
-                   THEN (depuna_ranked.cnt - depuna_ranked.rn) / (depuna_ranked.cnt - 1)
-                 WHEN depuna_ranked.cnt = 1
-                   THEN 1
-                 ELSE NULL
-               END,
-               0
-             )
-           ) / 3
-         ) * 5 AS fundingStructureScore
+           ELSE NULL
+         END AS fundingStructureScore
        FROM latest_base
        LEFT JOIN lnlsdepr_ranked
          ON lnlsdepr_ranked.cert = latest_base.cert

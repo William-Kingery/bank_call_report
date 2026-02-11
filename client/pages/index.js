@@ -235,8 +235,14 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
-  const formatScore = (value) =>
-    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
+  const formatScore = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+
+    const score = Number(value);
+    if (!Number.isFinite(score)) return 'N/A';
+
+    return Math.round(score).toLocaleString('en-US');
+  };
   const formatRank = (rank, total) => {
     if (rank === null || rank === undefined || total === null || total === undefined) {
       return 'N/A';
