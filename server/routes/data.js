@@ -736,7 +736,7 @@ router.get('/benchmark', async (_req, res) => {
            coredep,
            ROW_NUMBER() OVER (
              PARTITION BY callym
-             ORDER BY coredep
+             ORDER BY coredep DESC
            ) AS rn,
            COUNT(*) OVER (PARTITION BY callym) AS cnt
          FROM peer_group_base
@@ -785,13 +785,13 @@ router.get('/benchmark', async (_req, res) => {
          END AS lnlsdepr_rank_score,
          CASE
            WHEN coredep_ranked.cnt > 0
-             THEN (coredep_ranked.cnt - coredep_ranked.rn + 1)
+             THEN coredep_ranked.rn
            ELSE NULL
          END AS coredep_rank,
          coredep_ranked.cnt AS coredep_rank_total,
          CASE
            WHEN coredep_ranked.cnt > 1
-             THEN (coredep_ranked.rn - 1) / (coredep_ranked.cnt - 1)
+             THEN (coredep_ranked.cnt - coredep_ranked.rn) / (coredep_ranked.cnt - 1)
            WHEN coredep_ranked.cnt = 1
              THEN 1
            ELSE NULL
@@ -815,7 +815,7 @@ router.get('/benchmark', async (_req, res) => {
              AND depuna_ranked.cnt > 0
              THEN (
                lnlsdepr_ranked.rn
-               + (coredep_ranked.cnt - coredep_ranked.rn + 1)
+               + coredep_ranked.rn
                + depuna_ranked.rn
              )
            ELSE NULL
