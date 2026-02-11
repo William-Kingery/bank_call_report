@@ -177,6 +177,8 @@ export default function Home() {
   const [benchmarkSegment, setBenchmarkSegment] = useState(null);
   const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
+  const [liquiditySortField, setLiquiditySortField] = useState('fundingStructureScore');
+  const [liquiditySortOrder, setLiquiditySortOrder] = useState('desc');
   const [segmentBankCount, setSegmentBankCount] = useState(null);
   const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -853,6 +855,31 @@ export default function Home() {
 
     return sorted;
   }, [benchmarkData, benchmarkSortField, benchmarkSortOrder]);
+
+  const liquiditySortedData = useMemo(() => {
+    if (!benchmarkData.length) return [];
+
+    const sorted = [...benchmarkData];
+    sorted.sort((a, b) => {
+      const aValue = Number(a?.[liquiditySortField]);
+      const bValue = Number(b?.[liquiditySortField]);
+      const aHasValue = Number.isFinite(aValue);
+      const bHasValue = Number.isFinite(bValue);
+
+      if (!aHasValue && !bHasValue) {
+        return String(a?.nameFull ?? '').localeCompare(String(b?.nameFull ?? ''));
+      }
+      if (!aHasValue) return 1;
+      if (!bHasValue) return -1;
+      if (aValue === bValue) {
+        return String(a?.nameFull ?? '').localeCompare(String(b?.nameFull ?? ''));
+      }
+
+      return liquiditySortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+
+    return sorted;
+  }, [benchmarkData, liquiditySortField, liquiditySortOrder]);
 
   const benchmarkBubbleChart = useMemo(() => {
     const chartWidth = 640;
@@ -5313,6 +5340,42 @@ export default function Home() {
                     Deposit values are reported in thousands.
                   </p>
                 </div>
+                <div className={styles.benchmarkControls}>
+                  <label className={styles.benchmarkControlLabel} htmlFor="liquidity-sort-field">
+                    Sort by
+                  </label>
+                  <select
+                    id="liquidity-sort-field"
+                    className={styles.benchmarkSelect}
+                    value={liquiditySortField}
+                    onChange={(event) => setLiquiditySortField(event.target.value)}
+                  >
+                    <option value="dep">Total deposits</option>
+                    <option value="fundingStructureScore">Funding structure score</option>
+                  </select>
+                  <div className={styles.benchmarkSortButtons} role="group" aria-label="Liquidity sort order">
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        liquiditySortOrder === 'desc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setLiquiditySortOrder('desc')}
+                      aria-pressed={liquiditySortOrder === 'desc'}
+                    >
+                      Descending
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        liquiditySortOrder === 'asc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setLiquiditySortOrder('asc')}
+                      aria-pressed={liquiditySortOrder === 'asc'}
+                    >
+                      Ascending
+                    </button>
+                  </div>
+                </div>
 
                 {benchmarkLoading && (
                   <p className={`${styles.status} ${styles.loadingRow}`}>
@@ -5341,7 +5404,7 @@ export default function Home() {
                         </tr>
                       </thead>
                       <tbody>
-                        {benchmarkSortedData.map((bank) => (
+                        {liquiditySortedData.map((bank) => (
                           <tr key={bank.cert ?? `${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
