@@ -177,6 +177,8 @@ export default function Home() {
   const [benchmarkSegment, setBenchmarkSegment] = useState(null);
   const [benchmarkSortField, setBenchmarkSortField] = useState('asset');
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
+  const [liquiditySortField, setLiquiditySortField] = useState('fundingStructureScore');
+  const [liquiditySortOrder, setLiquiditySortOrder] = useState('desc');
   const [segmentBankCount, setSegmentBankCount] = useState(null);
   const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -235,8 +237,27 @@ export default function Home() {
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
   const formatPercentage = (value) =>
     value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
-  const formatScore = (value) =>
-    value === null || value === undefined ? 'N/A' : Number.parseFloat(value).toFixed(2);
+  const formatScore = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+
+    const score = Number(value);
+    if (!Number.isFinite(score)) return 'N/A';
+
+    return Math.round(score).toLocaleString('en-US');
+  };
+  const formatRank = (rank, total) => {
+    if (rank === null || rank === undefined || total === null || total === undefined) {
+      return 'N/A';
+    }
+
+    const rankValue = Number(rank);
+    const totalValue = Number(total);
+    if (!Number.isFinite(rankValue) || !Number.isFinite(totalValue) || totalValue <= 0) {
+      return 'N/A';
+    }
+
+    return `${rankValue.toLocaleString('en-US')} / ${totalValue.toLocaleString('en-US')}`;
+  };
   const formatQuarterShortLabel = (label) => {
     if (!label) return 'N/A';
     const [year, quarter] = label.split(' ');
@@ -788,9 +809,9 @@ export default function Home() {
 
   const benchmarkSubtitle = selectedAssetSegment
     ? isDistrictPeerGroup && selectedDistrict
-      ? `Top 10 banks in the ${selectedAssetSegment} segment within the ${selectedDistrict} district.`
-      : `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
-    : 'Top 10 banks by assets with profitability ratios.';
+      ? `Banks in the ${selectedAssetSegment} segment within the ${selectedDistrict} district.`
+      : `Banks in the ${selectedAssetSegment} segment by assets.`
+    : 'Banks by assets with profitability ratios.';
 
   useEffect(() => {
     setBenchmarkSortField((current) => {
@@ -834,6 +855,31 @@ export default function Home() {
 
     return sorted;
   }, [benchmarkData, benchmarkSortField, benchmarkSortOrder]);
+
+  const liquiditySortedData = useMemo(() => {
+    if (!benchmarkData.length) return [];
+
+    const sorted = [...benchmarkData];
+    sorted.sort((a, b) => {
+      const aValue = Number(a?.[liquiditySortField]);
+      const bValue = Number(b?.[liquiditySortField]);
+      const aHasValue = Number.isFinite(aValue);
+      const bHasValue = Number.isFinite(bValue);
+
+      if (!aHasValue && !bHasValue) {
+        return String(a?.nameFull ?? '').localeCompare(String(b?.nameFull ?? ''));
+      }
+      if (!aHasValue) return 1;
+      if (!bHasValue) return -1;
+      if (aValue === bValue) {
+        return String(a?.nameFull ?? '').localeCompare(String(b?.nameFull ?? ''));
+      }
+
+      return liquiditySortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+    });
+
+    return sorted;
+  }, [benchmarkData, liquiditySortField, liquiditySortOrder]);
 
   const benchmarkBubbleChart = useMemo(() => {
     const chartWidth = 640;
@@ -1557,6 +1603,14 @@ export default function Home() {
 
       {selectedCert && selectedName && !loading && (
         <section className={styles.selectionSummary}>
+          {activeTab === 'benchmark-liquidity' && benchmarkLoading && (
+            <div className={styles.selectionLoadingOverlay} role="status" aria-live="polite">
+              <span className={`${styles.spinner} ${styles.selectionSpinner}`} aria-hidden="true" />
+              <span className={styles.selectionLoadingText}>
+                Processing funding structure score...
+              </span>
+            </div>
+          )}
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
@@ -5095,7 +5149,7 @@ export default function Home() {
                       </thead>
                       <tbody>
                         {benchmarkSortedData.map((bank) => (
-                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                          <tr key={bank.cert ?? `${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{bank.city ?? 'N/A'}</td>
                             <td>{bank.stateName ?? 'N/A'}</td>
@@ -5286,9 +5340,48 @@ export default function Home() {
                     Deposit values are reported in thousands.
                   </p>
                 </div>
+                <div className={styles.benchmarkControls}>
+                  <label className={styles.benchmarkControlLabel} htmlFor="liquidity-sort-field">
+                    Sort by
+                  </label>
+                  <select
+                    id="liquidity-sort-field"
+                    className={styles.benchmarkSelect}
+                    value={liquiditySortField}
+                    onChange={(event) => setLiquiditySortField(event.target.value)}
+                  >
+                    <option value="dep">Total deposits</option>
+                    <option value="fundingStructureScore">Funding structure score</option>
+                  </select>
+                  <div className={styles.benchmarkSortButtons} role="group" aria-label="Liquidity sort order">
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        liquiditySortOrder === 'desc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setLiquiditySortOrder('desc')}
+                      aria-pressed={liquiditySortOrder === 'desc'}
+                    >
+                      Descending
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.benchmarkSortButton} ${
+                        liquiditySortOrder === 'asc' ? styles.benchmarkSortButtonActive : ''
+                      }`}
+                      onClick={() => setLiquiditySortOrder('asc')}
+                      aria-pressed={liquiditySortOrder === 'asc'}
+                    >
+                      Ascending
+                    </button>
+                  </div>
+                </div>
 
                 {benchmarkLoading && (
-                  <p className={styles.status}>Loading benchmark data...</p>
+                  <p className={`${styles.status} ${styles.loadingRow}`}>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Loading benchmark data...
+                  </p>
                 )}
                 {benchmarkError && (
                   <p className={styles.error}>Error: {benchmarkError}</p>
@@ -5302,19 +5395,25 @@ export default function Home() {
                           <th>Bank Name</th>
                           <th>Total Deposits</th>
                           <th>Loan to Deposit Ratio</th>
+                          <th>Loan to Deposit Rank</th>
                           <th>Core Deposit Ratio</th>
+                          <th>Core Deposit Rank</th>
                           <th>Uninsured Deposit Ratio</th>
+                          <th>Uninsured Deposit Rank</th>
                           <th>Funding Structure Score</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {benchmarkSortedData.map((bank) => (
-                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                        {liquiditySortedData.map((bank) => (
+                          <tr key={bank.cert ?? `${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.lnlsdepr)}</td>
+                            <td>{formatRank(bank.lnlsdepr_rank, bank.lnlsdepr_rank_total)}</td>
                             <td>{formatPercentage(getCoreDepositRatio(bank))}</td>
+                            <td>{formatRank(bank.coredep_rank, bank.coredep_rank_total)}</td>
                             <td>{formatPercentage(getUninsuredDepositRatio(bank))}</td>
+                            <td>{formatRank(bank.depuna_rank, bank.depuna_rank_total)}</td>
                             <td>{formatScore(bank.fundingStructureScore)}</td>
                           </tr>
                         ))}

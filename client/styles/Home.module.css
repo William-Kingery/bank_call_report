@@ -288,6 +288,7 @@
 }
 
 .selectionSummary {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -296,6 +297,31 @@
   background: linear-gradient(135deg, var(--terminal-card), var(--terminal-surface-alt));
   margin-bottom: 1rem;
   border: 1px solid var(--terminal-border);
+}
+
+.selectionLoadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--terminal-card) 72%, transparent);
+  z-index: 1;
+}
+
+.selectionSpinner {
+  width: 28px;
+  height: 28px;
+  border-width: 3px;
+}
+
+.selectionLoadingText {
+  color: var(--terminal-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .selectionLabel {
