@@ -621,14 +621,14 @@ router.get('/benchmark', async (_req, res) => {
 
     const orderClause = isDistrictScoped
       ? `ORDER BY
-           (latest_base_unique.nim IS NULL) ASC,
-           latest_base_unique.nim DESC,
-           (latest_base_unique.roa IS NULL) ASC,
-           latest_base_unique.roa DESC,
-           (latest_base_unique.roe IS NULL) ASC,
-           latest_base_unique.roe DESC,
-           latest_base_unique.asset DESC`
-      : 'ORDER BY latest_base_unique.asset DESC';
+           (peer_group_base.nim IS NULL) ASC,
+           peer_group_base.nim DESC,
+           (peer_group_base.roa IS NULL) ASC,
+           peer_group_base.roa DESC,
+           (peer_group_base.roe IS NULL) ASC,
+           peer_group_base.roe DESC,
+           peer_group_base.asset DESC`
+      : 'ORDER BY peer_group_base.asset DESC';
 
     const [rows] = await pool.query(
       `WITH latest_base AS (
@@ -707,6 +707,11 @@ router.get('/benchmark', async (_req, res) => {
          ) latest_base_dedup
          WHERE latest_base_dedup.bank_row_num = 1
        ),
+       peer_group_base AS (
+         SELECT *
+         FROM latest_base_unique
+         ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       ),
        lnlsdepr_ranked AS (
          SELECT
            cert,
@@ -715,11 +720,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym
              ORDER BY lnlsdepr
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base_unique
+           COUNT(*) OVER (PARTITION BY callym) AS cnt
+         FROM peer_group_base
          WHERE lnlsdepr IS NOT NULL
        ),
        coredep_ranked AS (
@@ -730,11 +735,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            coredep,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym
              ORDER BY coredep
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base_unique
+           COUNT(*) OVER (PARTITION BY callym) AS cnt
+         FROM peer_group_base
          WHERE coredep IS NOT NULL
        ),
        depuna_ranked AS (
@@ -745,26 +750,26 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            depuna,
            ROW_NUMBER() OVER (
-             PARTITION BY callym, fed, segment
+             PARTITION BY callym
              ORDER BY depuna
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base_unique
+           COUNT(*) OVER (PARTITION BY callym) AS cnt
+         FROM peer_group_base
          WHERE depuna IS NOT NULL
        )
        SELECT
-         latest_base_unique.cert AS cert,
-         latest_base_unique.nameFull AS nameFull,
-         latest_base_unique.city AS city,
-         latest_base_unique.stateName AS stateName,
-         latest_base_unique.asset AS asset,
-         latest_base_unique.dep AS dep,
-         latest_base_unique.depuna AS depuna,
-         latest_base_unique.coredep AS coredep,
-         latest_base_unique.nim AS nim,
-         latest_base_unique.roa AS roa,
-         latest_base_unique.roe AS roe,
-         latest_base_unique.lnlsdepr AS lnlsdepr,
+         peer_group_base.cert AS cert,
+         peer_group_base.nameFull AS nameFull,
+         peer_group_base.city AS city,
+         peer_group_base.stateName AS stateName,
+         peer_group_base.asset AS asset,
+         peer_group_base.dep AS dep,
+         peer_group_base.depuna AS depuna,
+         peer_group_base.coredep AS coredep,
+         peer_group_base.nim AS nim,
+         peer_group_base.roa AS roa,
+         peer_group_base.roe AS roe,
+         peer_group_base.lnlsdepr AS lnlsdepr,
          CASE
            WHEN lnlsdepr_ranked.cnt > 0
              THEN lnlsdepr_ranked.rn
@@ -815,14 +820,13 @@ router.get('/benchmark', async (_req, res) => {
              )
            ELSE NULL
          END AS fundingStructureScore
-       FROM latest_base_unique
+       FROM peer_group_base
        LEFT JOIN lnlsdepr_ranked
-         ON lnlsdepr_ranked.cert = latest_base_unique.cert
+         ON lnlsdepr_ranked.cert = peer_group_base.cert
        LEFT JOIN coredep_ranked
-         ON coredep_ranked.cert = latest_base_unique.cert
+         ON coredep_ranked.cert = peer_group_base.cert
        LEFT JOIN depuna_ranked
-         ON depuna_ranked.cert = latest_base_unique.cert
-       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+         ON depuna_ranked.cert = peer_group_base.cert
        ${orderClause}`
       ,
       params
