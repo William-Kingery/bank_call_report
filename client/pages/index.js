@@ -807,9 +807,9 @@ export default function Home() {
 
   const benchmarkSubtitle = selectedAssetSegment
     ? isDistrictPeerGroup && selectedDistrict
-      ? `Top 10 banks in the ${selectedAssetSegment} segment within the ${selectedDistrict} district.`
-      : `Top 10 banks in the ${selectedAssetSegment} segment by assets.`
-    : 'Top 10 banks by assets with profitability ratios.';
+      ? `Banks in the ${selectedAssetSegment} segment within the ${selectedDistrict} district.`
+      : `Banks in the ${selectedAssetSegment} segment by assets.`
+    : 'Banks by assets with profitability ratios.';
 
   useEffect(() => {
     setBenchmarkSortField((current) => {
@@ -5122,7 +5122,7 @@ export default function Home() {
                       </thead>
                       <tbody>
                         {benchmarkSortedData.map((bank) => (
-                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                          <tr key={bank.cert ?? `${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{bank.city ?? 'N/A'}</td>
                             <td>{bank.stateName ?? 'N/A'}</td>
@@ -5342,7 +5342,7 @@ export default function Home() {
                       </thead>
                       <tbody>
                         {benchmarkSortedData.map((bank) => (
-                          <tr key={`${bank.nameFull}-${bank.city}-${bank.stateName}`}>
+                          <tr key={bank.cert ?? `${bank.nameFull}-${bank.city}-${bank.stateName}`}>
                             <td className={styles.benchmarkBank}>{bank.nameFull}</td>
                             <td>{formatNumber(bank.dep)}</td>
                             <td>{formatPercentage(bank.lnlsdepr)}</td>

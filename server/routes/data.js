@@ -601,11 +601,11 @@ router.get('/benchmark', async (_req, res) => {
 
     if (range) {
       if (range.min != null) {
-        conditions.push('latest_base.asset >= ?');
+        conditions.push('latest_base_unique.asset >= ?');
         params.push(range.min);
       }
       if (range.max != null) {
-        conditions.push('latest_base.asset < ?');
+        conditions.push('latest_base_unique.asset < ?');
         params.push(range.max);
       }
     }
@@ -615,20 +615,20 @@ router.get('/benchmark', async (_req, res) => {
       if (!Number.isFinite(fedCode)) {
         return res.status(400).json({ message: 'Invalid district parameter' });
       }
-      conditions.push('latest_base.fed = ?');
+      conditions.push('latest_base_unique.fed = ?');
       params.push(fedCode);
     }
 
     const orderClause = isDistrictScoped
       ? `ORDER BY
-           (latest_base.nim IS NULL) ASC,
-           latest_base.nim DESC,
-           (latest_base.roa IS NULL) ASC,
-           latest_base.roa DESC,
-           (latest_base.roe IS NULL) ASC,
-           latest_base.roe DESC,
-           latest_base.asset DESC`
-      : 'ORDER BY latest_base.asset DESC';
+           (latest_base_unique.nim IS NULL) ASC,
+           latest_base_unique.nim DESC,
+           (latest_base_unique.roa IS NULL) ASC,
+           latest_base_unique.roa DESC,
+           (latest_base_unique.roe IS NULL) ASC,
+           latest_base_unique.roe DESC,
+           latest_base_unique.asset DESC`
+      : 'ORDER BY latest_base_unique.asset DESC';
 
     const [rows] = await pool.query(
       `WITH latest_base AS (
@@ -694,6 +694,19 @@ router.get('/benchmark', async (_req, res) => {
            ON c.CERT = latest_cdi.CERT
            AND c.CALLYM = latest_cdi.callym
        ),
+       latest_base_unique AS (
+         SELECT *
+         FROM (
+           SELECT
+             latest_base.*,
+             ROW_NUMBER() OVER (
+               PARTITION BY latest_base.cert
+               ORDER BY latest_base.callym DESC
+             ) AS bank_row_num
+           FROM latest_base
+         ) latest_base_dedup
+         WHERE latest_base_dedup.bank_row_num = 1
+       ),
        lnlsdepr_ranked AS (
          SELECT
            cert,
@@ -706,7 +719,7 @@ router.get('/benchmark', async (_req, res) => {
              ORDER BY lnlsdepr
            ) AS rn,
            COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base
+         FROM latest_base_unique
          WHERE lnlsdepr IS NOT NULL
        ),
        coredep_ranked AS (
@@ -721,7 +734,7 @@ router.get('/benchmark', async (_req, res) => {
              ORDER BY coredep
            ) AS rn,
            COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base
+         FROM latest_base_unique
          WHERE coredep IS NOT NULL
        ),
        depuna_ranked AS (
@@ -736,21 +749,22 @@ router.get('/benchmark', async (_req, res) => {
              ORDER BY depuna
            ) AS rn,
            COUNT(*) OVER (PARTITION BY callym, fed, segment) AS cnt
-         FROM latest_base
+         FROM latest_base_unique
          WHERE depuna IS NOT NULL
        )
        SELECT
-         latest_base.nameFull AS nameFull,
-         latest_base.city AS city,
-         latest_base.stateName AS stateName,
-         latest_base.asset AS asset,
-         latest_base.dep AS dep,
-         latest_base.depuna AS depuna,
-         latest_base.coredep AS coredep,
-         latest_base.nim AS nim,
-         latest_base.roa AS roa,
-         latest_base.roe AS roe,
-         latest_base.lnlsdepr AS lnlsdepr,
+         latest_base_unique.cert AS cert,
+         latest_base_unique.nameFull AS nameFull,
+         latest_base_unique.city AS city,
+         latest_base_unique.stateName AS stateName,
+         latest_base_unique.asset AS asset,
+         latest_base_unique.dep AS dep,
+         latest_base_unique.depuna AS depuna,
+         latest_base_unique.coredep AS coredep,
+         latest_base_unique.nim AS nim,
+         latest_base_unique.roa AS roa,
+         latest_base_unique.roe AS roe,
+         latest_base_unique.lnlsdepr AS lnlsdepr,
          CASE
            WHEN lnlsdepr_ranked.cnt > 0
              THEN lnlsdepr_ranked.rn
@@ -801,13 +815,13 @@ router.get('/benchmark', async (_req, res) => {
              )
            ELSE NULL
          END AS fundingStructureScore
-       FROM latest_base
+       FROM latest_base_unique
        LEFT JOIN lnlsdepr_ranked
-         ON lnlsdepr_ranked.cert = latest_base.cert
+         ON lnlsdepr_ranked.cert = latest_base_unique.cert
        LEFT JOIN coredep_ranked
-         ON coredep_ranked.cert = latest_base.cert
+         ON coredep_ranked.cert = latest_base_unique.cert
        LEFT JOIN depuna_ranked
-         ON depuna_ranked.cert = latest_base.cert
+         ON depuna_ranked.cert = latest_base_unique.cert
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        ${orderClause}`
       ,
