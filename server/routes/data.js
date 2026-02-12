@@ -736,8 +736,8 @@ router.get('/benchmark', async (_req, res) => {
            coredep,
            ROW_NUMBER() OVER (
              ORDER BY
-               (coredep IS NULL) ASC,
-               coredep DESC
+               (coredep IS NULL OR dep IS NULL OR dep = 0) ASC,
+               (coredep / dep) DESC
            ) AS rn,
            COUNT(*) OVER () AS cnt
          FROM peer_group_base
@@ -751,8 +751,8 @@ router.get('/benchmark', async (_req, res) => {
            depuna,
            ROW_NUMBER() OVER (
              ORDER BY
-               (depuna IS NULL) ASC,
-               depuna ASC
+               (depuna IS NULL OR dep IS NULL OR dep = 0) ASC,
+               (depuna / dep) ASC
            ) AS rn,
            COUNT(*) OVER () AS cnt
          FROM peer_group_base
