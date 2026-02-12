@@ -720,12 +720,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym
              ORDER BY
                (lnlsdepr IS NULL) ASC,
                lnlsdepr ASC
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym) AS cnt
+           COUNT(*) OVER () AS cnt
          FROM peer_group_base
        ),
        coredep_ranked AS (
@@ -736,12 +735,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            coredep,
            ROW_NUMBER() OVER (
-             PARTITION BY callym
              ORDER BY
-               (coredep IS NULL) ASC,
-               coredep DESC
+               (coredep IS NULL OR dep IS NULL OR dep = 0) ASC,
+               (coredep / dep) DESC
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym) AS cnt
+           COUNT(*) OVER () AS cnt
          FROM peer_group_base
        ),
        depuna_ranked AS (
@@ -752,12 +750,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            depuna,
            ROW_NUMBER() OVER (
-             PARTITION BY callym
              ORDER BY
-               (depuna IS NULL) ASC,
-               depuna ASC
+               (depuna IS NULL OR dep IS NULL OR dep = 0) ASC,
+               (depuna / dep) ASC
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym) AS cnt
+           COUNT(*) OVER () AS cnt
          FROM peer_group_base
        )
        SELECT
