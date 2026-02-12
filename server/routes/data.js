@@ -720,12 +720,11 @@ router.get('/benchmark', async (_req, res) => {
            segment,
            lnlsdepr,
            ROW_NUMBER() OVER (
-             PARTITION BY callym
              ORDER BY
                (lnlsdepr IS NULL) ASC,
                lnlsdepr ASC
            ) AS rn,
-           COUNT(*) OVER (PARTITION BY callym) AS cnt
+           COUNT(*) OVER () AS cnt
          FROM peer_group_base
        ),
        coredep_ranked AS (
