@@ -298,7 +298,7 @@ const fetchSegmentSummary = async ({
        SUM(COALESCE(c.NETINCQA, 0))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
        SUM(COALESCE(c.NETINCQA, 0))
-         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
+         / NULLIF(SUM(COALESCE(f.EQ, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -393,7 +393,7 @@ const fetchDistrictSummary = async ({
        SUM(COALESCE(c.NETINCQA, 0))
          / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
        SUM(COALESCE(c.NETINCQA, 0))
-         / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
+         / NULLIF(SUM(COALESCE(f.EQ, 0)), 0) * 100 AS roe
      FROM fdic_fts f
      JOIN (
        SELECT CERT, MAX(CALLYM) AS callym
@@ -1107,7 +1107,7 @@ router.get('/national-averages/summary', async (req, res) => {
          SUM(COALESCE(c.NETINCQA, 0))
            / NULLIF(SUM(COALESCE(c.ERNAST2, 0)), 0) * 100 AS roa,
          SUM(COALESCE(c.NETINCQA, 0))
-           / NULLIF(SUM(COALESCE(c.EQTOTCP, 0)), 0) * 100 AS roe
+           / NULLIF(SUM(COALESCE(f.EQ, 0)), 0) * 100 AS roe
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
