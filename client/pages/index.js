@@ -382,6 +382,17 @@ export default function Home() {
       const ciLoansValue = Number(point.lncit1r);
       const reLoansValue = Number(point.lnrert1r);
       const consumerLoansValue = Number(point.lncont1r);
+      const tier1CapitalAmount =
+        Number.isFinite(Number(point.rwa)) && Number.isFinite(Number(point.rbct1))
+          ? (Number(point.rwa) * Number(point.rbct1)) / 100
+          : null;
+      const commercialRealEstateLoansValue = Number(point.LNCOMRE);
+      const commercialRealEstateLoansRatio =
+        Number.isFinite(commercialRealEstateLoansValue) &&
+        Number.isFinite(tier1CapitalAmount) &&
+        tier1CapitalAmount > 0
+          ? (commercialRealEstateLoansValue / tier1CapitalAmount) * 100
+          : null;
       const highRiskLoansValue = Number(point.lnhrskr);
       const constructionLoansValue = Number(point.lncdt1r);
       const rbct1Value = Number(point.rbct1);
@@ -394,6 +405,7 @@ export default function Home() {
         ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
         reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
         consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
+        commercialRealEstateLoansRatio,
         highRiskLoansRatio: Number.isFinite(highRiskLoansValue) ? highRiskLoansValue : null,
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
           ? constructionLoansValue
@@ -515,6 +527,10 @@ export default function Home() {
       ciLoans: buildColumnData(capitalViewSeries, 'ciLoansRatio'),
       reLoans: buildColumnData(capitalViewSeries, 'reLoansRatio'),
       consumerLoans: buildColumnData(capitalViewSeries, 'consumerLoansRatio'),
+      commercialRealEstateLoans: buildColumnData(
+        capitalViewSeries,
+        'commercialRealEstateLoansRatio',
+      ),
       highRiskLoans: buildColumnData(capitalViewSeries, 'highRiskLoansRatio'),
       constructionLoans: buildColumnData(capitalViewSeries, 'constructionLoansRatio'),
     }),
@@ -4210,6 +4226,74 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
+                        <h4 className={styles.lineChartTitle}>Commercial real estate loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Property lending concentration</p>
+                      </div>
+                      <div className={styles.lineChartBody}>
+                        <span className={styles.lineChartYAxis}>Percent</span>
+                        {capitalColumnData.commercialRealEstateLoans.max != null && (
+                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                            {formatPercentage(capitalColumnData.commercialRealEstateLoans.max)}
+                          </span>
+                        )}
+                        {capitalColumnData.commercialRealEstateLoans.min != null && (
+                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                            {formatPercentage(capitalColumnData.commercialRealEstateLoans.min)}
+                          </span>
+                        )}
+                        {capitalColumnData.commercialRealEstateLoans.hasData ? (
+                          <div
+                            className={styles.columnChartGrid}
+                            role="img"
+                            aria-label="Commercial real estate loans to Tier 1 capital column chart"
+                            style={{
+                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                            }}
+                          >
+                            {capitalColumnData.commercialRealEstateLoans.values.map((point) => (
+                              <div
+                                key={`commercial-real-estate-loans-${point.label}`}
+                                className={styles.columnChartBarWrapper}
+                                title={
+                                  point.value == null
+                                    ? `${point.label}: N/A`
+                                    : `${point.label}: ${formatPercentage(point.value)}`
+                                }
+                              >
+                                <div
+                                  className={`${styles.columnChartBar} ${styles.reLoansColumnBar} ${
+                                    point.value == null ? styles.columnChartBarEmpty : ''
+                                  }`}
+                                  style={{ height: `${point.percentage}%` }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={styles.status}>No commercial real estate loan data available.</p>
+                        )}
+                      </div>
+                      <div
+                        className={`${styles.lineChartLabels} ${styles.capitalChartLabels}`}
+                        style={{
+                          gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                          minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                        }}
+                      >
+                        {capitalViewSeries.map((point) => (
+                          <span key={`commercial-real-estate-loans-label-${point.label}`}>
+                            {formatCapitalAxisLabel(point)}
+                          </span>
+                        ))}
+                      </div>
+                      <p className={styles.chartXAxisLabel}>Quarter</p>
+                    </div>
+                  </div>
+
+                  <div className={styles.chartCard}>
+                    <div className={styles.lineChartBlock}>
+                      <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>Consumer loans to Tier 1</h4>
                         <p className={styles.lineChartSubhead}>Household credit share</p>
                       </div>
@@ -4862,34 +4946,34 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>Consumer loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Household credit share</p>
+                        <h4 className={styles.lineChartTitle}>Commercial real estate loans to Tier 1</h4>
+                        <p className={styles.lineChartSubhead}>Property lending concentration</p>
                       </div>
                       <div className={styles.lineChartBody}>
                         <span className={styles.lineChartYAxis}>Percent</span>
-                        {capitalColumnData.consumerLoans.max != null && (
+                        {capitalColumnData.commercialRealEstateLoans.max != null && (
                           <span className={styles.lineChartTick} style={{ top: '12%' }}>
-                            {formatPercentage(capitalColumnData.consumerLoans.max)}
+                            {formatPercentage(capitalColumnData.commercialRealEstateLoans.max)}
                           </span>
                         )}
-                        {capitalColumnData.consumerLoans.min != null && (
+                        {capitalColumnData.commercialRealEstateLoans.min != null && (
                           <span className={styles.lineChartTick} style={{ top: '88%' }}>
-                            {formatPercentage(capitalColumnData.consumerLoans.min)}
+                            {formatPercentage(capitalColumnData.commercialRealEstateLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.consumerLoans.hasData ? (
+                        {capitalColumnData.commercialRealEstateLoans.hasData ? (
                           <div
                             className={styles.columnChartGrid}
                             role="img"
-                            aria-label="Consumer loans to Tier 1 capital column chart"
+                            aria-label="Commercial real estate loans to Tier 1 capital column chart"
                             style={{
                               gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
                               minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
                             }}
                           >
-                            {capitalColumnData.consumerLoans.values.map((point) => (
+                            {capitalColumnData.commercialRealEstateLoans.values.map((point) => (
                               <div
-                                key={`consumer-loans-${point.label}`}
+                                key={`commercial-real-estate-loans-${point.label}`}
                                 className={styles.columnChartBarWrapper}
                                 title={
                                   point.value == null
@@ -4898,7 +4982,7 @@ export default function Home() {
                                 }
                               >
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.consumerLoansColumnBar} ${
+                                  className={`${styles.columnChartBar} ${styles.reLoansColumnBar} ${
                                     point.value == null ? styles.columnChartBarEmpty : ''
                                   }`}
                                   style={{ height: `${point.percentage}%` }}
@@ -4907,7 +4991,7 @@ export default function Home() {
                             ))}
                           </div>
                         ) : (
-                          <p className={styles.status}>No consumer loan data available.</p>
+                          <p className={styles.status}>No commercial real estate loan data available.</p>
                         )}
                       </div>
                       <div
@@ -4918,7 +5002,7 @@ export default function Home() {
                         }}
                       >
                         {capitalViewSeries.map((point) => (
-                          <span key={`consumer-loans-label-${point.label}`}>
+                          <span key={`commercial-real-estate-loans-label-${point.label}`}>
                             {formatCapitalAxisLabel(point)}
                           </span>
                         ))}
