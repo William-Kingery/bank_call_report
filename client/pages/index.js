@@ -382,6 +382,7 @@ export default function Home() {
       const ciLoansValue = Number(point.lncit1r);
       const reLoansValue = Number(point.lnrert1r);
       const consumerLoansValue = Number(point.lncont1r);
+      const totalTangibleEquityValue = Number(point.eq);
       const tier1CapitalAmount =
         Number.isFinite(Number(point.rwa)) && Number.isFinite(Number(point.rbct1))
           ? (Number(point.rwa) * Number(point.rbct1)) / 100
@@ -405,6 +406,9 @@ export default function Home() {
         ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
         reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
         consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
+        totalTangibleEquity: Number.isFinite(totalTangibleEquityValue)
+          ? totalTangibleEquityValue
+          : null,
         commercialRealEstateLoansRatio,
         highRiskLoansRatio: Number.isFinite(highRiskLoansValue) ? highRiskLoansValue : null,
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
@@ -536,6 +540,42 @@ export default function Home() {
     }),
     [capitalViewSeries],
   );
+
+  const tangibleEquityRatioChart = useMemo(
+    () =>
+      buildLineChartData(
+        capitalViewSeries,
+        capitalColumnWidth,
+        (point) => point.tangibleEquityRatio,
+      ),
+    [capitalColumnWidth, capitalViewSeries],
+  );
+
+  const tangibleEquityStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const totalValue = Number(point?.totalTangibleEquity);
+      const total = Number.isFinite(totalValue) ? totalValue : null;
+
+      return {
+        label: point.label,
+        total,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        totalPercent: point.total != null && max > 0 ? (point.total / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
 
   const capitalStackedData = useMemo(() => {
     const values = capitalViewSeries.map((point) => {
@@ -3933,49 +3973,110 @@ export default function Home() {
                         <h4 className={styles.lineChartTitle}>
                           Tangible equity capital ratio
                         </h4>
-                        <p className={styles.lineChartSubhead}>Equity strength</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total tangible equity
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {tangibleEquityStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(tangibleEquityStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.tangibleEquity.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.tangibleEquity.max)}
                           </span>
                         )}
                         {capitalColumnData.tangibleEquity.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.tangibleEquity.min)}
                           </span>
                         )}
-                        {capitalColumnData.tangibleEquity.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Tangible equity capital ratio column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.tangibleEquity.values.map((point) => (
-                              <div
-                                key={`tangible-equity-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {tangibleEquityStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total tangible equity stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {tangibleEquityStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.tangibleEquityColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-tangible-equity-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.tangibleEquity.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Tangible equity capital ratio line chart"
+                                  viewBox={`0 0 ${tangibleEquityRatioChart.width} ${tangibleEquityRatioChart.height}`}
+                                  width={tangibleEquityRatioChart.width}
+                                  height={tangibleEquityRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {tangibleEquityRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`tangible-equity-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {tangibleEquityRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`tangible-equity-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No tangible equity data available.</p>
                         )}
@@ -4545,49 +4646,110 @@ export default function Home() {
                         <h4 className={styles.lineChartTitle}>
                           Tangible equity capital ratio
                         </h4>
-                        <p className={styles.lineChartSubhead}>Equity strength</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total tangible equity
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {tangibleEquityStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(tangibleEquityStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.tangibleEquity.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.tangibleEquity.max)}
                           </span>
                         )}
                         {capitalColumnData.tangibleEquity.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.tangibleEquity.min)}
                           </span>
                         )}
-                        {capitalColumnData.tangibleEquity.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Tangible equity capital ratio column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.tangibleEquity.values.map((point) => (
-                              <div
-                                key={`tangible-equity-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {tangibleEquityStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total tangible equity stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {tangibleEquityStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.tangibleEquityColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-tangible-equity-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.tangibleEquity.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Tangible equity capital ratio line chart"
+                                  viewBox={`0 0 ${tangibleEquityRatioChart.width} ${tangibleEquityRatioChart.height}`}
+                                  width={tangibleEquityRatioChart.width}
+                                  height={tangibleEquityRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {tangibleEquityRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`tangible-equity-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {tangibleEquityRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`tangible-equity-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No tangible equity data available.</p>
                         )}
