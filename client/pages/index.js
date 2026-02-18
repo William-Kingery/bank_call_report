@@ -3753,7 +3753,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>LNLSDEPR</h4>
+                        <h4 className={styles.lineChartTitle}>Loans to Deposit Ratio</h4>
                         <p className={styles.lineChartSubhead}>Loan to deposit ratio trend</p>
                       </div>
                       <div className={styles.chartLegendRow} aria-hidden="true">
