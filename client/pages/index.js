@@ -4264,7 +4264,7 @@ export default function Home() {
                                   {tangibleEquityRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`tangible-equity-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4274,7 +4274,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`tangible-equity-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4483,7 +4483,7 @@ export default function Home() {
                                   {ciLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4493,7 +4493,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`ci-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4610,7 +4610,7 @@ export default function Home() {
                                   {reLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`re-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4620,7 +4620,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`re-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4737,7 +4737,7 @@ export default function Home() {
                                   {commercialRealEstateLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`commercial-real-estate-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4747,7 +4747,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`commercial-real-estate-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4864,7 +4864,7 @@ export default function Home() {
                                   {consumerLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`consumer-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4874,7 +4874,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`consumer-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4991,7 +4991,7 @@ export default function Home() {
                                   {highRiskLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5001,7 +5001,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`high-risk-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5120,7 +5120,7 @@ export default function Home() {
                                   {constructionLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5130,7 +5130,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`construction-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5249,7 +5249,7 @@ export default function Home() {
                                   {tangibleEquityRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`tangible-equity-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5259,7 +5259,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`tangible-equity-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5468,7 +5468,7 @@ export default function Home() {
                                   {ciLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5478,7 +5478,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`ci-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5597,7 +5597,7 @@ export default function Home() {
                                   {reLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`re-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5607,7 +5607,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`re-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5724,7 +5724,7 @@ export default function Home() {
                                   {consumerLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`consumer-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5734,7 +5734,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`consumer-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5851,7 +5851,7 @@ export default function Home() {
                                   {commercialRealEstateLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`commercial-real-estate-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5861,7 +5861,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`commercial-real-estate-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5978,7 +5978,7 @@ export default function Home() {
                                   {highRiskLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5988,7 +5988,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`high-risk-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -6107,7 +6107,7 @@ export default function Home() {
                                   {constructionLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -6117,7 +6117,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`construction-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"

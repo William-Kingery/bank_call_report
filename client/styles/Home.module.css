@@ -1308,6 +1308,15 @@
   background: linear-gradient(180deg, #fb923c, #ea580c);
 }
 
+.capitalRatioLine {
+  stroke: #374151;
+  filter: drop-shadow(0 6px 10px rgba(55, 65, 81, 0.3));
+}
+
+.capitalRatioLineDot {
+  stroke: #374151;
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.5rem;
