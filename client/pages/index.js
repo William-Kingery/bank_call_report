@@ -380,6 +380,7 @@ export default function Home() {
     return buildQuarterSeries(sortedPoints, (point) => {
       const tangibleEquityValue = Number(point.eqtanqta);
       const ciLoansValue = Number(point.lncit1r);
+      const totalCiLoansValue = Number(point.LNCI);
       const reLoansValue = Number(point.lnrert1r);
       const consumerLoansValue = Number(point.lncont1r);
       const totalTangibleEquityValue = Number(point.eq);
@@ -404,6 +405,7 @@ export default function Home() {
         label: formatQuarterLabel(point.callym),
         tangibleEquityRatio: Number.isFinite(tangibleEquityValue) ? tangibleEquityValue : null,
         ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
+        totalCiLoans: Number.isFinite(totalCiLoansValue) ? totalCiLoansValue : null,
         reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
         consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
         totalTangibleEquity: Number.isFinite(totalTangibleEquityValue)
@@ -554,6 +556,37 @@ export default function Home() {
   const tangibleEquityStackedData = useMemo(() => {
     const values = capitalViewSeries.map((point) => {
       const totalValue = Number(point?.totalTangibleEquity);
+      const total = Number.isFinite(totalValue) ? totalValue : null;
+
+      return {
+        label: point.label,
+        total,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        totalPercent: point.total != null && max > 0 ? (point.total / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
+
+  const ciLoansRatioChart = useMemo(
+    () => buildLineChartData(capitalViewSeries, capitalColumnWidth, (point) => point.ciLoansRatio),
+    [capitalColumnWidth, capitalViewSeries],
+  );
+
+  const ciLoansStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const totalValue = Number(point?.totalCiLoans);
       const total = Number.isFinite(totalValue) ? totalValue : null;
 
       return {
@@ -4192,49 +4225,110 @@ export default function Home() {
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>C&amp;I loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Commercial exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total C&amp;I loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {ciLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(ciLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.ciLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.ciLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.ciLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.ciLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.ciLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="C&I loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.ciLoans.values.map((point) => (
-                              <div
-                                key={`ci-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {ciLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total C&I loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {ciLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.ciLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-ci-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.ciLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="C&I loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${ciLoansRatioChart.width} ${ciLoansRatioChart.height}`}
+                                  width={ciLoansRatioChart.width}
+                                  height={ciLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {ciLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {ciLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`ci-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No C&amp;I loan data available.</p>
                         )}
@@ -4254,9 +4348,7 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>RE loans to Tier 1</h4>
@@ -4865,49 +4957,110 @@ export default function Home() {
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>C&amp;I loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Commercial exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total C&amp;I loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {ciLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(ciLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.ciLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.ciLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.ciLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.ciLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.ciLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="C&I loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.ciLoans.values.map((point) => (
-                              <div
-                                key={`ci-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {ciLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total C&I loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {ciLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.ciLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-ci-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.ciLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="C&I loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${ciLoansRatioChart.width} ${ciLoansRatioChart.height}`}
+                                  width={ciLoansRatioChart.width}
+                                  height={ciLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {ciLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {ciLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`ci-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No C&amp;I loan data available.</p>
                         )}
