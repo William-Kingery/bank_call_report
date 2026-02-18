@@ -3199,7 +3199,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>EEFFQR</h4>
+                        <h4 className={styles.lineChartTitle}>Efficiency Ratio</h4>
                         <p className={styles.lineChartSubhead}>Operating expense control</p>
                       </div>
                       <div className={styles.lineChartBody}>
@@ -3218,7 +3218,7 @@ export default function Home() {
                           <div
                             className={styles.columnChartGrid}
                             role="img"
-                            aria-label="EEFFQR column chart"
+                            aria-label="Efficiency Ratio column chart"
                             style={{
                               gridTemplateColumns: `repeat(${efficiencyViewSeries.length}, minmax(0, ${profitabilityColumnWidth}px))`,
                               minWidth: getProfitabilityAxisMinWidthForView(
@@ -3753,7 +3753,7 @@ export default function Home() {
                   <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
-                        <h4 className={styles.lineChartTitle}>LNLSDEPR</h4>
+                        <h4 className={styles.lineChartTitle}>Loans to Deposit Ratio</h4>
                         <p className={styles.lineChartSubhead}>Loan to deposit ratio trend</p>
                       </div>
                       <div className={styles.chartLegendRow} aria-hidden="true">
