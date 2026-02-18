@@ -1295,6 +1295,54 @@
   stroke: #64748b;
 }
 
+.orangeRatioLine {
+  stroke: #f97316;
+  filter: drop-shadow(0 6px 10px rgba(249, 115, 22, 0.32));
+}
+
+.orangeRatioLineDot {
+  stroke: #f97316;
+}
+
+.orangeStackedSegment {
+  background: linear-gradient(180deg, #fb923c, #ea580c);
+}
+
+.capitalRatioLine {
+  stroke: #374151;
+  filter: drop-shadow(0 6px 10px rgba(55, 65, 81, 0.3));
+}
+
+.capitalRatioLineDot {
+  stroke: #374151;
+}
+
+.ciRatioLine {
+  stroke: #16a34a;
+  filter: drop-shadow(0 6px 10px rgba(22, 163, 74, 0.32));
+}
+
+.ciRatioLineDot {
+  stroke: #16a34a;
+}
+
+.highRiskRatioLine {
+  stroke: #dc2626;
+  filter: drop-shadow(0 6px 10px rgba(220, 38, 38, 0.32));
+}
+
+.highRiskRatioLineDot {
+  stroke: #dc2626;
+}
+
+.ciStackedSegment {
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+}
+
+.highRiskStackedSegment {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.5rem;
