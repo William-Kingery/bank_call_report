@@ -384,6 +384,7 @@ export default function Home() {
       const reLoansValue = Number(point.lnrert1r);
       const totalReLoansValue = Number(point.LNRE);
       const consumerLoansValue = Number(point.lncont1r);
+      const totalConsumerLoansValue = Number(point.LNCON);
       const totalTangibleEquityValue = Number(point.eq);
       const tier1CapitalAmount =
         Number.isFinite(Number(point.rwa)) && Number.isFinite(Number(point.rbct1))
@@ -398,7 +399,15 @@ export default function Home() {
           ? (commercialRealEstateLoansValue / tier1CapitalAmount) * 100
           : null;
       const highRiskLoansValue = Number(point.lnhrskr);
+      const totalHighRiskLoansValue =
+        Number.isFinite(highRiskLoansValue) && Number.isFinite(tier1CapitalAmount)
+          ? (highRiskLoansValue / 100) * tier1CapitalAmount
+          : null;
       const constructionLoansValue = Number(point.lncdt1r);
+      const totalConstructionLoansValue =
+        Number.isFinite(constructionLoansValue) && Number.isFinite(tier1CapitalAmount)
+          ? (constructionLoansValue / 100) * tier1CapitalAmount
+          : null;
       const rbct1Value = Number(point.rbct1);
       const rbct2Value = Number(point.rbct2);
 
@@ -411,6 +420,7 @@ export default function Home() {
         reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
         totalReLoans: Number.isFinite(totalReLoansValue) ? totalReLoansValue : null,
         consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
+        totalConsumerLoans: Number.isFinite(totalConsumerLoansValue) ? totalConsumerLoansValue : null,
         totalTangibleEquity: Number.isFinite(totalTangibleEquityValue)
           ? totalTangibleEquityValue
           : null,
@@ -419,8 +429,12 @@ export default function Home() {
           ? totalCommercialRealEstateLoansValue
           : null,
         highRiskLoansRatio: Number.isFinite(highRiskLoansValue) ? highRiskLoansValue : null,
+        totalHighRiskLoans: Number.isFinite(totalHighRiskLoansValue) ? totalHighRiskLoansValue : null,
         constructionLoansRatio: Number.isFinite(constructionLoansValue)
           ? constructionLoansValue
+          : null,
+        totalConstructionLoans: Number.isFinite(totalConstructionLoansValue)
+          ? totalConstructionLoansValue
           : null,
         rbct1: Number.isFinite(rbct1Value) ? rbct1Value : null,
         rbct2: Number.isFinite(rbct2Value) ? rbct2Value : null,
@@ -656,6 +670,100 @@ export default function Home() {
   const commercialRealEstateLoansStackedData = useMemo(() => {
     const values = capitalViewSeries.map((point) => {
       const totalValue = Number(point?.totalCommercialRealEstateLoans);
+      const total = Number.isFinite(totalValue) ? totalValue : null;
+
+      return {
+        label: point.label,
+        total,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        totalPercent: point.total != null && max > 0 ? (point.total / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
+
+  const consumerLoansRatioChart = useMemo(
+    () => buildLineChartData(capitalViewSeries, capitalColumnWidth, (point) => point.consumerLoansRatio),
+    [capitalColumnWidth, capitalViewSeries],
+  );
+
+  const consumerLoansStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const totalValue = Number(point?.totalConsumerLoans);
+      const total = Number.isFinite(totalValue) ? totalValue : null;
+
+      return {
+        label: point.label,
+        total,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        totalPercent: point.total != null && max > 0 ? (point.total / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
+
+  const highRiskLoansRatioChart = useMemo(
+    () => buildLineChartData(capitalViewSeries, capitalColumnWidth, (point) => point.highRiskLoansRatio),
+    [capitalColumnWidth, capitalViewSeries],
+  );
+
+  const highRiskLoansStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const totalValue = Number(point?.totalHighRiskLoans);
+      const total = Number.isFinite(totalValue) ? totalValue : null;
+
+      return {
+        label: point.label,
+        total,
+      };
+    });
+
+    const totals = values
+      .map((point) => point.total)
+      .filter((value) => Number.isFinite(value));
+    const max = totals.length ? Math.max(...totals) : 0;
+
+    return {
+      values: values.map((point) => ({
+        ...point,
+        totalPercent: point.total != null && max > 0 ? (point.total / max) * 100 : 0,
+      })),
+      max,
+      hasData: totals.length > 0,
+    };
+  }, [capitalViewSeries]);
+
+  const constructionLoansRatioChart = useMemo(
+    () =>
+      buildLineChartData(capitalViewSeries, capitalColumnWidth, (point) => point.constructionLoansRatio),
+    [capitalColumnWidth, capitalViewSeries],
+  );
+
+  const constructionLoansStackedData = useMemo(() => {
+    const values = capitalViewSeries.map((point) => {
+      const totalValue = Number(point?.totalConstructionLoans);
       const total = Number.isFinite(totalValue) ? totalValue : null;
 
       return {
@@ -4675,49 +4783,110 @@ export default function Home() {
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>Consumer loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Household credit share</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total consumer loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {consumerLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(consumerLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.consumerLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.consumerLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.consumerLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.consumerLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.consumerLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Consumer loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.consumerLoans.values.map((point) => (
-                              <div
-                                key={`consumer-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {consumerLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total consumer loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {consumerLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.consumerLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-consumer-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.consumerLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Consumer loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${consumerLoansRatioChart.width} ${consumerLoansRatioChart.height}`}
+                                  width={consumerLoansRatioChart.width}
+                                  height={consumerLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {consumerLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`consumer-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {consumerLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`consumer-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No consumer loan data available.</p>
                         )}
@@ -4737,55 +4906,114 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>High risk loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Risk-weighted exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total high risk loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {highRiskLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(highRiskLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.highRiskLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.highRiskLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.highRiskLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.highRiskLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.highRiskLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="High risk loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.highRiskLoans.values.map((point) => (
-                              <div
-                                key={`high-risk-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {highRiskLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total high risk loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {highRiskLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.highRiskLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-high-risk-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.highRiskLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="High risk loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${highRiskLoansRatioChart.width} ${highRiskLoansRatioChart.height}`}
+                                  width={highRiskLoansRatioChart.width}
+                                  height={highRiskLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {highRiskLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {highRiskLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`high-risk-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No high risk loan data available.</p>
                         )}
@@ -4805,57 +5033,116 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>
                           Construction &amp; land development to Tier 1
                         </h4>
-                        <p className={styles.lineChartSubhead}>Construction exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total construction and land development loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {constructionLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(constructionLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.constructionLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.constructionLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.constructionLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.constructionLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.constructionLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Construction and land development loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.constructionLoans.values.map((point) => (
-                              <div
-                                key={`construction-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {constructionLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total construction and land development loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {constructionLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.constructionLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-construction-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.constructionLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Construction and land development loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${constructionLoansRatioChart.width} ${constructionLoansRatioChart.height}`}
+                                  width={constructionLoansRatioChart.width}
+                                  height={constructionLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {constructionLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {constructionLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`construction-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No construction loan data available.</p>
                         )}
@@ -4875,51 +5162,7 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-                </div>
-              </section>
-              <section
-                className={`${styles.chartSection} ${styles.printOnly} ${styles.printPageBreak}`}
-              >
-                {capitalMetrics}
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <p className={styles.chartKicker}>Trend lines</p>
-                    <h3 className={styles.sectionTitle}>Capital ratio trends</h3>
-                  </div>
-                  <div className={styles.sectionHeaderMeta}>
-                    <p className={styles.chartHint}>Values shown are percentages</p>
-                    <div
-                      className={styles.chartViewToggle}
-                      role="group"
-                      aria-label="Capital quarter range"
-                    >
-                      <button
-                        type="button"
-                        className={`${styles.chartViewButton} ${
-                          capitalView === 'latest' ? styles.chartViewButtonActive : ''
-                        }`}
-                        onClick={() => setCapitalView('latest')}
-                        aria-pressed={capitalView === 'latest'}
-                      >
-                        Latest 9
-                      </button>
-                      <button
-                        type="button"
-                        className={`${styles.chartViewButton} ${
-                          capitalView === 'latest4' ? styles.chartViewButtonActive : ''
-                        }`}
-                        onClick={() => setCapitalView('latest4')}
-                        aria-pressed={capitalView === 'latest4'}
-                      >
-                        Latest 4 Qtrs
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={`${styles.chartGrid} ${styles.capitalChartGrid}`}>
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>
@@ -5400,49 +5643,110 @@ export default function Home() {
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>Consumer loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Household credit share</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total consumer loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {consumerLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(consumerLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.consumerLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.consumerLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.consumerLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.consumerLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.consumerLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Consumer loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.consumerLoans.values.map((point) => (
-                              <div
-                                key={`consumer-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {consumerLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total consumer loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {consumerLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.consumerLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-consumer-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.consumerLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Consumer loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${consumerLoansRatioChart.width} ${consumerLoansRatioChart.height}`}
+                                  width={consumerLoansRatioChart.width}
+                                  height={consumerLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {consumerLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`consumer-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {consumerLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`consumer-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No consumer loan data available.</p>
                         )}
@@ -5462,9 +5766,7 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>Commercial real estate loans to Tier 1</h4>
@@ -5595,49 +5897,110 @@ export default function Home() {
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>High risk loans to Tier 1</h4>
-                        <p className={styles.lineChartSubhead}>Risk-weighted exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total high risk loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {highRiskLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(highRiskLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.highRiskLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.highRiskLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.highRiskLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.highRiskLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.highRiskLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="High risk loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.highRiskLoans.values.map((point) => (
-                              <div
-                                key={`high-risk-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {highRiskLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total high risk loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {highRiskLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.highRiskLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-high-risk-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.highRiskLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="High risk loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${highRiskLoansRatioChart.width} ${highRiskLoansRatioChart.height}`}
+                                  width={highRiskLoansRatioChart.width}
+                                  height={highRiskLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {highRiskLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {highRiskLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`high-risk-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
                           <p className={styles.status}>No high risk loan data available.</p>
                         )}
@@ -5657,61 +6020,118 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
-                  </div>
-
-                  <div className={styles.chartCard}>
+                  </div>                  <div className={styles.chartCard}>
                     <div className={styles.lineChartBlock}>
                       <div className={styles.lineChartHeader}>
                         <h4 className={styles.lineChartTitle}>
                           Construction &amp; land development to Tier 1
                         </h4>
-                        <p className={styles.lineChartSubhead}>Construction exposure</p>
+                        <p className={styles.lineChartSubhead}>
+                          Ratio trend with total construction and land development loans
+                        </p>
                       </div>
                       <div className={styles.lineChartBody}>
-                        <span className={styles.lineChartYAxis}>Percent</span>
+                        <span className={styles.lineChartYAxis}>Thousands</span>
+                        <span className={styles.lineChartYAxisRight}>Percent</span>
+                        {constructionLoansStackedData.max > 0 && (
+                          <>
+                            <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                              {formatNumber(constructionLoansStackedData.max)}
+                            </span>
+                            <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                              0
+                            </span>
+                          </>
+                        )}
                         {capitalColumnData.constructionLoans.max != null && (
-                          <span className={styles.lineChartTick} style={{ top: '12%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '12%' }}>
                             {formatPercentage(capitalColumnData.constructionLoans.max)}
                           </span>
                         )}
                         {capitalColumnData.constructionLoans.min != null && (
-                          <span className={styles.lineChartTick} style={{ top: '88%' }}>
+                          <span className={styles.lineChartTickRight} style={{ top: '88%' }}>
                             {formatPercentage(capitalColumnData.constructionLoans.min)}
                           </span>
                         )}
-                        {capitalColumnData.constructionLoans.hasData ? (
-                          <div
-                            className={styles.columnChartGrid}
-                            role="img"
-                            aria-label="Construction and land development loans to Tier 1 capital column chart"
-                            style={{
-                              gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
-                              minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
-                            }}
-                          >
-                            {capitalColumnData.constructionLoans.values.map((point) => (
-                              <div
-                                key={`construction-loans-${point.label}`}
-                                className={styles.columnChartBarWrapper}
-                                title={
-                                  point.value == null
-                                    ? `${point.label}: N/A`
-                                    : `${point.label}: ${formatPercentage(point.value)}`
-                                }
-                              >
+                        {constructionLoansStackedData.hasData ? (
+                          <>
+                            <div
+                              className={styles.columnChartGrid}
+                              role="img"
+                              aria-label="Total construction and land development loans stacked column chart"
+                              style={{
+                                gridTemplateColumns: `repeat(${capitalViewSeries.length}, minmax(0, ${capitalColumnWidth}px))`,
+                                minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                              }}
+                            >
+                              {constructionLoansStackedData.values.map((point) => (
                                 <div
-                                  className={`${styles.columnChartBar} ${styles.constructionLoansColumnBar} ${
-                                    point.value == null ? styles.columnChartBarEmpty : ''
-                                  }`}
-                                  style={{ height: `${point.percentage}%` }}
-                                />
+                                  key={`total-construction-loans-${point.label}`}
+                                  className={styles.columnChartBarWrapper}
+                                  title={
+                                    point.total == null
+                                      ? `${point.label}: N/A`
+                                      : `${point.label}: ${formatNumber(point.total)}`
+                                  }
+                                >
+                                  <div
+                                    className={`${styles.stackedColumnBar} ${
+                                      point.total == null ? styles.stackedColumnBarEmpty : ''
+                                    }`}
+                                  >
+                                    <div
+                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      style={{ height: `${point.totalPercent}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {capitalColumnData.constructionLoans.hasData && (
+                              <div
+                                className={`${styles.ratioLineChartWrapper} ${styles.ratioLineChartOverlay}`}
+                                aria-hidden="true"
+                                style={{
+                                  minWidth: getAxisMinWidth(capitalViewSeries.length, capitalColumnWidth),
+                                }}
+                              >
+                                <svg
+                                  className={styles.ratioLineChart}
+                                  role="img"
+                                  aria-label="Construction and land development loans to Tier 1 ratio line chart"
+                                  viewBox={`0 0 ${constructionLoansRatioChart.width} ${constructionLoansRatioChart.height}`}
+                                  width={constructionLoansRatioChart.width}
+                                  height={constructionLoansRatioChart.height}
+                                  preserveAspectRatio="none"
+                                >
+                                  {constructionLoansRatioChart.segments.map((segment) => (
+                                    <polyline
+                                      key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
+                                      className={styles.ratioLine}
+                                      points={segment
+                                        .map((point) => `${point.x},${point.y}`)
+                                        .join(' ')}
+                                    />
+                                  ))}
+                                  {constructionLoansRatioChart.points.map((point) =>
+                                    point ? (
+                                      <circle
+                                        key={`construction-loans-dot-${point.label}`}
+                                        className={styles.ratioLineDot}
+                                        cx={point.x}
+                                        cy={point.y}
+                                        r="4"
+                                      >
+                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                      </circle>
+                                    ) : null,
+                                  )}
+                                </svg>
                               </div>
-                            ))}
-                          </div>
+                            )}
+                          </>
                         ) : (
-                          <p className={styles.status}>
-                            No construction loan data available.
-                          </p>
+                          <p className={styles.status}>No construction loan data available.</p>
                         )}
                       </div>
                       <div
