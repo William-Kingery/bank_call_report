@@ -4456,7 +4456,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.ciStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -4483,7 +4483,7 @@ export default function Home() {
                                   {ciLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.ciRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4493,7 +4493,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`ci-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.ciRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4964,7 +4964,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.highRiskStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -4991,7 +4991,7 @@ export default function Home() {
                                   {highRiskLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.highRiskRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5001,7 +5001,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`high-risk-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.highRiskRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5441,7 +5441,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.ciStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -5468,7 +5468,7 @@ export default function Home() {
                                   {ciLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.ciRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5478,7 +5478,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`ci-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.ciRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5951,7 +5951,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.highRiskStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -5978,7 +5978,7 @@ export default function Home() {
                                   {highRiskLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.highRiskRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5988,7 +5988,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`high-risk-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.highRiskRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"

@@ -1317,6 +1317,32 @@
   stroke: #374151;
 }
 
+.ciRatioLine {
+  stroke: #16a34a;
+  filter: drop-shadow(0 6px 10px rgba(22, 163, 74, 0.32));
+}
+
+.ciRatioLineDot {
+  stroke: #16a34a;
+}
+
+.highRiskRatioLine {
+  stroke: #dc2626;
+  filter: drop-shadow(0 6px 10px rgba(220, 38, 38, 0.32));
+}
+
+.highRiskRatioLineDot {
+  stroke: #dc2626;
+}
+
+.ciStackedSegment {
+  background: linear-gradient(180deg, #4ade80, #16a34a);
+}
+
+.highRiskStackedSegment {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.5rem;
