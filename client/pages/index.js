@@ -4583,7 +4583,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -4610,7 +4610,7 @@ export default function Home() {
                                   {reLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`re-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4620,7 +4620,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`re-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -4710,7 +4710,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -4737,7 +4737,7 @@ export default function Home() {
                                   {commercialRealEstateLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`commercial-real-estate-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4747,7 +4747,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`commercial-real-estate-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5093,7 +5093,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -5120,7 +5120,7 @@ export default function Home() {
                                   {constructionLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5130,7 +5130,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`construction-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5570,7 +5570,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -5597,7 +5597,7 @@ export default function Home() {
                                   {reLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`re-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5607,7 +5607,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`re-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -5824,7 +5824,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -5851,7 +5851,7 @@ export default function Home() {
                                   {commercialRealEstateLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`commercial-real-estate-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5861,7 +5861,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`commercial-real-estate-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
@@ -6080,7 +6080,7 @@ export default function Home() {
                                     }`}
                                   >
                                     <div
-                                      className={`${styles.stackedSegment} ${styles.stackedSegmentRbct1}`}
+                                      className={`${styles.stackedSegment} ${styles.orangeStackedSegment}`}
                                       style={{ height: `${point.totalPercent}%` }}
                                     />
                                   </div>
@@ -6107,7 +6107,7 @@ export default function Home() {
                                   {constructionLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`construction-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={styles.ratioLine}
+                                      className={`${styles.ratioLine} ${styles.orangeRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -6117,7 +6117,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`construction-loans-dot-${point.label}`}
-                                        className={styles.ratioLineDot}
+                                        className={`${styles.ratioLineDot} ${styles.orangeRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"

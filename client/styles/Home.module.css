@@ -1295,6 +1295,19 @@
   stroke: #64748b;
 }
 
+.orangeRatioLine {
+  stroke: #f97316;
+  filter: drop-shadow(0 6px 10px rgba(249, 115, 22, 0.32));
+}
+
+.orangeRatioLineDot {
+  stroke: #f97316;
+}
+
+.orangeStackedSegment {
+  background: linear-gradient(180deg, #fb923c, #ea580c);
+}
+
 .lineChartYAxis {
   position: absolute;
   left: 0.5rem;
