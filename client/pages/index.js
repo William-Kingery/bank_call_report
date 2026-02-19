@@ -5162,6 +5162,7 @@ export default function Home() {
                       </div>
                       <p className={styles.chartXAxisLabel}>Quarter</p>
                     </div>
+                  </div>
                 </div>
               </section>
             </div>
