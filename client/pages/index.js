@@ -4483,7 +4483,7 @@ export default function Home() {
                                   {ciLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`ci-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.ciRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -4493,7 +4493,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`ci-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.ciRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
