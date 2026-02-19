@@ -235,8 +235,16 @@ export default function Home() {
 
   const formatNumber = (value) =>
     value === null || value === undefined ? 'N/A' : Number(value).toLocaleString('en-US');
-  const formatPercentage = (value) =>
-    value === null || value === undefined ? 'N/A' : `${Number.parseFloat(value).toFixed(2)}%`;
+  const formatPercentage = (value) => {
+    if (value === null || value === undefined) return 'N/A';
+
+    const numericValue = Number.parseFloat(value);
+    if (!Number.isFinite(numericValue)) return 'N/A';
+
+    const absoluteValue = Math.abs(numericValue);
+    const digits = absoluteValue > 0 && absoluteValue < 0.01 ? 4 : 2;
+    return `${numericValue.toFixed(digits)}%`;
+  };
   const formatScore = (value) => {
     if (value === null || value === undefined) return 'N/A';
 
