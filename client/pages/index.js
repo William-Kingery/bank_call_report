@@ -4991,7 +4991,7 @@ export default function Home() {
                                   {highRiskLoansRatioChart.segments.map((segment) => (
                                     <polyline
                                       key={`high-risk-loans-segment-${segment[0].label}-${segment[segment.length - 1].label}`}
-                                      className={`${styles.ratioLine} ${styles.highRiskRatioLine}`}
+                                      className={`${styles.ratioLine} ${styles.capitalRatioLine}`}
                                       points={segment
                                         .map((point) => `${point.x},${point.y}`)
                                         .join(' ')}
@@ -5001,7 +5001,7 @@ export default function Home() {
                                     point ? (
                                       <circle
                                         key={`high-risk-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.highRiskRatioLineDot}`}
+                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
                                         cx={point.x}
                                         cy={point.y}
                                         r="4"
