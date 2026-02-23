@@ -390,13 +390,18 @@ export default function Home() {
         Number.isFinite(Number(point.rwa)) && Number.isFinite(Number(point.rbct1))
           ? (Number(point.rwa) * Number(point.rbct1)) / 100
           : null;
+      const totalTier1CapitalValue = Number(point.totalTier1Capital);
       const commercialRealEstateLoansValue = Number(point.LNCOMRE);
       const totalCommercialRealEstateLoansValue = Number(point.LNCOMRE);
       const commercialRealEstateLoansRatio =
         Number.isFinite(commercialRealEstateLoansValue) &&
-        Number.isFinite(tier1CapitalAmount) &&
-        tier1CapitalAmount > 0
-          ? (commercialRealEstateLoansValue / tier1CapitalAmount) * 100
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (commercialRealEstateLoansValue / totalTier1CapitalValue) * 100
+          : Number.isFinite(commercialRealEstateLoansValue) &&
+              Number.isFinite(tier1CapitalAmount) &&
+              tier1CapitalAmount > 0
+            ? (commercialRealEstateLoansValue / tier1CapitalAmount) * 100
           : null;
       const highRiskLoansValue = Number(point.lnhrskr);
       const totalHighRiskLoansValue =
