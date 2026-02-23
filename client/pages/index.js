@@ -102,6 +102,7 @@ export default function Home() {
         consumerLoans: [],
         highRiskLoans: [],
         constructionLoans: [],
+        commercialRealEstateLoans: [],
       };
     }
 
@@ -117,6 +118,7 @@ export default function Home() {
       consumerLoans: buildSeries('lncont1r'),
       highRiskLoans: buildSeries('lnhrskr'),
       constructionLoans: buildSeries('lncdt1r'),
+      commercialRealEstateLoans: buildSeries('lnret1r'),
     };
   }, [filteredPoints]);
 
@@ -135,6 +137,10 @@ export default function Home() {
   );
   const maxConstructionLoans = useMemo(
     () => getMaxValue(capitalSeries.constructionLoans),
+    [capitalSeries]
+  );
+  const maxCommercialRealEstateLoans = useMemo(
+    () => getMaxValue(capitalSeries.commercialRealEstateLoans),
     [capitalSeries]
   );
 
@@ -546,6 +552,17 @@ export default function Home() {
                     <ColumnChart
                       series={capitalSeries.constructionLoans}
                       maxValue={maxConstructionLoans}
+                      formatLabel={formatQuarterLabel}
+                      formatValue={formatPercentage}
+                    />
+                  </div>
+                  <div className={styles.capitalCard}>
+                    <p className={styles.chartTitle}>
+                      Commercial Real Estate Loans to Total Tier 1 Capital trend
+                    </p>
+                    <ColumnChart
+                      series={capitalSeries.commercialRealEstateLoans}
+                      maxValue={maxCommercialRealEstateLoans}
                       formatLabel={formatQuarterLabel}
                       formatValue={formatPercentage}
                     />
