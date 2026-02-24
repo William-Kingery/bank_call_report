@@ -548,70 +548,58 @@ const NationalAverages = () => {
   }, [selectedQuarterValue, summaryRows]);
 
   const renderFilterControls = () => (
-    <div className={styles.filterControls}>
-      <label className={styles.selectLabel}>
-        Qtr by Year
-        <select
-          className={styles.select}
-          value={selectedPeriod}
-          onChange={(event) => setSelectedPeriod(event.target.value)}
-          disabled={!availableQuarters.length}
-        >
-          <optgroup label="Quarterly">
-            {availableQuarters.map((option) => (
-              <option key={option} value={`quarter:${option}`}>
-                {formatQuarter(option)}
-              </option>
-            ))}
-          </optgroup>
-        </select>
-      </label>
-      <label className={styles.selectLabel}>
-        Portfolio view
-        <select
-          className={styles.select}
-          value={selectedPortfolio}
-          onChange={(event) => setSelectedPortfolio(event.target.value)}
-        >
-          {BENCHMARK_PORTFOLIOS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={styles.selectLabel}>
-        Region
-        <select
-          className={styles.select}
-          value={selectedRegion}
-          onChange={(event) => setSelectedRegion(event.target.value)}
-        >
-          {REGION_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={styles.selectLabel}>
-        Map metric
-        <select
-          className={styles.select}
-          value={selectedMapMetric}
-          onChange={(event) => setSelectedMapMetric(event.target.value)}
-        >
-          {MAP_METRICS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className={styles.controlPanel}>
       <div className={styles.printControlGroup}>
         <button className={styles.printButton} type="button" onClick={handlePrint}>
           Print chart + table
         </button>
+      </div>
+      <div className={styles.filterControls}>
+        <label className={styles.selectLabel}>
+          Qtr by Year
+          <select
+            className={styles.select}
+            value={selectedPeriod}
+            onChange={(event) => setSelectedPeriod(event.target.value)}
+            disabled={!availableQuarters.length}
+          >
+            <optgroup label="Quarterly">
+              {availableQuarters.map((option) => (
+                <option key={option} value={`quarter:${option}`}>
+                  {formatQuarter(option)}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Portfolio view
+          <select
+            className={styles.select}
+            value={selectedPortfolio}
+            onChange={(event) => setSelectedPortfolio(event.target.value)}
+          >
+            {BENCHMARK_PORTFOLIOS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Region
+          <select
+            className={styles.select}
+            value={selectedRegion}
+            onChange={(event) => setSelectedRegion(event.target.value)}
+          >
+            {REGION_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className={styles.selectLabel}>
           FRB District
           <select
@@ -622,6 +610,20 @@ const NationalAverages = () => {
             {FRB_DISTRICT_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Map metric
+          <select
+            className={styles.select}
+            value={selectedMapMetric}
+            onChange={(event) => setSelectedMapMetric(event.target.value)}
+          >
+            {MAP_METRICS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
