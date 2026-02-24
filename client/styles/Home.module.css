@@ -1319,7 +1319,7 @@
 
 .ratioValueLabel {
   fill: var(--terminal-text);
-  font-size: 0.7rem;
+  font-size: 0.45rem;
   font-weight: 400;
   pointer-events: none;
   paint-order: stroke;
