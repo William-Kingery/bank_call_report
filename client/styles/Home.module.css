@@ -1318,9 +1318,9 @@
 }
 
 .ratioValueLabel {
-  fill: #1f2937;
-  font-size: 0.52rem;
-  font-weight: 600;
+  fill: var(--terminal-text);
+  font-size: 0.7rem;
+  font-weight: 400;
   pointer-events: none;
   paint-order: stroke;
   stroke: #ffffff;
