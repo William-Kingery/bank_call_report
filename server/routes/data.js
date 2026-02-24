@@ -498,6 +498,7 @@ router.get('/charts', async (req, res) => {
          f.LNDEP AS LNDEP,
          f.LNOTHER AS LNOTHER,
          f.LNCOMRE AS LNCOMRE,
+         f.RBCT1W AS totalTier1Capital,
          f.LNRE AS LNRE,
          f.LNCON AS LNCON,
          f.EQ AS eq,

@@ -379,34 +379,50 @@ export default function Home() {
 
     return buildQuarterSeries(sortedPoints, (point) => {
       const tangibleEquityValue = Number(point.eqtanqta);
-      const ciLoansValue = Number(point.lncit1r);
       const totalCiLoansValue = Number(point.LNCI);
-      const reLoansValue = Number(point.lnrert1r);
       const totalReLoansValue = Number(point.LNRE);
-      const consumerLoansValue = Number(point.lncont1r);
       const totalConsumerLoansValue = Number(point.LNCON);
       const totalTangibleEquityValue = Number(point.eq);
-      const tier1CapitalAmount =
-        Number.isFinite(Number(point.rwa)) && Number.isFinite(Number(point.rbct1))
-          ? (Number(point.rwa) * Number(point.rbct1)) / 100
-          : null;
+      const totalTier1CapitalValue = Number(point.totalTier1Capital);
       const commercialRealEstateLoansValue = Number(point.LNCOMRE);
       const totalCommercialRealEstateLoansValue = Number(point.LNCOMRE);
+      const ciLoansRatio =
+        Number.isFinite(totalCiLoansValue) &&
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (totalCiLoansValue / totalTier1CapitalValue) * 100
+          : null;
+      const reLoansRatio =
+        Number.isFinite(totalReLoansValue) &&
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (totalReLoansValue / totalTier1CapitalValue) * 100
+          : null;
+      const consumerLoansRatio =
+        Number.isFinite(totalConsumerLoansValue) &&
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (totalConsumerLoansValue / totalTier1CapitalValue) * 100
+          : null;
       const commercialRealEstateLoansRatio =
         Number.isFinite(commercialRealEstateLoansValue) &&
-        Number.isFinite(tier1CapitalAmount) &&
-        tier1CapitalAmount > 0
-          ? (commercialRealEstateLoansValue / tier1CapitalAmount) * 100
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (commercialRealEstateLoansValue / totalTier1CapitalValue) * 100
           : null;
       const highRiskLoansValue = Number(point.lnhrskr);
       const totalHighRiskLoansValue =
-        Number.isFinite(highRiskLoansValue) && Number.isFinite(tier1CapitalAmount)
-          ? (highRiskLoansValue / 100) * tier1CapitalAmount
+        Number.isFinite(highRiskLoansValue) &&
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (highRiskLoansValue / 100) * totalTier1CapitalValue
           : null;
       const constructionLoansValue = Number(point.lncdt1r);
       const totalConstructionLoansValue =
-        Number.isFinite(constructionLoansValue) && Number.isFinite(tier1CapitalAmount)
-          ? (constructionLoansValue / 100) * tier1CapitalAmount
+        Number.isFinite(constructionLoansValue) &&
+        Number.isFinite(totalTier1CapitalValue) &&
+        totalTier1CapitalValue > 0
+          ? (constructionLoansValue / 100) * totalTier1CapitalValue
           : null;
       const rbct1Value = Number(point.rbct1);
       const rbct2Value = Number(point.rbct2);
@@ -415,11 +431,11 @@ export default function Home() {
         callym: point.callym,
         label: formatQuarterLabel(point.callym),
         tangibleEquityRatio: Number.isFinite(tangibleEquityValue) ? tangibleEquityValue : null,
-        ciLoansRatio: Number.isFinite(ciLoansValue) ? ciLoansValue : null,
+        ciLoansRatio,
         totalCiLoans: Number.isFinite(totalCiLoansValue) ? totalCiLoansValue : null,
-        reLoansRatio: Number.isFinite(reLoansValue) ? reLoansValue : null,
+        reLoansRatio,
         totalReLoans: Number.isFinite(totalReLoansValue) ? totalReLoansValue : null,
-        consumerLoansRatio: Number.isFinite(consumerLoansValue) ? consumerLoansValue : null,
+        consumerLoansRatio,
         totalConsumerLoans: Number.isFinite(totalConsumerLoansValue) ? totalConsumerLoansValue : null,
         totalTangibleEquity: Number.isFinite(totalTangibleEquityValue)
           ? totalTangibleEquityValue
@@ -4272,15 +4288,24 @@ export default function Home() {
                                   ))}
                                   {tangibleEquityRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`tangible-equity-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`tangible-equity-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -4491,15 +4516,24 @@ export default function Home() {
                                   ))}
                                   {ciLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`ci-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`ci-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -4618,15 +4652,24 @@ export default function Home() {
                                   ))}
                                   {reLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`re-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`re-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -4745,15 +4788,24 @@ export default function Home() {
                                   ))}
                                   {commercialRealEstateLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`commercial-real-estate-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`commercial-real-estate-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -4872,15 +4924,24 @@ export default function Home() {
                                   ))}
                                   {consumerLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`consumer-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`consumer-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -4999,15 +5060,24 @@ export default function Home() {
                                   ))}
                                   {highRiskLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`high-risk-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`high-risk-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
@@ -5128,15 +5198,24 @@ export default function Home() {
                                   ))}
                                   {constructionLoansRatioChart.points.map((point) =>
                                     point ? (
-                                      <circle
-                                        key={`construction-loans-dot-${point.label}`}
-                                        className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
-                                        cx={point.x}
-                                        cy={point.y}
-                                        r="4"
-                                      >
-                                        <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
-                                      </circle>
+                                      <g key={`construction-loans-value-${point.label}`}>
+                                        <circle
+                                          className={`${styles.ratioLineDot} ${styles.capitalRatioLineDot}`}
+                                          cx={point.x}
+                                          cy={point.y}
+                                          r="4"
+                                        >
+                                          <title>{`${point.label}: ${formatPercentage(point.value)}`}</title>
+                                        </circle>
+                                        <text
+                                          className={`${styles.ratioValueLabel} ${styles.capitalRatioValueLabel}`}
+                                          x={point.x}
+                                          y={Math.max(point.y - 8, 12)}
+                                          textAnchor="middle"
+                                        >
+                                          {formatPercentage(point.value)}
+                                        </text>
+                                      </g>
                                     ) : null,
                                   )}
                                 </svg>
