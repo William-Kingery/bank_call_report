@@ -1317,6 +1317,21 @@
   stroke: #374151;
 }
 
+.ratioValueLabel {
+  fill: #1f2937;
+  font-size: 0.62rem;
+  font-weight: 700;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+}
+
+.capitalRatioValueLabel {
+  fill: #111827;
+}
+
 .ciRatioLine {
   stroke: #16a34a;
   filter: drop-shadow(0 6px 10px rgba(22, 163, 74, 0.32));
