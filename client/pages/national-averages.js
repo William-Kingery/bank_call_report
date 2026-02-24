@@ -177,24 +177,30 @@ const formatPercentage = (value) => {
   return `${value.toFixed(2)}%`;
 };
 
-const getTileFill = (value) => {
+const getTileFill = (value, minValue, maxValue) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
   }
   const shades = ['#facc15', '#fb923c', '#3b82f6', '#166534'];
-  const billions = value / 1_000_000;
-
-  if (billions < 500) {
-    return shades[0];
-  }
-  if (billions < 1000) {
-    return shades[1];
-  }
-  if (billions < 2500) {
+  if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || maxValue <= minValue) {
     return shades[2];
   }
+  const ratio = (value - minValue) / (maxValue - minValue);
+  if (ratio < 0.25) return shades[0];
+  if (ratio < 0.5) return shades[1];
+  if (ratio < 0.75) return shades[2];
   return shades[3];
 };
+
+const MAP_METRICS = [
+  { value: 'totalAssets', label: 'Assets', formatter: formatCurrency, type: 'total' },
+  { value: 'totalLiabilities', label: 'Liabilities', formatter: formatCurrency, type: 'total' },
+  { value: 'totalDeposits', label: 'Deposits', formatter: formatCurrency, type: 'total' },
+  { value: 'totalEquity', label: 'Equity', formatter: formatCurrency, type: 'total' },
+  { value: 'avgNim', label: 'nIM', formatter: formatPercentage, type: 'average' },
+  { value: 'avgRoa', label: 'ROA', formatter: formatPercentage, type: 'average' },
+  { value: 'avgRoe', label: 'ROE', formatter: formatPercentage, type: 'average' },
+];
 
 const NationalAverages = () => {
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
@@ -203,6 +209,7 @@ const NationalAverages = () => {
   const [availableQuarters, setAvailableQuarters] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [stateAssets, setStateAssets] = useState([]);
+  const [selectedMapMetric, setSelectedMapMetric] = useState('totalAssets');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [summaryRows, setSummaryRows] = useState([]);
@@ -468,14 +475,17 @@ const NationalAverages = () => {
     return () => controller.abort();
   }, [selectedPortfolio, selectedPeriod]);
 
+  const selectedMapMetricConfig =
+    MAP_METRICS.find((metric) => metric.value === selectedMapMetric) ?? MAP_METRICS[0];
+
   const stateAssetMap = useMemo(() => {
     return stateAssets.reduce((acc, item) => {
       if (item.stateName) {
-        acc[item.stateName] = Number(item.totalAssets);
+        acc[item.stateName] = Number(item[selectedMapMetricConfig.value]);
       }
       return acc;
     }, {});
-  }, [stateAssets]);
+  }, [selectedMapMetricConfig.value, stateAssets]);
 
   const isStateInRegion =
     selectedRegion === 'All Regions'
@@ -490,18 +500,25 @@ const NationalAverages = () => {
   const isStateVisible = (stateName) =>
     isStateInRegion(stateName) && isStateInDistrict(stateName);
 
-  const assetValues = stateAssets
+  const metricValues = stateAssets
     .filter((item) => isStateVisible(item.stateName))
-    .map((item) => Number(item.totalAssets))
+    .map((item) => Number(item[selectedMapMetricConfig.value]))
     .filter(Number.isFinite);
-  const minAsset = assetValues.length ? Math.min(...assetValues) : 0;
-  const maxAsset = assetValues.length ? Math.max(...assetValues) : 0;
-  const totalAssets = stateAssets
+  const minAsset = metricValues.length ? Math.min(...metricValues) : 0;
+  const maxAsset = metricValues.length ? Math.max(...metricValues) : 0;
+  const metricSummaryValue = stateAssets
     .filter((item) => isStateVisible(item.stateName))
-    .reduce((sum, item) => {
-      const value = Number(item.totalAssets);
-      return Number.isFinite(value) ? sum + value : sum;
-    }, 0);
+    .reduce(
+      (acc, item) => {
+        const value = Number(item[selectedMapMetricConfig.value]);
+        if (Number.isFinite(value)) {
+          acc.total += value;
+          acc.count += 1;
+        }
+        return acc;
+      },
+      { total: 0, count: 0 }
+    );
   const totalAssetsLabelParts = [];
   if (selectedRegion !== 'All Regions') {
     totalAssetsLabelParts.push(`${selectedRegion} region`);
@@ -512,6 +529,14 @@ const NationalAverages = () => {
   const totalAssetsLabel = totalAssetsLabelParts.length
     ? totalAssetsLabelParts.join(', ')
     : 'All regions';
+  const summaryLabelPrefix =
+    selectedMapMetricConfig.type === 'average' ? 'Average' : 'Total';
+  const summaryValue =
+    selectedMapMetricConfig.type === 'average'
+      ? metricSummaryValue.count
+        ? metricSummaryValue.total / metricSummaryValue.count
+        : NaN
+      : metricSummaryValue.total;
 
   const selectedQuarterValue = selectedPeriod ? selectedPeriod.split(':')[1] : '';
 
@@ -523,56 +548,58 @@ const NationalAverages = () => {
   }, [selectedQuarterValue, summaryRows]);
 
   const renderFilterControls = () => (
-    <div className={styles.filterControls}>
-      <label className={styles.selectLabel}>
-        Qtr by Year
-        <select
-          className={styles.select}
-          value={selectedPeriod}
-          onChange={(event) => setSelectedPeriod(event.target.value)}
-          disabled={!availableQuarters.length}
-        >
-          <optgroup label="Quarterly">
-            {availableQuarters.map((option) => (
-              <option key={option} value={`quarter:${option}`}>
-                {formatQuarter(option)}
-              </option>
-            ))}
-          </optgroup>
-        </select>
-      </label>
-      <label className={styles.selectLabel}>
-        Portfolio view
-        <select
-          className={styles.select}
-          value={selectedPortfolio}
-          onChange={(event) => setSelectedPortfolio(event.target.value)}
-        >
-          {BENCHMARK_PORTFOLIOS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={styles.selectLabel}>
-        Region
-        <select
-          className={styles.select}
-          value={selectedRegion}
-          onChange={(event) => setSelectedRegion(event.target.value)}
-        >
-          {REGION_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
+    <div className={styles.controlPanel}>
       <div className={styles.printControlGroup}>
         <button className={styles.printButton} type="button" onClick={handlePrint}>
           Print chart + table
         </button>
+      </div>
+      <div className={styles.filterControls}>
+        <label className={styles.selectLabel}>
+          Qtr by Year
+          <select
+            className={styles.select}
+            value={selectedPeriod}
+            onChange={(event) => setSelectedPeriod(event.target.value)}
+            disabled={!availableQuarters.length}
+          >
+            <optgroup label="Quarterly">
+              {availableQuarters.map((option) => (
+                <option key={option} value={`quarter:${option}`}>
+                  {formatQuarter(option)}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Portfolio view
+          <select
+            className={styles.select}
+            value={selectedPortfolio}
+            onChange={(event) => setSelectedPortfolio(event.target.value)}
+          >
+            {BENCHMARK_PORTFOLIOS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Region
+          <select
+            className={styles.select}
+            value={selectedRegion}
+            onChange={(event) => setSelectedRegion(event.target.value)}
+          >
+            {REGION_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className={styles.selectLabel}>
           FRB District
           <select
@@ -583,6 +610,20 @@ const NationalAverages = () => {
             {FRB_DISTRICT_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={styles.selectLabel}>
+          Map metric
+          <select
+            className={styles.select}
+            value={selectedMapMetric}
+            onChange={(event) => setSelectedMapMetric(event.target.value)}
+          >
+            {MAP_METRICS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
               </option>
             ))}
           </select>
@@ -622,7 +663,7 @@ const NationalAverages = () => {
             <p className={styles.sectionKicker}>Latest assets by state</p>
             <h2 className={styles.sectionTitle}>US Nation-wide Banking</h2>
             <p className={styles.sectionSubtitle}>
-              Total Summary for each State for the selected period
+              State-level totals and profitability averages for the selected period
             </p>
           </div>
           {renderFilterControls()}
@@ -644,9 +685,11 @@ const NationalAverages = () => {
           <div className={styles.legend}>
             <div className={styles.legendSummary}>
               <span className={styles.legendSummaryLabel}>
-                Total assets ({totalAssetsLabel})
+                {summaryLabelPrefix} {selectedMapMetricConfig.label} ({totalAssetsLabel})
               </span>
-              <span className={styles.legendSummaryValue}>{formatCurrency(totalAssets)}</span>
+              <span className={styles.legendSummaryValue}>
+                {selectedMapMetricConfig.formatter(summaryValue)}
+              </span>
             </div>
             <div className={styles.legendBar} />
           </div>

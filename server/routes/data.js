@@ -984,7 +984,28 @@ router.get('/state-assets', async (req, res) => {
     const [rows] = await pool.query(
       `SELECT
          s.STNAME AS stateName,
-         SUM(f.ASSET) AS totalAssets
+         SUM(f.ASSET) AS totalAssets,
+         SUM(f.LIAB) AS totalLiabilities,
+         SUM(f.DEP) AS totalDeposits,
+         SUM(f.EQ) AS totalEquity,
+         AVG(
+           CASE
+             WHEN COALESCE(c.ERNAST2, 0) = 0 THEN NULL
+             ELSE ((COALESCE(c.INTINQA, 0) - COALESCE(c.EINTXQA, 0)) / c.ERNAST2) * 100
+           END
+         ) AS avgNim,
+         AVG(
+           CASE
+             WHEN COALESCE(c.ERNAST2, 0) = 0 THEN NULL
+             ELSE (COALESCE(c.NETINCQA, 0) / c.ERNAST2) * 100
+           END
+         ) AS avgRoa,
+         AVG(
+           CASE
+             WHEN COALESCE(f.EQ, 0) = 0 THEN NULL
+             ELSE (COALESCE(c.NETINCQA, 0) / f.EQ) * 100
+           END
+         ) AS avgRoe
        FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
@@ -995,6 +1016,9 @@ router.get('/state-assets', async (req, res) => {
        JOIN fdic_structure s
          ON s.CERT = latest_structure.CERT
          AND s.CALLYM = latest_structure.callym
+       LEFT JOIN fdic_cdi c
+         ON c.CERT = f.CERT
+         AND c.CALLYM = f.CALLYM
        ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
        GROUP BY s.STNAME
        ORDER BY totalAssets DESC`,
