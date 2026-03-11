@@ -37,18 +37,24 @@ router.get('/charts', async (req, res) => {
   try {
     const [structureRows] = await pool.query(
       `SELECT
-         NAMEFULL AS nameFull,
-         CITY AS city,
-         STATENAME AS stateName,
-         ZIPCODE AS zipCode
-       FROM fdic_structure
-       WHERE CERT = ?
-       ORDER BY CALLYM DESC
+         s.NAMEFULL AS nameFull,
+         s.CITY AS city,
+         s.STATENAME AS stateName,
+         s.ZIPCODE AS zipCode,
+         b.webaddr AS webaddr,
+         b.ticker AS ticker,
+         b.BankCategories AS bankCategories
+       FROM fdic_structure s
+       LEFT JOIN BankWebAddress b
+         ON s.CERT = b.CERT
+       WHERE s.CERT = ?
+       ORDER BY s.CALLYM DESC
        LIMIT 1`,
       [cert]
     );
 
-    const { nameFull, city, stateName, zipCode } = structureRows?.[0] ?? {};
+    const { nameFull, city, stateName, zipCode, webaddr, ticker, bankCategories } =
+      structureRows?.[0] ?? {};
 
     if (!nameFull) {
       return res.status(404).json({ message: 'Bank not found' });
@@ -81,6 +87,9 @@ router.get('/charts', async (req, res) => {
       city,
       stateName,
       zipCode,
+      webaddr,
+      ticker,
+      bankCategories,
       points: seriesRows,
     });
   } catch (error) {

@@ -131,6 +131,12 @@
   color: #334155;
 }
 
+.selectionMeta {
+  margin: 0.2rem 0 0;
+  color: #1e293b;
+  font-weight: 600;
+}
+
 .selectionCert {
   font-weight: 700;
   color: #312e81;

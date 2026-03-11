@@ -284,8 +284,18 @@ export default function Home() {
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
+            {(reportData?.ticker || reportData?.bankCategories) && (
+              <p className={styles.selectionMeta}>
+                {reportData?.ticker ? `Ticker: ${reportData.ticker}` : null}
+                {reportData?.ticker && reportData?.bankCategories ? ' • ' : null}
+                {reportData?.bankCategories ? `Category: ${reportData.bankCategories}` : null}
+              </p>
+            )}
             {formattedLocation && (
               <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
+            {reportData?.webaddr && (
+              <p className={styles.selectionLocation}>Web Address: {reportData.webaddr}</p>
             )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
