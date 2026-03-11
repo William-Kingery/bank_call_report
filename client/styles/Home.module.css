@@ -340,6 +340,24 @@
   color: var(--terminal-muted);
 }
 
+.selectionMeta {
+  margin: 0.2rem 0 0;
+  color: var(--terminal-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.selectionLink {
+  color: var(--terminal-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.selectionLink:hover,
+.selectionLink:focus {
+  color: var(--terminal-text);
+}
+
 .peerGroupCount {
   margin: 0.4rem 0 0;
   display: inline-flex;

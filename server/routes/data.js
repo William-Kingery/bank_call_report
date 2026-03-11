@@ -570,12 +570,28 @@ router.get('/charts', async (req, res) => {
       [cert]
     );
 
+    const [webAddressRows] = await pool.query(
+      `SELECT
+         webaddr AS webAddress,
+         ticker AS ticker,
+         BankCategories AS bankCategory
+       FROM BankWebAddress
+       WHERE CERT = ?
+       LIMIT 1`,
+      [cert]
+    );
+
+    const { webAddress = null, ticker = null, bankCategory = null } = webAddressRows?.[0] ?? {};
+
     res.json({
       cert,
       nameFull,
       city,
       stateName,
       zipCode,
+      webAddress,
+      ticker,
+      bankCategory,
       frbDistrict: getFrbDistrict(fed),
       points: seriesRows,
       latestRat: ratRows?.[0] ?? null,

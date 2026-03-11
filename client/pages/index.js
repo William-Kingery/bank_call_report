@@ -1259,6 +1259,12 @@ export default function Home() {
     return parts.length > 0 ? parts.join(', ') : null;
   }, [reportData]);
 
+  const webAddress = reportData?.webAddress ? String(reportData.webAddress).trim() : '';
+  const normalizedWebAddress =
+    webAddress && !/^https?:\/\//i.test(webAddress) ? `https://${webAddress}` : webAddress;
+  const tickerLabel = reportData?.ticker ? String(reportData.ticker).trim() : null;
+  const bankCategoryLabel = reportData?.bankCategory ? String(reportData.bankCategory).trim() : null;
+
   const getLiabilitiesValue = (point) =>
     point?.asset != null && point?.eq != null ? point.asset - point.eq : null;
   const latestLiabilities = getLiabilitiesValue(latestPoint);
@@ -1896,8 +1902,27 @@ export default function Home() {
           <div>
             <p className={styles.selectionLabel}>Selected bank</p>
             <h2 className={styles.selectionName}>{reportData?.nameFull ?? selectedName}</h2>
+            {(tickerLabel || bankCategoryLabel) && (
+              <p className={styles.selectionMeta}>
+                {tickerLabel && <span>Ticker: {tickerLabel}</span>}
+                {tickerLabel && bankCategoryLabel && <span aria-hidden="true"> • </span>}
+                {bankCategoryLabel && <span>Category: {bankCategoryLabel}</span>}
+              </p>
+            )}
             {formattedLocation && (
               <p className={styles.selectionLocation}>{formattedLocation}</p>
+            )}
+            {normalizedWebAddress && (
+              <p className={styles.selectionLocation}>
+                <a
+                  href={normalizedWebAddress}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.selectionLink}
+                >
+                  {webAddress}
+                </a>
+              </p>
             )}
             {(segmentBankCount != null || segmentBankCountError) && (
               <p className={styles.peerGroupCount}>
