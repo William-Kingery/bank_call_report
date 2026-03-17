@@ -6,6 +6,7 @@ import pool from './db.js';
 import healthRoutes from './routes/health.js';
 import schemaRoutes from './routes/schema.js';
 import dataRoutes from './routes/data.js';
+import crmRoutes from './routes/crm.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -21,6 +22,7 @@ app.use(
 app.use(healthRoutes);
 app.use(schemaRoutes);
 app.use(dataRoutes);
+app.use('/api/crm', crmRoutes);
 
 const startServer = async () => {
   try {
