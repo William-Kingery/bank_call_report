@@ -1,131 +1,114 @@
-# Bank Call Report
+# Bank Call Report Explorer
 
-This repository includes an AWS CDK implementation for a lightweight production deployment:
+A full-stack web app for exploring FDIC call report trends by bank name.
 
-- `client` (Next.js static export) -> S3 + CloudFront
-- `server` (Express API container) -> App Runner
-- MySQL database -> Amazon RDS
-- Database credentials -> AWS Secrets Manager
+## What this app does
 
-## What Is Already Implemented
+- Search institutions by full or partial `NAMEFULL`
+- Select a bank by `CERT`
+- View quarterly performance, asset-quality, and capital metrics
+- Toggle quarter windows (`Latest 9 Qtrs` / `Latest 4 Qtrs`)
 
-- CDK app entrypoint: `infra/bin/bank-call-report.ts`
-- CDK stack resources: `infra/lib/bank-call-report-stack.ts`
-- API image build for App Runner: `server/Dockerfile`
-- Frontend static export support: `client/next.config.js`
-- API CORS env support: `server/index.js` (`CORS_ORIGIN`)
+## Tech stack
 
-## Prerequisites
+- Frontend: Next.js 14, React 18
+- Backend: Node.js, Express 4
+- Database: MySQL (`mysql2/promise`)
+- Infrastructure: AWS CDK (S3/CloudFront, App Runner, RDS, Secrets Manager)
 
-- AWS account with permissions for CDK, CloudFront, S3, App Runner, VPC, RDS, IAM, and Secrets Manager
-- AWS CLI configured locally (`aws configure`)
-- Node.js 20+
-- npm
-- AWS CDK v2 CLI
+## Repository layout
 
-Install CDK CLI if needed:
-
-```bash
-npm install -g aws-cdk
+```text
+.
+├── client/   # Next.js frontend
+├── server/   # Express API + MySQL integration
+├── infra/    # AWS CDK infrastructure
+└── docs/     # User and deployment documentation
 ```
 
-## Next Steps To Set Up CDK Deployment
+## Local development quick start
 
-1. Install dependencies for the app and infrastructure:
-
-```bash
-cd client && npm ci
-cd ../server && npm ci
-cd ../infra && npm ci
-cd ..
-```
-
-2. Bootstrap CDK in your target account/region (one-time per account/region):
+1. Install dependencies:
 
 ```bash
-cd infra
-npx cdk bootstrap
+cd server && npm install
+cd ../client && npm install
 ```
 
-3. Build frontend assets with a temporary API value for first deploy:
+2. Configure server environment variables in `server/.env`:
+
+```env
+PORT=4000
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_NAME=your_database
+CORS_ORIGIN=http://localhost:3000
+```
+
+3. (Optional) configure client API base in `client/.env.local`:
+
+```env
+NEXT_PUBLIC_API_BASE=http://localhost:4000
+```
+
+4. Run backend:
 
 ```bash
-cd ../client
-NEXT_PUBLIC_API_BASE=https://placeholder.invalid npm run build
+cd server
+npm run dev
 ```
 
-4. Deploy the stack:
+5. Run frontend:
 
 ```bash
-cd ../infra
-npx cdk deploy
+cd client
+npm run dev
 ```
 
-5. Capture stack outputs after deploy:
+6. Open:
 
-- `FrontendUrl` (CloudFront URL)
-- `ApiUrl` (App Runner URL)
-- `DatabaseEndpoint`
-- `DatabaseSecretArn`
+- Frontend: `http://localhost:3000`
+- Backend health: `http://localhost:4000/api/health`
 
-6. Rebuild the frontend with the real API URL and redeploy:
+## API endpoints
 
-```bash
-cd ../client
-NEXT_PUBLIC_API_BASE=<ApiUrl from stack output> npm run build
-cd ../infra
-npx cdk deploy
-```
+- `GET /`
+- `GET /api/health`
+- `GET /search?query=<text>`
+- `GET /charts?cert=<number>`
+- `GET /schema/tables`
+- `GET /schema/table/:tableName`
+- `GET /schema/keys`
 
-7. Validate the deployment:
-
-- Open `FrontendUrl` in a browser
-- Check backend health: `<ApiUrl>/api/health`
-- Confirm API-to-database connectivity returns `database: connected`
-
-## Data Loading Requirement
-
-The application expects FDIC tables/data in RDS:
+## Required database tables
 
 - `fdic_structure`
 - `fdic_fts`
 - `fdic_rat`
 
-Load this data into the RDS instance before using search/charts endpoints.
+## AWS CDK deployment
 
-## Optional CDK Context Overrides
+The current infrastructure implementation is in `infra/` and deploys:
 
-You can override defaults at deploy time:
+- `client` static export -> S3 + CloudFront
+- `server` container -> App Runner
+- MySQL -> Amazon RDS
+- DB credentials -> AWS Secrets Manager
 
-```bash
-npx cdk deploy -c dbName=bank_call_report -c frontendBuildPath=../client/out
-```
+Use the deployment runbook in [`infra/README.md`](./infra/README.md) and the root deployment checklist below:
 
-## Common Operations
+1. Install dependencies (`client`, `server`, `infra`)
+2. Run `cd infra && npx cdk bootstrap` (one-time per account/region)
+3. Build frontend with temporary API URL
+4. Deploy with `cd infra && npx cdk deploy`
+5. Rebuild frontend with real `ApiUrl` output and deploy again
+6. Load FDIC data into RDS
 
-Deploy updates:
+## Additional docs
 
-```bash
-cd infra
-npx cdk deploy
-```
-
-Preview changes before deploy:
-
-```bash
-cd infra
-npx cdk diff
-```
-
-Tear down stack (keeps DB snapshot):
-
-```bash
-cd infra
-npx cdk destroy
-```
-
-## Notes
-
-- RDS uses snapshot retention on deletion (`RemovalPolicy.SNAPSHOT`).
-- App Runner CORS origin is configured from the CloudFront domain by CDK.
-- If you add a custom domain later, update frontend env and CORS values accordingly.
+- User guide: [`docs/README.md`](./docs/README.md)
+- AWS hosting approach: [`docs/AWS_HOSTING_APPROACH.md`](./docs/AWS_HOSTING_APPROACH.md)
+- GitHub Actions CI/CD plan: [`docs/GITHUB_ACTIONS_CICD_SETUP.md`](./docs/GITHUB_ACTIONS_CICD_SETUP.md)
+- Post-deploy iteration roadmap: [`docs/POST_DEPLOY_ITERATIONS.md`](./docs/POST_DEPLOY_ITERATIONS.md)
