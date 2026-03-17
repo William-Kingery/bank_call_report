@@ -9,11 +9,15 @@ import dataRoutes from './routes/data.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: corsOrigins,
     credentials: true,
   })
 );

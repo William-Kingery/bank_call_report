@@ -13,4 +13,6 @@ out/
 .env
 .env.*
 
+# CDK
+cdk.out/
 
