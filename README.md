@@ -97,18 +97,12 @@ The current infrastructure implementation is in `infra/` and deploys:
 - MySQL -> Amazon RDS
 - DB credentials -> AWS Secrets Manager
 
-Use the deployment runbook in [`infra/README.md`](./infra/README.md) and the root deployment checklist below:
-
-1. Install dependencies (`client`, `server`, `infra`)
-2. Run `cd infra && npx cdk bootstrap` (one-time per account/region)
-3. Build frontend with temporary API URL
-4. Deploy with `cd infra && npx cdk deploy`
-5. Rebuild frontend with real `ApiUrl` output and deploy again
-6. Load FDIC data into RDS
+Use the dedicated deployment runbook in [`docs/CDK_DEPLOYMENT_PLAN.md`](./docs/CDK_DEPLOYMENT_PLAN.md).
 
 ## Additional docs
 
 - User guide: [`docs/README.md`](./docs/README.md)
 - AWS hosting approach: [`docs/AWS_HOSTING_APPROACH.md`](./docs/AWS_HOSTING_APPROACH.md)
+- CDK deployment plan: [`docs/CDK_DEPLOYMENT_PLAN.md`](./docs/CDK_DEPLOYMENT_PLAN.md)
 - GitHub Actions CI/CD plan: [`docs/GITHUB_ACTIONS_CICD_SETUP.md`](./docs/GITHUB_ACTIONS_CICD_SETUP.md)
 - Post-deploy iteration roadmap: [`docs/POST_DEPLOY_ITERATIONS.md`](./docs/POST_DEPLOY_ITERATIONS.md)
