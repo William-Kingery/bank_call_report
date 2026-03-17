@@ -179,9 +179,6 @@ export default function Home() {
   const [benchmarkSortOrder, setBenchmarkSortOrder] = useState('desc');
   const [liquiditySortField, setLiquiditySortField] = useState('fundingStructureScore');
   const [liquiditySortOrder, setLiquiditySortOrder] = useState('desc');
-  const [segmentBankCount, setSegmentBankCount] = useState(null);
-  const [segmentBankCountQuarter, setSegmentBankCountQuarter] = useState(null);
-  const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasSelectedBank, setHasSelectedBank] = useState(false);
@@ -1692,40 +1689,6 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    if (!selectedAssetSegment) {
-      setSegmentBankCount(null);
-      setSegmentBankCountQuarter(null);
-      setSegmentBankCountError(null);
-      return;
-    }
-
-    const fetchSegmentBankCount = async () => {
-      setSegmentBankCountError(null);
-      try {
-        const params = new URLSearchParams({
-          segment: selectedAssetSegment,
-        });
-        if (isDistrictPeerGroup && selectedDistrict) {
-          params.set('district', selectedDistrict);
-        }
-        const response = await fetch(`${API_BASE}/segment-bank-count?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error('Failed to load peer group count');
-        }
-        const data = await response.json();
-        setSegmentBankCount(data.count ?? null);
-        setSegmentBankCountQuarter(data.quarter ?? null);
-      } catch (err) {
-        setSegmentBankCountError(err.message);
-        setSegmentBankCount(null);
-        setSegmentBankCountQuarter(null);
-      }
-    };
-
-    fetchSegmentBankCount();
-  }, [isDistrictPeerGroup, selectedAssetSegment, selectedDistrict]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     if (
@@ -1928,19 +1891,7 @@ export default function Home() {
                 </a>
               </p>
             )}
-            {(segmentBankCount != null || segmentBankCountError) && (
-              <p className={styles.peerGroupCount}>
-                {segmentBankCountError
-                  ? segmentBankCountError
-                  : `Latest Quarter (${formatQuarterLabel(
-                      segmentBankCountQuarter,
-                    )}) Number of Banks within ${
-                      isDistrictPeerGroup && selectedDistrict
-                        ? `${selectedDistrict} `
-                        : ''
-                    }Peer Group: ${segmentBankCount.toLocaleString('en-US')}`}
-              </p>
-            )}
+
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
         </section>
