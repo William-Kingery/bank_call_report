@@ -1799,6 +1799,7 @@ export default function Home() {
             <Link className={styles.headerLink} href="/national-averages">
               View national averages overview
             </Link>
+            <span className={styles.headerLink}>CRM Studio</span>
             <Link className={styles.headerLink} href="/smart-pricing">
               Smart Pricing
             </Link>
