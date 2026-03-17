@@ -180,6 +180,7 @@ export default function Home() {
   const [liquiditySortField, setLiquiditySortField] = useState('fundingStructureScore');
   const [liquiditySortOrder, setLiquiditySortOrder] = useState('desc');
   const [segmentBankCount, setSegmentBankCount] = useState(null);
+  const [segmentBankCountQuarter, setSegmentBankCountQuarter] = useState(null);
   const [segmentBankCountError, setSegmentBankCountError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1693,6 +1694,7 @@ export default function Home() {
   useEffect(() => {
     if (!selectedAssetSegment) {
       setSegmentBankCount(null);
+      setSegmentBankCountQuarter(null);
       setSegmentBankCountError(null);
       return;
     }
@@ -1712,9 +1714,11 @@ export default function Home() {
         }
         const data = await response.json();
         setSegmentBankCount(data.count ?? null);
+        setSegmentBankCountQuarter(data.quarter ?? null);
       } catch (err) {
         setSegmentBankCountError(err.message);
         setSegmentBankCount(null);
+        setSegmentBankCountQuarter(null);
       }
     };
 
@@ -1928,7 +1932,9 @@ export default function Home() {
               <p className={styles.peerGroupCount}>
                 {segmentBankCountError
                   ? segmentBankCountError
-                  : `Number of Banks within ${
+                  : `Latest Quarter (${formatQuarterLabel(
+                      segmentBankCountQuarter,
+                    )}) Number of Banks within ${
                       isDistrictPeerGroup && selectedDistrict
                         ? `${selectedDistrict} `
                         : ''

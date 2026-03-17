@@ -911,6 +911,14 @@ router.get('/segment-bank-count', async (req, res) => {
 
     const conditions = ['f.ASSET IS NOT NULL'];
     const params = [];
+    const latestQuarter = await fetchLatestQuarter();
+
+    if (!latestQuarter) {
+      return res.json({ count: 0, quarter: null });
+    }
+
+    conditions.push('f.CALLYM = ?');
+    params.push(latestQuarter);
 
     if (range.min != null) {
       conditions.push('f.ASSET >= ?');
@@ -931,15 +939,8 @@ router.get('/segment-bank-count', async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT COUNT(*) AS bankCount
-       FROM (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         GROUP BY CERT
-       ) latest_fts
-       JOIN fdic_fts f
-         ON f.CERT = latest_fts.CERT
-         AND f.CALLYM = latest_fts.callym
+      `SELECT COUNT(DISTINCT f.CERT) AS bankCount
+       FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_structure
@@ -953,7 +954,7 @@ router.get('/segment-bank-count', async (req, res) => {
       params,
     );
 
-    res.json({ count: rows?.[0]?.bankCount ?? 0 });
+    res.json({ count: rows?.[0]?.bankCount ?? 0, quarter: latestQuarter });
   } catch (error) {
     console.error('Error fetching segment bank count:', error);
     res.status(500).json({ message: 'Failed to fetch segment bank count' });
