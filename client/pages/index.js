@@ -156,6 +156,9 @@ export default function Home() {
       ? Math.min(100, Math.max(0, (latestCriticized / latestAssets) * 100))
       : null;
 
+  const peerGroupSummary = reportData?.peerGroupSummary ?? null;
+  const peerGroupCounts = peerGroupSummary?.counts ?? [];
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -289,6 +292,40 @@ export default function Home() {
             )}
           </div>
           <div className={styles.selectionCert}>CERT #{selectedCert}</div>
+        </section>
+      )}
+
+
+      {peerGroupSummary?.callym && peerGroupCounts.length > 0 && (
+        <section className={styles.peerGroupSection}>
+          <div className={styles.latestHeader}>
+            <div>
+              <p className={styles.latestLabel}>Peer group bank counts</p>
+              <p className={styles.latestQuarter}>{formatQuarterLabel(peerGroupSummary.callym)}</p>
+            </div>
+            <p className={styles.latestHint}>Latest quarter only</p>
+          </div>
+          <div className={styles.tableWrapper}>
+            <table className={styles.trendTable}>
+              <thead>
+                <tr>
+                  <th scope="col">Peer group</th>
+                  <th scope="col">Number of banks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {peerGroupCounts.map((item) => (
+                  <tr key={item.peerGroup}>
+                    <td>
+                      {item.peerGroup}
+                      {peerGroupSummary.selectedBankPeerGroup === item.peerGroup ? ' (Selected bank)' : ''}
+                    </td>
+                    <td>{formatNumber(item.bankCount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 

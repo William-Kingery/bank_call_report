@@ -75,6 +75,57 @@ router.get('/charts', async (req, res) => {
       [cert]
     );
 
+    const [latestQuarterRows] = await pool.query('SELECT MAX(CALLYM) AS callym FROM fdic_fts');
+    const latestQuarter = latestQuarterRows?.[0]?.callym ?? null;
+
+    let peerGroupCounts = [];
+    let selectedBankPeerGroup = null;
+
+    if (latestQuarter) {
+      const peerGroupCase = `
+        CASE
+          WHEN ASSET < 100000 THEN 'Under $100M'
+          WHEN ASSET < 1000000 THEN '$100M to $1B'
+          WHEN ASSET < 10000000 THEN '$1B to $10B'
+          WHEN ASSET < 100000000 THEN '$10B to $100B'
+          ELSE '$100B+'
+        END
+      `;
+
+      const sortOrderCase = `
+        CASE
+          WHEN ASSET < 100000 THEN 1
+          WHEN ASSET < 1000000 THEN 2
+          WHEN ASSET < 10000000 THEN 3
+          WHEN ASSET < 100000000 THEN 4
+          ELSE 5
+        END
+      `;
+
+      const [peerGroupCountRows] = await pool.query(
+        `SELECT
+           ${peerGroupCase} AS peerGroup,
+           COUNT(*) AS bankCount
+         FROM fdic_fts
+         WHERE CALLYM = ?
+         GROUP BY peerGroup, ${sortOrderCase}
+         ORDER BY ${sortOrderCase}`,
+        [latestQuarter]
+      );
+
+      peerGroupCounts = peerGroupCountRows;
+
+      const [selectedPeerGroupRows] = await pool.query(
+        `SELECT ${peerGroupCase} AS peerGroup
+         FROM fdic_fts
+         WHERE CERT = ? AND CALLYM = ?
+         LIMIT 1`,
+        [cert, latestQuarter]
+      );
+
+      selectedBankPeerGroup = selectedPeerGroupRows?.[0]?.peerGroup ?? null;
+    }
+
     res.json({
       cert,
       nameFull,
@@ -82,6 +133,11 @@ router.get('/charts', async (req, res) => {
       stateName,
       zipCode,
       points: seriesRows,
+      peerGroupSummary: {
+        callym: latestQuarter,
+        selectedBankPeerGroup,
+        counts: peerGroupCounts,
+      },
     });
   } catch (error) {
     console.error('Error fetching chart data:', error);
