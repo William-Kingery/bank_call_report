@@ -2,6 +2,26 @@
 
 This is the canonical deployment runbook for the current CDK implementation.
 
+## Current Progress
+
+- [x] Created the IAM managed policy stack `DeveloperPolicy`
+- [x] Configured a working AWS CLI deploy profile (`admin`)
+- [x] Verified local AWS CLI, Node.js, npm, and CDK CLI
+- [x] Installed dependencies in `client`
+- [x] Installed dependencies in `server`
+- [x] Installed dependencies in `infra`
+- [x] Fixed the CDK entrypoint import in `infra/bin/bank-call-report.ts`
+- [x] Updated the RDS MySQL engine version to `8.0.40` for `us-east-1`
+- [ ] Ensure Docker Desktop is running
+- [ ] Build `client/out` with a placeholder API URL
+- [ ] Run `cdk bootstrap`
+- [ ] Run the first successful `cdk deploy`
+- [ ] Capture stack outputs
+- [ ] Rebuild frontend with the real `ApiUrl`
+- [ ] Run the second `cdk deploy`
+- [ ] Validate frontend and API health
+- [ ] Load FDIC data into RDS
+
 ## Target Architecture
 
 - `client` (Next.js static export) -> S3 + CloudFront
@@ -200,11 +220,26 @@ docker info
 ```bash
 cd client && npm ci
 cd ../server && npm ci
-cd ../infra && npm ci
+cd ../infra && npm install
 cd ..
 ```
 
-2. Bootstrap CDK in your target account/region:
+Notes:
+
+- `infra` currently does not include a `package-lock.json`, so `npm ci` will fail there. Use `npm install`.
+- The `client` and `server` directories can continue using `npm ci` because they already have lockfiles.
+
+2. Build the frontend once before synth/bootstrap:
+
+```bash
+cd client
+NEXT_PUBLIC_API_BASE=https://placeholder.invalid npm run build
+cd ../infra
+```
+
+This CDK app stages the frontend build output from `client/out`, so `cdk synth`, `cdk bootstrap`, and `cdk deploy` expect that directory to exist.
+
+3. Bootstrap CDK in your target account/region:
 
 ```bash
 cd infra
@@ -216,7 +251,7 @@ If you are intentionally deploying to another region, replace `us-east-1` with t
 
 ## First Deployment
 
-1. Build frontend with a placeholder API value:
+1. If you have not already built the frontend with a placeholder API value, do it now:
 
 ```bash
 cd ../client
@@ -296,3 +331,4 @@ npx cdk deploy -c dbName=bank_call_report -c frontendBuildPath=../client/out
 - RDS deletion is configured to keep a snapshot.
 - App Runner CORS origin is set from the CloudFront domain by CDK.
 - If you add custom domains, update frontend API base and CORS configuration accordingly.
+- `infra/lib/bank-call-report-stack.ts` should use MySQL `8.0.40` in `us-east-1`. The previously pinned `8.0.39` is not currently available in that region and causes stack rollback.

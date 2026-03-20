@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as path from 'node:path';
 import * as cdk from 'aws-cdk-lib';
-import { BankCallReportStack } from '../lib/bank-call-report-stack.js';
+import { BankCallReportStack } from '../lib/bank-call-report-stack';
 
 const app = new cdk.App();
 
