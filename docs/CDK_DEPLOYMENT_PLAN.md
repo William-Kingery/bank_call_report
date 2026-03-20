@@ -11,17 +11,186 @@ This is the canonical deployment runbook for the current CDK implementation.
 
 ## Prerequisites
 
-- AWS account + IAM permissions for CDK deploys
-- AWS CLI configured locally (`aws configure`)
-- Node.js 20+
-- npm
-- AWS CDK v2 CLI
-- Docker running locally (required for API image asset build)
+Complete the following before you run `cdk bootstrap` or `cdk deploy`.
 
-Install CDK CLI if needed:
+### 1. AWS account, region, and IAM access
+
+- Do not use the AWS account root user for CDK deployments.
+- Use a dedicated IAM identity for deployments. An IAM Identity Center-backed role is best if your organization already uses it. If not, use an IAM user with programmatic access and configure the AWS CLI with that access key.
+- This CDK app defaults to `us-east-1` if you do not override the region. That default is set in `infra/bin/bank-call-report.ts`.
+
+Recommended setup path for a brand-new account:
+
+1. Sign in to the AWS console as an administrator.
+2. Open IAM:
+   - Console: <https://console.aws.amazon.com/iam/>
+   - Docs: <https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html>
+3. Create or identify a deployer identity:
+   - Recommended if available: grant a role that the developer can assume locally.
+   - Simple fallback: create an IAM user for deployment and create an access key for AWS CLI use.
+4. Give that identity permissions for CDK bootstrapping and deployment.
+
+Fastest path for initial setup:
+
+- Attach the AWS managed policy `AdministratorAccess` to the deployment identity, use it for bootstrap + first deploy, then tighten permissions later if your organization requires that.
+
+More controlled path:
+
+- For `cdk bootstrap`, AWS documents this minimum bootstrap policy for the IAM identity performing the bootstrap:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:*",
+        "ecr:*",
+        "ssm:*",
+        "s3:*",
+        "iam:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+- After bootstrap, the deployer must be able to assume the CDK bootstrap roles. AWS documents the following policy for that:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AssumeCDKRoles",
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/aws-cdk:bootstrap-role": [
+            "image-publishing",
+            "file-publishing",
+            "deploy",
+            "lookup"
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+- This specific stack creates resources in these AWS services: CloudFormation, IAM, S3, CloudFront, ECR assets, App Runner, EC2/VPC, RDS, and Secrets Manager. If your team does not allow `AdministratorAccess` on the CDK bootstrap execution role, your AWS admin must provide a custom execution policy that allows CloudFormation to create and update those services.
+
+Useful AWS docs:
+
+- CDK bootstrap permissions: <https://docs.aws.amazon.com/cdk/v2/guide/bootstrapping-env.html>
+- CDK deployment flow and bootstrap roles: <https://docs.aws.amazon.com/cdk/v2/guide/deploy.html>
+- CDK security and role-assumption policy guidance: <https://docs.aws.amazon.com/cdk/v2/guide/best-practices-security.html>
+- Configure security credentials for the CDK CLI: <https://docs.aws.amazon.com/cdk/v2/guide/configure-access.html>
+
+### 2. Install AWS CLI locally
+
+Official install docs:
+
+- AWS CLI install guide: <https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html>
+- `aws configure` reference: <https://docs.aws.amazon.com/cli/latest/reference/configure/>
+
+macOS install example:
+
+```bash
+curl "https://awscli.amazonaws.com/AWSCLIV2.pkg" -o "AWSCLIV2.pkg"
+sudo installer -pkg AWSCLIV2.pkg -target /
+aws --version
+```
+
+Configure credentials locally:
+
+```bash
+aws configure --profile bank-call-report
+```
+
+Enter:
+
+- `AWS Access Key ID`: from the IAM user or role-backed access workflow
+- `AWS Secret Access Key`: matching secret key
+- `Default region name`: `us-east-1` unless your team intentionally deploys elsewhere
+- `Default output format`: `json`
+
+Use that profile in your shell:
+
+```bash
+export AWS_PROFILE=bank-call-report
+aws sts get-caller-identity
+aws configure list
+```
+
+If your company uses role assumption instead of long-lived IAM user keys, follow the role-based CLI setup here:
+
+- <https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html>
+
+### 3. Install Node.js 20+ and npm
+
+- Official Node download page: <https://nodejs.org/en/download/>
+- npm is installed with Node.js, so you normally do not install npm separately.
+
+Verify:
+
+```bash
+node --version
+npm --version
+```
+
+Use Node.js 20 or newer. If you want to stay closest to this repository's current infra toolchain, Node 20 LTS is a safe choice.
+
+### 4. Install AWS CDK v2 CLI
+
+Official docs:
+
+- CDK prerequisites: <https://docs.aws.amazon.com/cdk/v2/guide/prerequisites.html>
+- CDK getting started / CLI install: <https://docs.aws.amazon.com/cdk/v2/guide/getting-started.html>
+- CDK CLI reference: <https://docs.aws.amazon.com/cdk/v2/guide/cli.html>
+
+Install globally:
 
 ```bash
 npm install -g aws-cdk
+cdk --version
+```
+
+Repo-specific note:
+
+- `infra/package.json` currently uses CDK library version `2.177.0`.
+- A newer global CDK CLI is usually fine, but if you want an exact match you can install `npm install -g aws-cdk@2.177.0`.
+
+### 5. Install and start Docker locally
+
+- Docker Desktop for Mac: <https://docs.docker.com/desktop/setup/install/mac-install/>
+- Docker Desktop for Windows: <https://docs.docker.com/desktop/setup/install/windows-install/>
+
+This repository builds the API container locally during `cdk deploy`, so Docker must be running before deployment.
+
+Verify:
+
+```bash
+docker --version
+docker info
+```
+
+### 6. Final local prerequisite check
+
+Before moving to the one-time CDK setup below, confirm all of these succeed:
+
+```bash
+aws --version
+aws sts get-caller-identity
+node --version
+npm --version
+cdk --version
+docker info
 ```
 
 ## One-Time Setup
@@ -39,8 +208,11 @@ cd ..
 
 ```bash
 cd infra
-npx cdk bootstrap
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+npx cdk bootstrap aws://$ACCOUNT_ID/us-east-1
 ```
+
+If you are intentionally deploying to another region, replace `us-east-1` with that region in both your AWS CLI profile and the bootstrap command.
 
 ## First Deployment
 
