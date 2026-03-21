@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import AuthGate from '../components/AuthGate';
 import ThemeToggle from '../components/ThemeToggle';
+import { apiFetch } from '../lib/api';
 import styles from '../styles/Home.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
@@ -1665,7 +1667,7 @@ export default function Home() {
         if (isDistrictPeerGroup && selectedDistrict) {
           params.set('district', selectedDistrict);
         }
-        const response = await fetch(`${API_BASE}/benchmark?${params.toString()}`);
+        const response = await apiFetch(API_BASE, `/benchmark?${params.toString()}`);
         if (!response.ok) {
           throw new Error('Failed to load benchmark data');
         }
@@ -1706,7 +1708,7 @@ export default function Home() {
         if (isDistrictPeerGroup && selectedDistrict) {
           params.set('district', selectedDistrict);
         }
-        const response = await fetch(`${API_BASE}/segment-bank-count?${params.toString()}`);
+        const response = await apiFetch(API_BASE, `/segment-bank-count?${params.toString()}`);
         if (!response.ok) {
           throw new Error('Failed to load peer group count');
         }
@@ -1735,10 +1737,9 @@ export default function Home() {
 
     const timer = setTimeout(async () => {
       try {
-        const response = await fetch(
-          `${API_BASE}/search?query=${encodeURIComponent(query)}`,
-          { signal: controller.signal }
-        );
+        const response = await apiFetch(API_BASE, `/search?query=${encodeURIComponent(query)}`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch suggestions');
@@ -1784,7 +1785,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/charts?cert=${cert}`);
+      const response = await apiFetch(API_BASE, `/charts?cert=${cert}`);
       if (!response.ok) {
         throw new Error('Failed to load performance data');
       }
@@ -1815,6 +1816,7 @@ export default function Home() {
   };
 
   return (
+    <AuthGate apiBase={API_BASE}>
     <main
       className={`${styles.main} ${
         theme === 'night' ? styles.themeNight : styles.themeDay
@@ -5633,5 +5635,6 @@ export default function Home() {
         </>
       )}
     </main>
+    </AuthGate>
   );
 }

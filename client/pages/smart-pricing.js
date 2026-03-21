@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import AuthGate from '../components/AuthGate';
 import ThemeToggle from '../components/ThemeToggle';
 import styles from '../styles/SmartPricing.module.css';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 const THEME_STORAGE_KEY = 'bloomberg-theme';
 const DAY_COUNT_OPTIONS = ['30/360', 'ACT/360', 'ACT/365'];
 const PAYMENT_RULES = ['recast_on_reset', 'fixed_payment'];
@@ -473,6 +475,7 @@ export default function SmartPricing() {
   };
 
   return (
+    <AuthGate apiBase={API_BASE}>
     <main
       className={`${styles.main} ${
         theme === 'night' ? styles.themeNight : styles.themeDay
@@ -778,5 +781,6 @@ export default function SmartPricing() {
         </section>
       </section>
     </main>
+    </AuthGate>
   );
 }

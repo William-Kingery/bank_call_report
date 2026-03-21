@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import AuthGate from '../components/AuthGate';
 import ThemeToggle from '../components/ThemeToggle';
+import { apiFetch } from '../lib/api';
 import styles from '../styles/NationalAverages.module.css';
 import USAssetsMap from '../components/USAssetsMap';
 
@@ -279,7 +281,7 @@ const NationalAverages = () => {
 
     const fetchQuarters = async () => {
       try {
-        const response = await fetch(`${API_BASE}/state-assets/quarters`, {
+        const response = await apiFetch(API_BASE, '/state-assets/quarters', {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -318,7 +320,7 @@ const NationalAverages = () => {
       setSummaryError(null);
       try {
         const queryString = buildSummaryQueryParams().toString();
-        const response = await fetch(`${API_BASE}/national-averages/summary${queryString ? `?${queryString}` : ''}`, {
+        const response = await apiFetch(API_BASE, `/national-averages/summary${queryString ? `?${queryString}` : ''}`, {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -349,8 +351,9 @@ const NationalAverages = () => {
       setRegionSummaryError(null);
       try {
         const queryString = buildSummaryQueryParams().toString();
-        const response = await fetch(
-          `${API_BASE}/national-averages/region-summary${queryString ? `?${queryString}` : ''}`,
+        const response = await apiFetch(
+          API_BASE,
+          `/national-averages/region-summary${queryString ? `?${queryString}` : ''}`,
           { signal: controller.signal }
         );
         if (!response.ok) {
@@ -381,8 +384,9 @@ const NationalAverages = () => {
       setSegmentSummaryError(null);
       try {
         const queryString = buildSummaryQueryParams().toString();
-        const response = await fetch(
-          `${API_BASE}/national-averages/segment-summary${queryString ? `?${queryString}` : ''}`,
+        const response = await apiFetch(
+          API_BASE,
+          `/national-averages/segment-summary${queryString ? `?${queryString}` : ''}`,
           { signal: controller.signal }
         );
         if (!response.ok) {
@@ -413,8 +417,9 @@ const NationalAverages = () => {
       setDistrictSummaryError(null);
       try {
         const queryString = buildSummaryQueryParams().toString();
-        const response = await fetch(
-          `${API_BASE}/national-averages/district-summary${queryString ? `?${queryString}` : ''}`,
+        const response = await apiFetch(
+          API_BASE,
+          `/national-averages/district-summary${queryString ? `?${queryString}` : ''}`,
           { signal: controller.signal }
         );
         if (!response.ok) {
@@ -453,7 +458,7 @@ const NationalAverages = () => {
           queryParams.set('quarter', periodValue);
         }
         const queryString = queryParams.toString();
-        const response = await fetch(`${API_BASE}/state-assets${queryString ? `?${queryString}` : ''}`, {
+        const response = await apiFetch(API_BASE, `/state-assets${queryString ? `?${queryString}` : ''}`, {
           signal: controller.signal,
         });
         if (!response.ok) {
@@ -633,6 +638,7 @@ const NationalAverages = () => {
   );
 
   return (
+    <AuthGate apiBase={API_BASE}>
     <main
       className={`${styles.main} ${
         theme === 'night' ? styles.themeNight : styles.themeDay
@@ -914,6 +920,7 @@ const NationalAverages = () => {
 
       </section>
     </main>
+    </AuthGate>
   );
 };
 

@@ -1,11 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from "cors";
+import cookieParser from 'cookie-parser';
 
 import pool from './db.js';
+import authRoutes from './routes/auth.js';
 import healthRoutes from './routes/health.js';
 import schemaRoutes from './routes/schema.js';
 import dataRoutes from './routes/data.js';
+import { requireAuth } from './middleware/requireAuth.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -15,6 +18,7 @@ const corsOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
   .filter(Boolean);
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: corsOrigins,
@@ -23,8 +27,9 @@ app.use(
 );
 
 app.use(healthRoutes);
-app.use(schemaRoutes);
-app.use(dataRoutes);
+app.use('/auth', authRoutes);
+app.use(requireAuth, schemaRoutes);
+app.use(requireAuth, dataRoutes);
 
 const startServer = async () => {
   try {
