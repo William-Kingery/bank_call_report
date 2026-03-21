@@ -13,4 +13,9 @@ new BankCallReportStack(app, 'BankCallReportStack', {
   dbName: app.node.tryGetContext('dbName') || 'bank_call_report',
   frontendBuildPath:
     app.node.tryGetContext('frontendBuildPath') || path.join(__dirname, '../../client/out'),
+  existingDbName: process.env.EXISTING_DB_NAME || 'usbanks',
+  existingDbHost: process.env.EXISTING_DB_HOST || '',
+  existingDbPort: process.env.EXISTING_DB_PORT || '3306',
+  existingDbUser: process.env.EXISTING_DB_USER || '',
+  existingDbPassword: process.env.EXISTING_DB_PASSWORD || '',
 });

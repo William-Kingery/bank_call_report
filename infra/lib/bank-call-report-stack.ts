@@ -15,11 +15,22 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 export interface BankCallReportStackProps extends cdk.StackProps {
   dbName: string;
   frontendBuildPath: string;
+  existingDbName: string;
+  existingDbHost: string;
+  existingDbPort: string;
+  existingDbUser: string;
+  existingDbPassword: string;
 }
 
 export class BankCallReportStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: BankCallReportStackProps) {
     super(scope, id, props);
+
+    if (!props.existingDbHost || !props.existingDbUser || !props.existingDbPassword) {
+      throw new Error(
+        'Missing existing database configuration. Set EXISTING_DB_HOST, EXISTING_DB_USER, and EXISTING_DB_PASSWORD before deploying.'
+      );
+    }
 
     const frontendBucket = new s3.Bucket(this, 'FrontendBucket', {
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -95,6 +106,17 @@ export class BankCallReportStack extends cdk.Stack {
       },
     });
 
+    const existingDbCredentialsSecret = new secretsmanager.Secret(
+      this,
+      'ExistingDbCredentialsSecret',
+      {
+        secretObjectValue: {
+          username: cdk.SecretValue.unsafePlainText(props.existingDbUser),
+          password: cdk.SecretValue.unsafePlainText(props.existingDbPassword),
+        },
+      }
+    );
+
     const dbInstance = new rds.DatabaseInstance(this, 'Database', {
       vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
@@ -133,7 +155,7 @@ export class BankCallReportStack extends cdk.Stack {
     const appRunnerInstanceRole = new iam.Role(this, 'AppRunnerInstanceRole', {
       assumedBy: new iam.ServicePrincipal('tasks.apprunner.amazonaws.com'),
     });
-    dbCredentialsSecret.grantRead(appRunnerInstanceRole);
+    existingDbCredentialsSecret.grantRead(appRunnerInstanceRole);
 
     const vpcConnector = new apprunner.CfnVpcConnector(this, 'ApiVpcConnector', {
       vpcConnectorName: `${cdk.Stack.of(this).stackName.toLowerCase()}-apivpc`,
@@ -141,7 +163,7 @@ export class BankCallReportStack extends cdk.Stack {
       securityGroups: [appRunnerVpcConnectorSg.securityGroupId],
     });
 
-    const secretArn = dbCredentialsSecret.secretArn;
+    const secretArn = existingDbCredentialsSecret.secretArn;
     const apiService = new apprunner.CfnService(this, 'ApiService', {
       serviceName: 'bank-call-report-api',
       sourceConfiguration: {
@@ -155,9 +177,9 @@ export class BankCallReportStack extends cdk.Stack {
           imageConfiguration: {
             port: '4000',
             runtimeEnvironmentVariables: [
-              { name: 'DB_HOST', value: dbInstance.dbInstanceEndpointAddress },
-              { name: 'DB_PORT', value: dbInstance.dbInstanceEndpointPort },
-              { name: 'DB_NAME', value: props.dbName },
+              { name: 'DB_HOST', value: props.existingDbHost },
+              { name: 'DB_PORT', value: props.existingDbPort },
+              { name: 'DB_NAME', value: props.existingDbName },
               {
                 name: 'CORS_ORIGIN',
                 value: `https://${frontendDistribution.distributionDomainName}`,
@@ -188,8 +210,7 @@ export class BankCallReportStack extends cdk.Stack {
           isPubliclyAccessible: true,
         },
         egressConfiguration: {
-          egressType: 'VPC',
-          vpcConnectorArn: vpcConnector.attrVpcConnectorArn,
+          egressType: 'DEFAULT',
         },
       },
     });
@@ -205,11 +226,11 @@ export class BankCallReportStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'DatabaseEndpoint', {
-      value: dbInstance.dbInstanceEndpointAddress,
+      value: props.existingDbHost,
     });
 
     new cdk.CfnOutput(this, 'DatabaseSecretArn', {
-      value: dbCredentialsSecret.secretArn,
+      value: existingDbCredentialsSecret.secretArn,
     });
   }
 }
