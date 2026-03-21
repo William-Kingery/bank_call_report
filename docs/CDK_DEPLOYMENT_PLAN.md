@@ -12,15 +12,16 @@ This is the canonical deployment runbook for the current CDK implementation.
 - [x] Installed dependencies in `infra`
 - [x] Fixed the CDK entrypoint import in `infra/bin/bank-call-report.ts`
 - [x] Updated the RDS MySQL engine version to `8.0.40` for `us-east-1`
-- [ ] Ensure Docker Desktop is running
-- [ ] Build `client/out` with a placeholder API URL
-- [ ] Run `cdk bootstrap`
-- [ ] Run the first successful `cdk deploy`
-- [ ] Capture stack outputs
-- [ ] Rebuild frontend with the real `ApiUrl`
-- [ ] Run the second `cdk deploy`
-- [ ] Validate frontend and API health
-- [ ] Load FDIC data into RDS
+- [x] Ensured Docker Desktop is running
+- [x] Built `client/out` with a placeholder API URL
+- [x] Ran `cdk bootstrap`
+- [x] Ran the first successful `cdk deploy`
+- [x] Captured stack outputs
+- [x] Rebuilt frontend with the real `ApiUrl`
+- [x] Ran the second `cdk deploy`
+- [x] Switched App Runner from the empty stack-created database to the existing `usbanks` database
+- [x] Validate frontend and API health
+- [x] Verified FDIC data exists in the existing `usbanks` database
 
 ## Target Architecture
 
@@ -60,20 +61,14 @@ More controlled path:
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "cloudformation:*",
-        "ecr:*",
-        "ssm:*",
-        "s3:*",
-        "iam:*"
-      ],
-      "Resource": "*"
-    }
-  ]
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": ["cloudformation:*", "ecr:*", "ssm:*", "s3:*", "iam:*"],
+			"Resource": "*"
+		}
+	]
 }
 ```
 
@@ -81,25 +76,25 @@ More controlled path:
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AssumeCDKRoles",
-      "Effect": "Allow",
-      "Action": "sts:AssumeRole",
-      "Resource": "*",
-      "Condition": {
-        "StringEquals": {
-          "iam:ResourceTag/aws-cdk:bootstrap-role": [
-            "image-publishing",
-            "file-publishing",
-            "deploy",
-            "lookup"
-          ]
-        }
-      }
-    }
-  ]
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AssumeCDKRoles",
+			"Effect": "Allow",
+			"Action": "sts:AssumeRole",
+			"Resource": "*",
+			"Condition": {
+				"StringEquals": {
+					"iam:ResourceTag/aws-cdk:bootstrap-role": [
+						"image-publishing",
+						"file-publishing",
+						"deploy",
+						"lookup"
+					]
+				}
+			}
+		}
+	]
 }
 ```
 
