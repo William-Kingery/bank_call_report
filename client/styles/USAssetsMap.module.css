@@ -1,0 +1,105 @@
+.mapWrapper {
+  position: relative;
+  width: 100%;
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.map {
+  width: 100%;
+  height: auto;
+  /* max-width: 1800px; */
+  margin: 0 auto;
+  display: block;
+  overflow: visible;
+}
+
+.tooltip {
+  position: absolute;
+  padding: 12px 14px;
+  background: rgba(10, 18, 30, 0.95);
+  color: var(--terminal-text);
+  border-radius: 10px;
+  font-size: 14px;
+  pointer-events: none;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+  z-index: 2;
+  border: 1px solid var(--terminal-border);
+}
+
+.tooltipTitle {
+  font-weight: 600;
+}
+
+.tooltipValue {
+  margin-top: 2px;
+}
+
+.labelGroup {
+  pointer-events: none;
+}
+
+.labelCalloutLine {
+  stroke: var(--terminal-map-border);
+  stroke-width: 0.8;
+}
+
+.labelCalloutDot {
+  fill: var(--terminal-map-border);
+  stroke: var(--terminal-text);
+  stroke-width: 0.6;
+}
+
+.labelPill {
+  fill: var(--terminal-surface);
+  stroke: var(--terminal-map-border);
+  stroke-width: 0.8;
+}
+
+.labelPillText {
+  font-size: 9px;
+  font-weight: 700;
+  fill: var(--terminal-text);
+  paint-order: stroke;
+  stroke: var(--terminal-surface);
+  stroke-width: 1.5;
+}
+
+.labelAbbr {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--terminal-text);
+  paint-order: stroke;
+  stroke: var(--terminal-surface);
+  stroke-width: 1.8;
+}
+
+.labelAbbrMuted {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--terminal-muted);
+  paint-order: stroke;
+  stroke: var(--terminal-surface);
+  stroke-width: 1.8;
+}
+
+.labelValue {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--terminal-text);
+  paint-order: stroke;
+  stroke: var(--terminal-surface);
+  stroke-width: 1.6;
+}
+
+.labelValueMuted {
+  font-size: 9px;
+  font-weight: 600;
+  fill: var(--terminal-muted);
+  paint-order: stroke;
+  stroke: var(--terminal-surface);
+  stroke-width: 1.6;
+}
