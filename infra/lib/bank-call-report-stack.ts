@@ -117,6 +117,7 @@ export class BankCallReportStack extends cdk.Stack {
 
     const apiImage = new ecrAssets.DockerImageAsset(this, 'ApiImageAsset', {
       directory: path.join(__dirname, '../../server'),
+      platform: ecrAssets.Platform.LINUX_AMD64,
     });
 
     const appRunnerEcrAccessRole = new iam.Role(this, 'AppRunnerEcrAccessRole', {
