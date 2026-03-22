@@ -220,14 +220,13 @@ docker info
 ```bash
 cd client && npm ci
 cd ../server && npm ci
-cd ../infra && npm install
+cd ../infra && npm ci
 cd ..
 ```
 
 Notes:
 
-- `infra` currently does not include a `package-lock.json`, so `npm ci` will fail there. Use `npm install`.
-- The `client` and `server` directories can continue using `npm ci` because they already have lockfiles.
+- `client`, `server`, and `infra` all include lockfiles, so `npm ci` is the preferred install command in each directory.
 
 2. Build the frontend once before synth/bootstrap:
 

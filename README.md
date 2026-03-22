@@ -104,5 +104,7 @@ Use the dedicated deployment runbook in [`docs/CDK_DEPLOYMENT_PLAN.md`](./docs/C
 - User guide: [`docs/README.md`](./docs/README.md)
 - AWS hosting approach: [`docs/AWS_HOSTING_APPROACH.md`](./docs/AWS_HOSTING_APPROACH.md)
 - CDK deployment plan: [`docs/CDK_DEPLOYMENT_PLAN.md`](./docs/CDK_DEPLOYMENT_PLAN.md)
-- GitHub Actions CI/CD plan: [`docs/GITHUB_ACTIONS_CICD_SETUP.md`](./docs/GITHUB_ACTIONS_CICD_SETUP.md)
+- GitHub Actions CI/CD overview: [`docs/GITHUB_ACTIONS_CICD_SETUP.md`](./docs/GITHUB_ACTIONS_CICD_SETUP.md)
+- Production GitHub Actions plan: [`docs/PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md`](./docs/PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md)
+- Preview environments plan: [`docs/PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md`](./docs/PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md)
 - Post-deploy iteration roadmap: [`docs/POST_DEPLOY_ITERATIONS.md`](./docs/POST_DEPLOY_ITERATIONS.md)
