@@ -133,6 +133,7 @@ const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
   return acc;
 }, new Map());
 const REGION_ORDER = ['Northeast', 'Midwest', 'South', 'West', 'Unknown'];
+const EARLY_WARNINGS_QUARTER = 202512;
 
 const fetchStateSegmentSummary = async ({
   quarter,
@@ -910,7 +911,7 @@ router.get('/segment-bank-count', async (req, res) => {
     }
 
     const conditions = ['f.ASSET IS NOT NULL'];
-    const params = [];
+    const params = [EARLY_WARNINGS_QUARTER];
     const latestQuarter = await fetchLatestQuarter();
 
     if (!latestQuarter) {
@@ -1338,8 +1339,8 @@ router.get('/early-warnings', async (req, res) => {
     const region = req.query.region;
     const district = req.query.district;
     const range = getSegmentRange(segment);
-    const conditions = ['f.ASSET IS NOT NULL'];
-    const params = [];
+    const conditions = ['f.ASSET IS NOT NULL', 'f.CALLYM = ?'];
+    const params = [EARLY_WARNINGS_QUARTER];
 
     if (range) {
       if (range.min != null) {
@@ -1402,14 +1403,7 @@ router.get('/early-warnings', async (req, res) => {
            ELSE (f.BRO / f.DEP) * 100
          END AS brokeredDepositRate,
          s.FED AS fed
-       FROM (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_fts
-         GROUP BY CERT
-       ) latest_fts
-       JOIN fdic_fts f
-         ON f.CERT = latest_fts.CERT
-         AND f.CALLYM = latest_fts.callym
+       FROM fdic_fts f
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_structure
@@ -1439,15 +1433,7 @@ router.get('/early-warnings', async (req, res) => {
       frbDistrict: getFrbDistrict(row.fed),
     }));
 
-    const latestQuarter = results.reduce((maxQuarter, row) => {
-      const quarter = Number(row.quarter);
-      if (!Number.isFinite(quarter)) {
-        return maxQuarter;
-      }
-      return maxQuarter == null || quarter > maxQuarter ? quarter : maxQuarter;
-    }, null);
-
-    res.json({ results, quarter: latestQuarter });
+    res.json({ results, quarter: EARLY_WARNINGS_QUARTER });
   } catch (error) {
     console.error('Error fetching early warnings data:', error);
     res.status(500).json({ message: 'Failed to fetch early warnings data' });

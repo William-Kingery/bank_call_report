@@ -5,6 +5,7 @@ import styles from '../styles/EarlyWarnings.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 const THEME_STORAGE_KEY = 'bloomberg-theme';
+const EARLY_WARNINGS_QUARTER = 202512;
 
 const PORTFOLIO_OPTIONS = [
   'National Average',
@@ -94,7 +95,7 @@ export default function EarlyWarningsPage() {
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
   const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [rows, setRows] = useState([]);
-  const [quarter, setQuarter] = useState(null);
+  const [quarter, setQuarter] = useState(EARLY_WARNINGS_QUARTER);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -170,15 +171,12 @@ export default function EarlyWarningsPage() {
   }, [selectedPortfolio, selectedRegion, selectedDistrict]);
 
   const summaryLabel = useMemo(() => {
-    const parts = ['Latest available quarter per bank'];
-    if (quarter) {
-      parts.push(`max reported ${formatQuarter(quarter)}`);
-    }
+    const parts = [`Only banks with ${formatQuarter(EARLY_WARNINGS_QUARTER)} data`];
     if (selectedPortfolio !== 'National Average') parts.push(selectedPortfolio);
     if (selectedRegion !== 'All Regions') parts.push(selectedRegion);
     if (selectedDistrict !== 'All Districts') parts.push(selectedDistrict);
     return parts.join(' • ');
-  }, [quarter, selectedPortfolio, selectedRegion, selectedDistrict]);
+  }, [selectedPortfolio, selectedRegion, selectedDistrict]);
 
   return (
     <main className={`${styles.main} ${theme === 'night' ? styles.themeNight : styles.themeDay}`}>
@@ -187,8 +185,8 @@ export default function EarlyWarningsPage() {
           <p className={styles.kicker}>Early Warnings</p>
           <h1 className={styles.title}>Bank Early Warning Dashboard</h1>
           <p className={styles.subtitle}>
-            Review key balance sheet, profitability, asset quality, and funding metrics using each
-            bank's latest available quarter, with portfolio, region, and FRB district filters.
+            Review key balance sheet, profitability, asset quality, and funding metrics only for
+            banks with Q4 2025 data, with portfolio, region, and FRB district filters.
           </p>
           <div className={styles.headerLinks}>
             <Link className={styles.backButton} href="/">
