@@ -1340,14 +1340,6 @@ router.get('/early-warnings', async (req, res) => {
     const range = getSegmentRange(segment);
     const conditions = ['f.ASSET IS NOT NULL'];
     const params = [];
-    const latestQuarter = await fetchLatestQuarter();
-
-    if (!latestQuarter) {
-      return res.json({ results: [], quarter: null });
-    }
-
-    conditions.push('f.CALLYM = ?');
-    params.push(latestQuarter);
 
     if (range) {
       if (range.min != null) {
@@ -1363,7 +1355,7 @@ router.get('/early-warnings', async (req, res) => {
     if (region && region !== 'All Regions') {
       const states = REGION_STATES[region] ?? [];
       if (!states.length) {
-        return res.json({ results: [], quarter: latestQuarter });
+        return res.json({ results: [], quarter: null });
       }
       conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
       params.push(...states);
@@ -1372,7 +1364,7 @@ router.get('/early-warnings', async (req, res) => {
     if (district && district !== 'All Districts') {
       const fedCode = FRB_DISTRICT_BY_NAME[district];
       if (!Number.isFinite(fedCode)) {
-        return res.json({ results: [], quarter: latestQuarter });
+        return res.json({ results: [], quarter: null });
       }
       conditions.push('s.FED = ?');
       params.push(fedCode);
@@ -1383,6 +1375,7 @@ router.get('/early-warnings', async (req, res) => {
          f.CERT AS cert,
          s.NAMEFULL AS bankName,
          s.STNAME AS stateName,
+         f.CALLYM AS quarter,
          ${buildSegmentCaseStatement('f.ASSET')} AS portfolioView,
          ${buildSegmentCaseStatement('f.ASSET')} AS segment,
          f.ASSET AS totalAssets,
@@ -1409,7 +1402,14 @@ router.get('/early-warnings', async (req, res) => {
            ELSE (f.BRO / f.DEP) * 100
          END AS brokeredDepositRate,
          s.FED AS fed
-       FROM fdic_fts f
+       FROM (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ) latest_fts
+       JOIN fdic_fts f
+         ON f.CERT = latest_fts.CERT
+         AND f.CALLYM = latest_fts.callym
        JOIN (
          SELECT CERT, MAX(CALLYM) AS callym
          FROM fdic_structure
@@ -1438,6 +1438,14 @@ router.get('/early-warnings', async (req, res) => {
       region: REGION_BY_STATE[row.stateName] ?? 'Unknown',
       frbDistrict: getFrbDistrict(row.fed),
     }));
+
+    const latestQuarter = results.reduce((maxQuarter, row) => {
+      const quarter = Number(row.quarter);
+      if (!Number.isFinite(quarter)) {
+        return maxQuarter;
+      }
+      return maxQuarter == null || quarter > maxQuarter ? quarter : maxQuarter;
+    }, null);
 
     res.json({ results, quarter: latestQuarter });
   } catch (error) {

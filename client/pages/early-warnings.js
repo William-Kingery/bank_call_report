@@ -75,7 +75,7 @@ const columns = [
 
 const formatQuarter = (callym) => {
   const numeric = Number(callym);
-  if (!Number.isFinite(numeric)) return 'latest quarter';
+  if (!Number.isFinite(numeric)) return 'Latest available quarter per bank';
   const year = Math.floor(numeric / 100);
   const month = numeric % 100;
   const quarter = Math.ceil(month / 3);
@@ -164,7 +164,10 @@ export default function EarlyWarningsPage() {
   }, [selectedPortfolio, selectedRegion, selectedDistrict]);
 
   const summaryLabel = useMemo(() => {
-    const parts = [formatQuarter(quarter)];
+    const parts = ['Latest available quarter per bank'];
+    if (quarter) {
+      parts.push(`max reported ${formatQuarter(quarter)}`);
+    }
     if (selectedPortfolio !== 'National Average') parts.push(selectedPortfolio);
     if (selectedRegion !== 'All Regions') parts.push(selectedRegion);
     if (selectedDistrict !== 'All Districts') parts.push(selectedDistrict);
@@ -178,8 +181,8 @@ export default function EarlyWarningsPage() {
           <p className={styles.kicker}>Early Warnings</p>
           <h1 className={styles.title}>Bank Early Warning Dashboard</h1>
           <p className={styles.subtitle}>
-            Review key balance sheet, profitability, asset quality, and funding metrics for the
-            latest quarter with portfolio, region, and FRB district filters.
+            Review key balance sheet, profitability, asset quality, and funding metrics using each
+            bank's latest available quarter, with portfolio, region, and FRB district filters.
           </p>
           <div className={styles.headerLinks}>
             <Link className={styles.backButton} href="/">
