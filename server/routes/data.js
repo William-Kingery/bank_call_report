@@ -1331,6 +1331,121 @@ router.get('/national-averages/district-summary', async (req, res) => {
   }
 });
 
+
+router.get('/early-warnings', async (req, res) => {
+  try {
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const range = getSegmentRange(segment);
+    const conditions = ['f.ASSET IS NOT NULL'];
+    const params = [];
+    const latestQuarter = await fetchLatestQuarter();
+
+    if (!latestQuarter) {
+      return res.json({ results: [], quarter: null });
+    }
+
+    conditions.push('f.CALLYM = ?');
+    params.push(latestQuarter);
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
+    if (region && region !== 'All Regions') {
+      const states = REGION_STATES[region] ?? [];
+      if (!states.length) {
+        return res.json({ results: [], quarter: latestQuarter });
+      }
+      conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+      params.push(...states);
+    }
+
+    if (district && district !== 'All Districts') {
+      const fedCode = FRB_DISTRICT_BY_NAME[district];
+      if (!Number.isFinite(fedCode)) {
+        return res.json({ results: [], quarter: latestQuarter });
+      }
+      conditions.push('s.FED = ?');
+      params.push(fedCode);
+    }
+
+    const [rows] = await pool.query(
+      `SELECT
+         f.CERT AS cert,
+         s.NAMEFULL AS bankName,
+         s.STNAME AS stateName,
+         ${buildSegmentCaseStatement('f.ASSET')} AS portfolioView,
+         ${buildSegmentCaseStatement('f.ASSET')} AS segment,
+         f.ASSET AS totalAssets,
+         f.DEP AS totalDeposits,
+         f.RBCT1W AS tier1Capital,
+         f.LNCOMRE AS totalCreLoans,
+         f.LNLSGR AS yoyLoanGrowth,
+         CASE
+           WHEN prev_f.DEP IS NULL OR prev_f.DEP = 0 OR f.DEP IS NULL THEN NULL
+           ELSE ((f.DEP - prev_f.DEP) / prev_f.DEP) * 100
+         END AS yoyDepositGrowth,
+         r.NPERFV AS npaPercent,
+         c.DRLNLSQ AS chargeOffPercent,
+         r.ROAQ AS roaa,
+         r.ROEQ AS roae,
+         r.NIMY AS nim,
+         r.LNLSDEPR AS loanToDepositRatio,
+         CASE
+           WHEN f.DEP IS NULL OR f.DEP = 0 OR f.DEPUNA IS NULL THEN NULL
+           ELSE (f.DEPUNA / f.DEP) * 100
+         END AS uninsuredDepositRate,
+         CASE
+           WHEN f.DEP IS NULL OR f.DEP = 0 OR f.BRO IS NULL THEN NULL
+           ELSE (f.BRO / f.DEP) * 100
+         END AS brokeredDepositRate,
+         s.FED AS fed
+       FROM fdic_fts f
+       JOIN (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_structure
+         GROUP BY CERT
+       ) latest_structure
+         ON latest_structure.CERT = f.CERT
+       JOIN fdic_structure s
+         ON s.CERT = latest_structure.CERT
+         AND s.CALLYM = latest_structure.callym
+       LEFT JOIN fdic_rat r
+         ON r.CERT = f.CERT
+         AND r.CALLYM = f.CALLYM
+       LEFT JOIN fdic_cdi c
+         ON c.CERT = f.CERT
+         AND c.CALLYM = f.CALLYM
+       LEFT JOIN fdic_fts prev_f
+         ON prev_f.CERT = f.CERT
+         AND prev_f.CALLYM = f.CALLYM - 100
+       ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       ORDER BY f.ASSET DESC, s.NAMEFULL ASC`,
+      params
+    );
+
+    const results = rows.map((row) => ({
+      ...row,
+      region: REGION_BY_STATE[row.stateName] ?? 'Unknown',
+      frbDistrict: getFrbDistrict(row.fed),
+    }));
+
+    res.json({ results, quarter: latestQuarter });
+  } catch (error) {
+    console.error('Error fetching early warnings data:', error);
+    res.status(500).json({ message: 'Failed to fetch early warnings data' });
+  }
+});
+
 router.get('/structure/banks', async (req, res) => {
   try {
     const limit = Number.parseInt(req.query.limit, 10);
