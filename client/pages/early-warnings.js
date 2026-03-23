@@ -66,7 +66,7 @@ const columns = [
   { key: 'totalAssets', label: 'Total Assets (MM)', formatter: formatMillions },
   { key: 'totalDeposits', label: 'Total Deposits (MM)', formatter: formatMillions },
   { key: 'tier1Capital', label: 'Tier 1 Capital (MM)', formatter: formatMillions },
-  { key: 'totalCreLoans', label: 'Total CRE Loans', formatter: formatCurrency },
+  { key: 'totalCreLoans', label: 'Total CRE Loans (MM)', formatter: formatMillions },
   { key: 'yoyLoanGrowth', label: 'YoY Loan Growth', formatter: formatPercent },
   { key: 'yoyDepositGrowth', label: 'YoY Deposit Growth', formatter: formatPercent },
   { key: 'npaPercent', label: 'NPA %', formatter: formatPercent },
