@@ -123,12 +123,19 @@ export default function EarlyWarningsPage() {
     };
   }, [theme]);
 
+  const filterRequestKey = useMemo(
+    () => [selectedPortfolio, selectedRegion, selectedDistrict].join('|'),
+    [selectedPortfolio, selectedRegion, selectedDistrict],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchRows = async () => {
       setLoading(true);
       setError(null);
+      setRows([]);
+      setQuarter(EARLY_WARNINGS_QUARTER);
 
       try {
         const queryParams = new URLSearchParams();
@@ -168,7 +175,7 @@ export default function EarlyWarningsPage() {
 
     fetchRows();
     return () => controller.abort();
-  }, [selectedPortfolio, selectedRegion, selectedDistrict]);
+  }, [filterRequestKey]);
 
   const summaryLabel = useMemo(() => {
     const parts = [`Only banks with ${formatQuarter(EARLY_WARNINGS_QUARTER)} data`];
@@ -176,7 +183,7 @@ export default function EarlyWarningsPage() {
     if (selectedRegion !== 'All Regions') parts.push(selectedRegion);
     if (selectedDistrict !== 'All Districts') parts.push(selectedDistrict);
     return parts.join(' • ');
-  }, [selectedPortfolio, selectedRegion, selectedDistrict]);
+  }, [filterRequestKey]);
 
   return (
     <main className={`${styles.main} ${theme === 'night' ? styles.themeNight : styles.themeDay}`}>
@@ -239,7 +246,7 @@ export default function EarlyWarningsPage() {
 
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      <section className={styles.tableCard}>
+      <section key={filterRequestKey} className={styles.tableCard}>
         <div className={styles.tableHeader}>
           <div>
             <p className={styles.sectionKicker}>Monitoring set</p>
