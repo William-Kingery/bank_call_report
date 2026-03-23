@@ -135,9 +135,13 @@ export default function EarlyWarningsPage() {
           queryParams.set('district', selectedDistrict);
         }
 
-        const response = await fetch(`${API_BASE}/api/data/early-warnings?${queryParams.toString()}`, {
-          signal: controller.signal,
-        });
+        const queryString = queryParams.toString();
+        const response = await fetch(
+          `${API_BASE}/early-warnings${queryString ? `?${queryString}` : ''}`,
+          {
+            signal: controller.signal,
+          },
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to fetch early warnings data (${response.status})`);
