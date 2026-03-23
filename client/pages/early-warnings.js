@@ -49,6 +49,12 @@ const formatCurrency = (value) => {
   return currencyFormatter.format(numeric * 1000);
 };
 
+const formatMillions = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 'N/A';
+  return `${currencyFormatter.format(numeric / 1000)}M`;
+};
+
 const formatPercent = (value) => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 'N/A';
@@ -57,9 +63,9 @@ const formatPercent = (value) => {
 
 const columns = [
   { key: 'bankName', label: 'Bank Name', formatter: (value) => value || 'N/A', sticky: true },
-  { key: 'totalAssets', label: 'Total Assets', formatter: formatCurrency },
-  { key: 'totalDeposits', label: 'Total Deposits', formatter: formatCurrency },
-  { key: 'tier1Capital', label: 'Tier 1 Capital', formatter: formatCurrency },
+  { key: 'totalAssets', label: 'Total Assets (MM)', formatter: formatMillions },
+  { key: 'totalDeposits', label: 'Total Deposits (MM)', formatter: formatMillions },
+  { key: 'tier1Capital', label: 'Tier 1 Capital (MM)', formatter: formatMillions },
   { key: 'totalCreLoans', label: 'Total CRE Loans', formatter: formatCurrency },
   { key: 'yoyLoanGrowth', label: 'YoY Loan Growth', formatter: formatPercent },
   { key: 'yoyDepositGrowth', label: 'YoY Deposit Growth', formatter: formatPercent },
