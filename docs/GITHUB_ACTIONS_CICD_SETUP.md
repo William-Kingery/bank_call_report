@@ -5,6 +5,7 @@ This document is the high-level index for GitHub Actions-based deployment in thi
 Detailed implementation planning now lives in two separate runbooks:
 
 - Production auto-deploy plan: [`docs/PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md`](./PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md)
+- Production enablement runbook: [`docs/PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md`](./PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md)
 - Preview environments plan: [`docs/PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md`](./PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md)
 
 ## Deployment Model
@@ -40,5 +41,6 @@ Detailed implementation planning now lives in two separate runbooks:
 Use this document as an entry point only.
 
 - For production GitHub Actions implementation details, follow [`docs/PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md`](./PROD_GITHUB_ACTIONS_DEPLOYMENT_PLAN.md).
+- For production GitHub and AWS setup after the workflow is merged, follow [`docs/PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md`](./PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md).
 - For preview environment implementation details, follow [`docs/PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md`](./PREVIEW_ENVIRONMENTS_IMPLEMENTATION_PLAN.md).
 - For manual first-time CDK setup and local deployment steps, follow [`docs/CDK_DEPLOYMENT_PLAN.md`](./CDK_DEPLOYMENT_PLAN.md).

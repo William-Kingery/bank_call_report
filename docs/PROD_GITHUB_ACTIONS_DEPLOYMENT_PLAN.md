@@ -4,6 +4,9 @@ This document is an execution-focused plan for deploying the production applicat
 
 The goal is to give Codex a task list that can be implemented directly in the repository, while clearly separating external GitHub and AWS setup that requires human access.
 
+The production workflow now lives at [`.github/workflows/deploy-prod.yml`](../.github/workflows/deploy-prod.yml).
+For the manual GitHub and AWS enablement steps, use [`docs/PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md`](./PROD_DEPLOYMENT_ENABLEMENT_RUNBOOK.md).
+
 ## Scope
 
 - Trigger deployment on `push` to `main`
@@ -89,7 +92,12 @@ This avoids blocking on a stable custom domain now, while still making the curre
 
 - [ ] Create repository variable `AWS_REGION`.
 - [ ] Create repository variable `CDK_STACK_PROD` if the default stack name should be overrideable.
-- [ ] Create repository secret or variable `AWS_ROLE_ARN` for the deploy role.
+- [ ] Create repository variable `AWS_ROLE_ARN` for the deploy role.
+- [ ] Create repository variable `EXISTING_DB_HOST`.
+- [ ] Create repository variable `EXISTING_DB_PORT` if the default port `3306` should be overridden.
+- [ ] Create repository variable `EXISTING_DB_NAME` if the default database name `usbanks` should be overridden.
+- [ ] Create repository secret `EXISTING_DB_USER`.
+- [ ] Create repository secret `EXISTING_DB_PASSWORD`.
 - [ ] Protect `main` with required pull requests.
 - [ ] Add required status checks after the workflow is stable.
 

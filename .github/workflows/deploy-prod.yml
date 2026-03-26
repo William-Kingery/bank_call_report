@@ -1,0 +1,264 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  CDK_STACK_NAME: ${{ vars.CDK_STACK_PROD || 'BankCallReportStack' }}
+  AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
+  EXISTING_DB_HOST: ${{ vars.EXISTING_DB_HOST }}
+  EXISTING_DB_PORT: ${{ vars.EXISTING_DB_PORT || '3306' }}
+  EXISTING_DB_NAME: ${{ vars.EXISTING_DB_NAME || 'usbanks' }}
+  EXISTING_DB_USER: ${{ secrets.EXISTING_DB_USER }}
+  EXISTING_DB_PASSWORD: ${{ secrets.EXISTING_DB_PASSWORD }}
+
+jobs:
+  deploy:
+    name: Deploy Production Stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate required deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_vars=(
+            AWS_REGION
+            CDK_STACK_NAME
+            AWS_ROLE_ARN
+            EXISTING_DB_HOST
+            EXISTING_DB_PORT
+            EXISTING_DB_NAME
+            EXISTING_DB_USER
+            EXISTING_DB_PASSWORD
+          )
+
+          for var_name in "${required_vars[@]}"; do
+            if [ -z "${!var_name:-}" ]; then
+              echo "Missing required GitHub Actions configuration: ${var_name}" >&2
+              exit 1
+            fi
+          done
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Install infra dependencies
+        working-directory: infra
+        run: npm ci
+
+      - name: Read current production stack outputs
+        id: current_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+
+          if aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$CDK_STACK_NAME" \
+            > /dev/null 2>&1; then
+            api_url="$(aws cloudformation describe-stacks \
+              --region "$AWS_REGION" \
+              --stack-name "$CDK_STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey==\`ApiUrl\`].OutputValue | [0]" \
+              --output text)"
+            frontend_url="$(aws cloudformation describe-stacks \
+              --region "$AWS_REGION" \
+              --stack-name "$CDK_STACK_NAME" \
+              --query "Stacks[0].Outputs[?OutputKey==\`FrontendUrl\`].OutputValue | [0]" \
+              --output text)"
+
+            [ "$api_url" = "None" ] && api_url=""
+            [ "$frontend_url" = "None" ] && frontend_url=""
+
+            echo "stack_exists=true" >> "$GITHUB_OUTPUT"
+            echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+            echo "frontend_url=$frontend_url" >> "$GITHUB_OUTPUT"
+          else
+            echo "stack_exists=false" >> "$GITHUB_OUTPUT"
+            echo "api_url=" >> "$GITHUB_OUTPUT"
+            echo "frontend_url=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build frontend against current API URL
+        working-directory: client
+        env:
+          NEXT_PUBLIC_API_BASE: ${{ steps.current_outputs.outputs.api_url != '' && steps.current_outputs.outputs.api_url || 'https://placeholder.invalid' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .next out
+          npm run build
+
+      - name: Deploy production stack
+        working-directory: infra
+        env:
+          CDK_DEFAULT_REGION: ${{ env.AWS_REGION }}
+          EXISTING_DB_HOST: ${{ env.EXISTING_DB_HOST }}
+          EXISTING_DB_PORT: ${{ env.EXISTING_DB_PORT }}
+          EXISTING_DB_NAME: ${{ env.EXISTING_DB_NAME }}
+          EXISTING_DB_USER: ${{ env.EXISTING_DB_USER }}
+          EXISTING_DB_PASSWORD: ${{ env.EXISTING_DB_PASSWORD }}
+        run: npx cdk deploy "${{ env.CDK_STACK_NAME }}" --require-approval never
+
+      - name: Read stack outputs after deploy
+        id: post_deploy_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          api_url="$(aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$CDK_STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey==\`ApiUrl\`].OutputValue | [0]" \
+            --output text)"
+          frontend_url="$(aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$CDK_STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey==\`FrontendUrl\`].OutputValue | [0]" \
+            --output text)"
+
+          [ "$api_url" = "None" ] && api_url=""
+          [ "$frontend_url" = "None" ] && frontend_url=""
+
+          echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+          echo "frontend_url=$frontend_url" >> "$GITHUB_OUTPUT"
+
+      - name: Determine whether the API URL changed
+        id: api_url_change
+        shell: bash
+        run: |
+          set -euo pipefail
+          old_api_url="${{ steps.current_outputs.outputs.api_url }}"
+          new_api_url="${{ steps.post_deploy_outputs.outputs.api_url }}"
+
+          if [ "$old_api_url" != "$new_api_url" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Rebuild frontend against updated API URL
+        if: steps.api_url_change.outputs.changed == 'true'
+        working-directory: client
+        env:
+          NEXT_PUBLIC_API_BASE: ${{ steps.post_deploy_outputs.outputs.api_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .next out
+          npm run build
+
+      - name: Redeploy production stack after API URL change
+        if: steps.api_url_change.outputs.changed == 'true'
+        working-directory: infra
+        env:
+          CDK_DEFAULT_REGION: ${{ env.AWS_REGION }}
+          EXISTING_DB_HOST: ${{ env.EXISTING_DB_HOST }}
+          EXISTING_DB_PORT: ${{ env.EXISTING_DB_PORT }}
+          EXISTING_DB_NAME: ${{ env.EXISTING_DB_NAME }}
+          EXISTING_DB_USER: ${{ env.EXISTING_DB_USER }}
+          EXISTING_DB_PASSWORD: ${{ env.EXISTING_DB_PASSWORD }}
+        run: npx cdk deploy "${{ env.CDK_STACK_NAME }}" --require-approval never
+
+      - name: Read final production stack outputs
+        id: final_outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_PAGER=""
+          api_url="$(aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$CDK_STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey==\`ApiUrl\`].OutputValue | [0]" \
+            --output text)"
+          frontend_url="$(aws cloudformation describe-stacks \
+            --region "$AWS_REGION" \
+            --stack-name "$CDK_STACK_NAME" \
+            --query "Stacks[0].Outputs[?OutputKey==\`FrontendUrl\`].OutputValue | [0]" \
+            --output text)"
+
+          [ "$api_url" = "None" ] && api_url=""
+          [ "$frontend_url" = "None" ] && frontend_url=""
+
+          echo "api_url=$api_url" >> "$GITHUB_OUTPUT"
+          echo "frontend_url=$frontend_url" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke-check frontend and API health
+        env:
+          FRONTEND_URL: ${{ steps.final_outputs.outputs.frontend_url }}
+          API_URL: ${{ steps.final_outputs.outputs.api_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -z "$FRONTEND_URL" ] || [ -z "$API_URL" ]; then
+            echo "Missing final stack outputs required for smoke checks." >&2
+            exit 1
+          fi
+
+          frontend_ok=false
+          for attempt in $(seq 1 18); do
+            if curl --fail --silent --show-error --location --max-time 20 "$FRONTEND_URL" > /dev/null; then
+              frontend_ok=true
+              break
+            fi
+            echo "Frontend smoke check attempt ${attempt}/18 failed; retrying in 10 seconds."
+            sleep 10
+          done
+
+          if [ "$frontend_ok" != "true" ]; then
+            echo "Frontend smoke check failed for ${FRONTEND_URL}" >&2
+            exit 1
+          fi
+
+          api_health_url="${API_URL}/api/health"
+          api_ok=false
+          for attempt in $(seq 1 24); do
+            if response="$(curl --fail --silent --show-error --location --max-time 20 "$api_health_url")"; then
+              if python3 -c 'import json, sys; data = json.load(sys.stdin); assert data.get("server") == "ok"; assert data.get("database") == "connected"' <<<"$response"; then
+                api_ok=true
+                break
+              fi
+            fi
+            echo "API smoke check attempt ${attempt}/24 failed; retrying in 10 seconds."
+            sleep 10
+          done
+
+          if [ "$api_ok" != "true" ]; then
+            echo "API smoke check failed for ${api_health_url}" >&2
+            exit 1
+          fi
