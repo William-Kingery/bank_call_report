@@ -1449,7 +1449,7 @@ router.get('/early-warnings', async (req, res) => {
              ELSE ((f.DEP - prev_f.DEP) / prev_f.DEP) * 100
            END AS yoyDepositGrowth,
            r.NPERFV AS npaPercent,
-           c.DRLNLSQ AS chargeOffPercent,
+           ROUND(r.NTLNLSQR, 2) AS chargeOffPercent,
            r.ROAQ AS roaa,
            r.ROEQ AS roae,
            r.NIMY AS nim,
