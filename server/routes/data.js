@@ -1400,7 +1400,50 @@ router.get('/early-warnings', async (req, res) => {
            f.DEP AS totalDeposits,
            f.RBCT1W AS tier1Capital,
            f.LNCOMRE AS totalCreLoans,
-           f.LNLSGR AS yoyLoanGrowth,
+           CASE
+             WHEN (
+               COALESCE(prev_f.LNAG, 0)
+               + COALESCE(prev_f.LNCI, 0)
+               + COALESCE(prev_f.LNDEP, 0)
+               + COALESCE(prev_f.LNOTHER, 0)
+               + COALESCE(prev_f.LNCOMRE, 0)
+               + COALESCE(prev_f.LNRE, 0)
+               + COALESCE(prev_f.LNCON, 0)
+             ) = 0 THEN NULL
+             ELSE ROUND(
+               (
+                 (
+                   COALESCE(f.LNAG, 0)
+                   + COALESCE(f.LNCI, 0)
+                   + COALESCE(f.LNDEP, 0)
+                   + COALESCE(f.LNOTHER, 0)
+                   + COALESCE(f.LNCOMRE, 0)
+                   + COALESCE(f.LNRE, 0)
+                   + COALESCE(f.LNCON, 0)
+                 ) - (
+                   COALESCE(prev_f.LNAG, 0)
+                   + COALESCE(prev_f.LNCI, 0)
+                   + COALESCE(prev_f.LNDEP, 0)
+                   + COALESCE(prev_f.LNOTHER, 0)
+                   + COALESCE(prev_f.LNCOMRE, 0)
+                   + COALESCE(prev_f.LNRE, 0)
+                   + COALESCE(prev_f.LNCON, 0)
+                 )
+               ) / NULLIF(
+                 (
+                   COALESCE(prev_f.LNAG, 0)
+                   + COALESCE(prev_f.LNCI, 0)
+                   + COALESCE(prev_f.LNDEP, 0)
+                   + COALESCE(prev_f.LNOTHER, 0)
+                   + COALESCE(prev_f.LNCOMRE, 0)
+                   + COALESCE(prev_f.LNRE, 0)
+                   + COALESCE(prev_f.LNCON, 0)
+                 ),
+                 0
+               ) * 100,
+               2
+             )
+           END AS yoyLoanGrowth,
            CASE
              WHEN prev_f.DEP IS NULL OR prev_f.DEP = 0 OR f.DEP IS NULL THEN NULL
              ELSE ((f.DEP - prev_f.DEP) / prev_f.DEP) * 100
