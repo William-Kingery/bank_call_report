@@ -5,7 +5,6 @@ import styles from '../styles/EarlyWarnings.module.css';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:4000';
 const THEME_STORAGE_KEY = 'bloomberg-theme';
-const EARLY_WARNINGS_QUARTER = 202512;
 
 const PORTFOLIO_OPTIONS = [
   'National Average',
@@ -82,7 +81,7 @@ const columns = [
 
 const formatQuarter = (callym) => {
   const numeric = Number(callym);
-  if (!Number.isFinite(numeric)) return 'Latest available quarter per bank';
+  if (!Number.isFinite(numeric)) return 'latest available quarter';
   const year = Math.floor(numeric / 100);
   const month = numeric % 100;
   const quarter = Math.ceil(month / 3);
@@ -95,7 +94,7 @@ export default function EarlyWarningsPage() {
   const [selectedRegion, setSelectedRegion] = useState('All Regions');
   const [selectedDistrict, setSelectedDistrict] = useState('All Districts');
   const [rows, setRows] = useState([]);
-  const [quarter, setQuarter] = useState(EARLY_WARNINGS_QUARTER);
+  const [quarter, setQuarter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -135,7 +134,7 @@ export default function EarlyWarningsPage() {
       setLoading(true);
       setError(null);
       setRows([]);
-      setQuarter(EARLY_WARNINGS_QUARTER);
+      setQuarter(null);
 
       try {
         const queryParams = new URLSearchParams();
@@ -178,12 +177,12 @@ export default function EarlyWarningsPage() {
   }, [filterRequestKey]);
 
   const summaryLabel = useMemo(() => {
-    const parts = [`Only banks with ${formatQuarter(EARLY_WARNINGS_QUARTER)} data`];
+    const parts = [`One row per bank for ${formatQuarter(quarter)}`];
     if (selectedPortfolio !== 'National Average') parts.push(selectedPortfolio);
     if (selectedRegion !== 'All Regions') parts.push(selectedRegion);
     if (selectedDistrict !== 'All Districts') parts.push(selectedDistrict);
     return parts.join(' • ');
-  }, [filterRequestKey]);
+  }, [quarter, filterRequestKey]);
 
   return (
     <main className={`${styles.main} ${theme === 'night' ? styles.themeNight : styles.themeDay}`}>
@@ -192,8 +191,8 @@ export default function EarlyWarningsPage() {
           <p className={styles.kicker}>Early Warnings</p>
           <h1 className={styles.title}>Bank Early Warning Dashboard</h1>
           <p className={styles.subtitle}>
-            Review key balance sheet, profitability, asset quality, and funding metrics only for
-            banks with Q4 2025 data, with portfolio, region, and FRB district filters.
+            Review key balance sheet, profitability, asset quality, and funding metrics with one
+            row per bank for each bank&apos;s latest available quarter.
           </p>
           <div className={styles.headerLinks}>
             <Link className={styles.backButton} href="/">

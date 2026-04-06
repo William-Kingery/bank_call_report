@@ -133,7 +133,6 @@ const canonicalStateNames = Object.values(stateNames).reduce((acc, name) => {
   return acc;
 }, new Map());
 const REGION_ORDER = ['Northeast', 'Midwest', 'South', 'West', 'Unknown'];
-const EARLY_WARNINGS_QUARTER = 202512;
 
 const fetchStateSegmentSummary = async ({
   quarter,
@@ -911,7 +910,7 @@ router.get('/segment-bank-count', async (req, res) => {
     }
 
     const conditions = ['f.ASSET IS NOT NULL'];
-    const params = [EARLY_WARNINGS_QUARTER];
+    const params = [];
     const latestQuarter = await fetchLatestQuarter();
 
     if (!latestQuarter) {
@@ -1339,8 +1338,8 @@ router.get('/early-warnings', async (req, res) => {
     const region = req.query.region;
     const district = req.query.district;
     const range = getSegmentRange(segment);
-    const conditions = ['f.ASSET IS NOT NULL', 'f.CALLYM = ?'];
-    const params = [EARLY_WARNINGS_QUARTER];
+    const conditions = ['f.ASSET IS NOT NULL'];
+    const params = [];
 
     if (range) {
       if (range.min != null) {
@@ -1372,10 +1371,27 @@ router.get('/early-warnings', async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      `SELECT
+      `WITH latest_fts AS (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ),
+       latest_structure AS (
+         SELECT
+           s.CERT AS cert,
+           s.NAMEFULL AS nameFull,
+           s.STNAME AS stateName,
+           s.FED AS fed,
+           ROW_NUMBER() OVER (
+             PARTITION BY s.CERT
+             ORDER BY s.CALLYM DESC
+           ) AS rn
+         FROM fdic_structure s
+       )
+       SELECT
          f.CERT AS cert,
-         s.NAMEFULL AS bankName,
-         s.STNAME AS stateName,
+         s.nameFull AS bankName,
+         s.stateName AS stateName,
          f.CALLYM AS quarter,
          ${buildSegmentCaseStatement('f.ASSET')} AS portfolioView,
          ${buildSegmentCaseStatement('f.ASSET')} AS segment,
@@ -1402,17 +1418,14 @@ router.get('/early-warnings', async (req, res) => {
            WHEN f.DEP IS NULL OR f.DEP = 0 OR f.BRO IS NULL THEN NULL
            ELSE (f.BRO / f.DEP) * 100
          END AS brokeredDepositRate,
-         s.FED AS fed
-       FROM fdic_fts f
-       JOIN (
-         SELECT CERT, MAX(CALLYM) AS callym
-         FROM fdic_structure
-         GROUP BY CERT
-       ) latest_structure
-         ON latest_structure.CERT = f.CERT
-       JOIN fdic_structure s
-         ON s.CERT = latest_structure.CERT
-         AND s.CALLYM = latest_structure.callym
+         s.fed AS fed
+       FROM latest_fts
+       JOIN fdic_fts f
+         ON f.CERT = latest_fts.CERT
+         AND f.CALLYM = latest_fts.callym
+       JOIN latest_structure s
+         ON s.cert = f.CERT
+         AND s.rn = 1
        LEFT JOIN fdic_rat r
          ON r.CERT = f.CERT
          AND r.CALLYM = f.CALLYM
@@ -1433,7 +1446,15 @@ router.get('/early-warnings', async (req, res) => {
       frbDistrict: getFrbDistrict(row.fed),
     }));
 
-    res.json({ results, quarter: EARLY_WARNINGS_QUARTER });
+    const latestQuarter = results.reduce((maxQuarter, row) => {
+      const quarter = Number(row.quarter);
+      if (!Number.isFinite(quarter)) {
+        return maxQuarter;
+      }
+      return maxQuarter == null || quarter > maxQuarter ? quarter : maxQuarter;
+    }, null);
+
+    res.json({ results, quarter: latestQuarter });
   } catch (error) {
     console.error('Error fetching early warnings data:', error);
     res.status(500).json({ message: 'Failed to fetch early warnings data' });
