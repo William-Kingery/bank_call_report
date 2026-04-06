@@ -113,6 +113,23 @@
   gap: 0.75rem;
 }
 
+.exportButton {
+  border: 1px solid var(--terminal-border);
+  border-radius: 999px;
+  background: var(--terminal-accent);
+  color: var(--terminal-button-text);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.exportButton:hover,
+.exportButton:focus {
+  background: var(--terminal-accent-strong);
+  border-color: var(--terminal-accent-strong);
+  outline: none;
+}
+
 .contextValue,
 .bankCount {
   margin: 0;

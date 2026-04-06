@@ -88,6 +88,22 @@ const formatQuarter = (callym) => {
   return `Q${quarter} ${year}`;
 };
 
+const buildExportValue = (column, row) => {
+  const value = row?.[column.key];
+  if (!Number.isFinite(Number(value))) {
+    return column.formatter(value, row);
+  }
+  return value;
+};
+
+const escapeCsvCell = (value) => {
+  const normalized = value == null ? '' : String(value);
+  if (/[",\n]/.test(normalized)) {
+    return `"${normalized.replace(/"/g, '""')}"`;
+  }
+  return normalized;
+};
+
 export default function EarlyWarningsPage() {
   const [theme, setTheme] = useState('night');
   const [selectedPortfolio, setSelectedPortfolio] = useState('National Average');
@@ -184,6 +200,28 @@ export default function EarlyWarningsPage() {
     return parts.join(' • ');
   }, [quarter, filterRequestKey]);
 
+  const handleExportToExcel = () => {
+    const headers = columns.map((column) => column.label);
+    const csvLines = [
+      headers.join(','),
+      ...rows.map((row) =>
+        columns
+          .map((column) => escapeCsvCell(buildExportValue(column, row)))
+          .join(','),
+      ),
+    ];
+    const csv = csvLines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `early-warnings-${quarter || 'latest'}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <main className={`${styles.main} ${theme === 'night' ? styles.themeNight : styles.themeDay}`}>
       <header className={styles.header}>
@@ -206,6 +244,9 @@ export default function EarlyWarningsPage() {
         <div className={styles.headerActions}>
           <p className={styles.contextLabel}>Data scope</p>
           <p className={styles.contextValue}>{summaryLabel}</p>
+          <button className={styles.exportButton} type="button" onClick={handleExportToExcel}>
+            Export to Excel
+          </button>
           <ThemeToggle theme={theme} onChange={setTheme} />
         </div>
       </header>
