@@ -1338,7 +1338,12 @@ router.get('/early-warnings', async (req, res) => {
     const region = req.query.region;
     const district = req.query.district;
     const range = getSegmentRange(segment);
-    const conditions = ['f.ASSET IS NOT NULL'];
+    const conditions = [
+      'f.ASSET IS NOT NULL',
+      'f.RBCT1W IS NOT NULL',
+      'f.RBCT1W <> 0',
+      '((f.LNCOMRE / f.RBCT1W) * 100) > 300',
+    ];
     const params = [];
 
     if (range) {
