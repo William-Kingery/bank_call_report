@@ -1462,6 +1462,10 @@ router.get('/early-warnings', async (req, res) => {
              WHEN f.DEP IS NULL OR f.DEP = 0 OR f.BRO IS NULL THEN NULL
              ELSE (f.BRO / f.DEP) * 100
            END AS brokeredDepositRate,
+           CASE
+             WHEN f.RBCT1W IS NULL OR f.RBCT1W = 0 OR f.LNCOMRE IS NULL THEN NULL
+             ELSE ROUND((f.LNCOMRE / f.RBCT1W) * 100, 2)
+           END AS totalCreLoansToTier1Capital,
            s.fed AS fed
          FROM latest_fts
          JOIN fdic_fts f
@@ -1511,6 +1515,7 @@ router.get('/early-warnings', async (req, res) => {
          loanToDepositRatio,
          uninsuredDepositRate,
          brokeredDepositRate,
+         totalCreLoansToTier1Capital,
          fed
        FROM ranked_rows
        WHERE bank_row_num = 1
