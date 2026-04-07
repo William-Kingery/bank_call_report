@@ -1340,9 +1340,49 @@ router.get('/early-warnings', async (req, res) => {
     const range = getSegmentRange(segment);
     const conditions = [
       'f.ASSET IS NOT NULL',
-      'f.RBCT1W IS NOT NULL',
-      'f.RBCT1W <> 0',
-      '((f.LNCOMRE / f.RBCT1W) * 100) > 300',
+      `(
+        (
+          f.RBCT1W IS NOT NULL
+          AND f.RBCT1W <> 0
+          AND f.LNCOMRE IS NOT NULL
+          AND ((f.LNCOMRE / f.RBCT1W) * 100) > 300
+        )
+        OR (
+          (
+            (
+              COALESCE(f.LNAG, 0)
+              + COALESCE(f.LNCI, 0)
+              + COALESCE(f.LNDEP, 0)
+              + COALESCE(f.LNOTHER, 0)
+              + COALESCE(f.LNCOMRE, 0)
+              + COALESCE(f.LNRE, 0)
+              + COALESCE(f.LNCON, 0)
+            ) - (
+              COALESCE(prev_f.LNAG, 0)
+              + COALESCE(prev_f.LNCI, 0)
+              + COALESCE(prev_f.LNDEP, 0)
+              + COALESCE(prev_f.LNOTHER, 0)
+              + COALESCE(prev_f.LNCOMRE, 0)
+              + COALESCE(prev_f.LNRE, 0)
+              + COALESCE(prev_f.LNCON, 0)
+            )
+          ) / NULLIF(
+            (
+              COALESCE(prev_f.LNAG, 0)
+              + COALESCE(prev_f.LNCI, 0)
+              + COALESCE(prev_f.LNDEP, 0)
+              + COALESCE(prev_f.LNOTHER, 0)
+              + COALESCE(prev_f.LNCOMRE, 0)
+              + COALESCE(prev_f.LNRE, 0)
+              + COALESCE(prev_f.LNCON, 0)
+            ),
+            0
+          ) * 100
+        ) < 0
+        OR (
+          ((f.DEP - prev_f.DEP) / NULLIF(prev_f.DEP, 0)) * 100
+        ) < 0
+      )`,
     ];
     const params = [];
 
