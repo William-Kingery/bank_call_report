@@ -1331,6 +1331,267 @@ router.get('/national-averages/district-summary', async (req, res) => {
   }
 });
 
+
+router.get('/early-warnings', async (req, res) => {
+  try {
+    const segment = req.query.segment;
+    const region = req.query.region;
+    const district = req.query.district;
+    const range = getSegmentRange(segment);
+    const conditions = [
+      'f.ASSET IS NOT NULL',
+      `(
+        (
+          f.RBCT1W IS NOT NULL
+          AND f.RBCT1W <> 0
+          AND f.LNCOMRE IS NOT NULL
+          AND ((f.LNCOMRE / f.RBCT1W) * 100) > 300
+        )
+        OR (
+          (
+            (
+              COALESCE(f.LNAG, 0)
+              + COALESCE(f.LNCI, 0)
+              + COALESCE(f.LNDEP, 0)
+              + COALESCE(f.LNOTHER, 0)
+              + COALESCE(f.LNCOMRE, 0)
+              + COALESCE(f.LNRE, 0)
+              + COALESCE(f.LNCON, 0)
+            ) - (
+              COALESCE(prev_f.LNAG, 0)
+              + COALESCE(prev_f.LNCI, 0)
+              + COALESCE(prev_f.LNDEP, 0)
+              + COALESCE(prev_f.LNOTHER, 0)
+              + COALESCE(prev_f.LNCOMRE, 0)
+              + COALESCE(prev_f.LNRE, 0)
+              + COALESCE(prev_f.LNCON, 0)
+            )
+          ) / NULLIF(
+            (
+              COALESCE(prev_f.LNAG, 0)
+              + COALESCE(prev_f.LNCI, 0)
+              + COALESCE(prev_f.LNDEP, 0)
+              + COALESCE(prev_f.LNOTHER, 0)
+              + COALESCE(prev_f.LNCOMRE, 0)
+              + COALESCE(prev_f.LNRE, 0)
+              + COALESCE(prev_f.LNCON, 0)
+            ),
+            0
+          ) * 100
+        ) < 0
+        OR (
+          ((f.DEP - prev_f.DEP) / NULLIF(prev_f.DEP, 0)) * 100
+        ) < 0
+        OR (r.LNLSDEPR > 100)
+        OR (r.NTLNLSQR > 0.75)
+        OR (r.NPERFV > 0.50)
+      )`,
+    ];
+    const params = [];
+
+    if (range) {
+      if (range.min != null) {
+        conditions.push('f.ASSET >= ?');
+        params.push(range.min);
+      }
+      if (range.max != null) {
+        conditions.push('f.ASSET < ?');
+        params.push(range.max);
+      }
+    }
+
+    if (region && region !== 'All Regions') {
+      const states = REGION_STATES[region] ?? [];
+      if (!states.length) {
+        return res.json({ results: [], quarter: null });
+      }
+      conditions.push(`s.STNAME IN (${states.map(() => '?').join(', ')})`);
+      params.push(...states);
+    }
+
+    if (district && district !== 'All Districts') {
+      const fedCode = FRB_DISTRICT_BY_NAME[district];
+      if (!Number.isFinite(fedCode)) {
+        return res.json({ results: [], quarter: null });
+      }
+      conditions.push('s.FED = ?');
+      params.push(fedCode);
+    }
+
+    const [rows] = await pool.query(
+      `WITH latest_fts AS (
+         SELECT CERT, MAX(CALLYM) AS callym
+         FROM fdic_fts
+         GROUP BY CERT
+       ),
+       latest_structure AS (
+         SELECT
+           s.CERT AS cert,
+           s.NAMEFULL AS nameFull,
+           s.STNAME AS stateName,
+           s.FED AS fed,
+           ROW_NUMBER() OVER (
+             PARTITION BY s.CERT
+             ORDER BY s.CALLYM DESC
+           ) AS rn
+         FROM fdic_structure s
+       ),
+       base_rows AS (
+         SELECT
+           f.CERT AS cert,
+           s.nameFull AS bankName,
+           s.stateName AS stateName,
+           f.CALLYM AS quarter,
+           ${buildSegmentCaseStatement('f.ASSET')} AS portfolioView,
+           ${buildSegmentCaseStatement('f.ASSET')} AS segment,
+           f.ASSET AS totalAssets,
+           f.DEP AS totalDeposits,
+           f.RBCT1W AS tier1Capital,
+           f.LNCOMRE AS totalCreLoans,
+           CASE
+             WHEN (
+               COALESCE(prev_f.LNAG, 0)
+               + COALESCE(prev_f.LNCI, 0)
+               + COALESCE(prev_f.LNDEP, 0)
+               + COALESCE(prev_f.LNOTHER, 0)
+               + COALESCE(prev_f.LNCOMRE, 0)
+               + COALESCE(prev_f.LNRE, 0)
+               + COALESCE(prev_f.LNCON, 0)
+             ) = 0 THEN NULL
+             ELSE ROUND(
+               (
+                 (
+                   COALESCE(f.LNAG, 0)
+                   + COALESCE(f.LNCI, 0)
+                   + COALESCE(f.LNDEP, 0)
+                   + COALESCE(f.LNOTHER, 0)
+                   + COALESCE(f.LNCOMRE, 0)
+                   + COALESCE(f.LNRE, 0)
+                   + COALESCE(f.LNCON, 0)
+                 ) - (
+                   COALESCE(prev_f.LNAG, 0)
+                   + COALESCE(prev_f.LNCI, 0)
+                   + COALESCE(prev_f.LNDEP, 0)
+                   + COALESCE(prev_f.LNOTHER, 0)
+                   + COALESCE(prev_f.LNCOMRE, 0)
+                   + COALESCE(prev_f.LNRE, 0)
+                   + COALESCE(prev_f.LNCON, 0)
+                 )
+               ) / NULLIF(
+                 (
+                   COALESCE(prev_f.LNAG, 0)
+                   + COALESCE(prev_f.LNCI, 0)
+                   + COALESCE(prev_f.LNDEP, 0)
+                   + COALESCE(prev_f.LNOTHER, 0)
+                   + COALESCE(prev_f.LNCOMRE, 0)
+                   + COALESCE(prev_f.LNRE, 0)
+                   + COALESCE(prev_f.LNCON, 0)
+                 ),
+                 0
+               ) * 100,
+               2
+             )
+           END AS yoyLoanGrowth,
+           CASE
+             WHEN prev_f.DEP IS NULL OR prev_f.DEP = 0 OR f.DEP IS NULL THEN NULL
+             ELSE ((f.DEP - prev_f.DEP) / prev_f.DEP) * 100
+           END AS yoyDepositGrowth,
+           r.NPERFV AS npaPercent,
+           ROUND(r.NTLNLSQR, 2) AS chargeOffPercent,
+           r.ROAQ AS roaa,
+           r.ROEQ AS roae,
+           r.NIMY AS nim,
+           r.LNLSDEPR AS loanToDepositRatio,
+           CASE
+             WHEN f.DEP IS NULL OR f.DEP = 0 OR f.DEPUNA IS NULL THEN NULL
+             ELSE (f.DEPUNA / f.DEP) * 100
+           END AS uninsuredDepositRate,
+           CASE
+             WHEN f.DEP IS NULL OR f.DEP = 0 OR f.BRO IS NULL THEN NULL
+             ELSE (f.BRO / f.DEP) * 100
+           END AS brokeredDepositRate,
+           CASE
+             WHEN f.RBCT1W IS NULL OR f.RBCT1W = 0 OR f.LNCOMRE IS NULL THEN NULL
+             ELSE ROUND((f.LNCOMRE / f.RBCT1W) * 100, 2)
+           END AS totalCreLoansToTier1Capital,
+           s.fed AS fed
+         FROM latest_fts
+         JOIN fdic_fts f
+           ON f.CERT = latest_fts.CERT
+           AND f.CALLYM = latest_fts.callym
+         JOIN latest_structure s
+           ON s.cert = f.CERT
+           AND s.rn = 1
+         LEFT JOIN fdic_rat r
+           ON r.CERT = f.CERT
+           AND r.CALLYM = f.CALLYM
+         LEFT JOIN fdic_cdi c
+           ON c.CERT = f.CERT
+           AND c.CALLYM = f.CALLYM
+         LEFT JOIN fdic_fts prev_f
+           ON prev_f.CERT = f.CERT
+           AND prev_f.CALLYM = f.CALLYM - 100
+         ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+       ),
+       ranked_rows AS (
+         SELECT
+           base_rows.*,
+           ROW_NUMBER() OVER (
+             PARTITION BY base_rows.cert
+             ORDER BY base_rows.quarter DESC, base_rows.totalAssets DESC
+           ) AS bank_row_num
+         FROM base_rows
+       )
+       SELECT
+         cert,
+         bankName,
+         stateName,
+         quarter,
+         portfolioView,
+         segment,
+         totalAssets,
+         totalDeposits,
+         tier1Capital,
+         totalCreLoans,
+         yoyLoanGrowth,
+         yoyDepositGrowth,
+         npaPercent,
+         chargeOffPercent,
+         roaa,
+         roae,
+         nim,
+         loanToDepositRatio,
+         uninsuredDepositRate,
+         brokeredDepositRate,
+         totalCreLoansToTier1Capital,
+         fed
+       FROM ranked_rows
+       WHERE bank_row_num = 1
+       ORDER BY totalAssets DESC, bankName ASC`,
+      params
+    );
+
+    const results = rows.map((row) => ({
+      ...row,
+      region: REGION_BY_STATE[row.stateName] ?? 'Unknown',
+      frbDistrict: getFrbDistrict(row.fed),
+    }));
+
+    const latestQuarter = results.reduce((maxQuarter, row) => {
+      const quarter = Number(row.quarter);
+      if (!Number.isFinite(quarter)) {
+        return maxQuarter;
+      }
+      return maxQuarter == null || quarter > maxQuarter ? quarter : maxQuarter;
+    }, null);
+
+    res.json({ results, quarter: latestQuarter });
+  } catch (error) {
+    console.error('Error fetching early warnings data:', error);
+    res.status(500).json({ message: 'Failed to fetch early warnings data' });
+  }
+});
+
 router.get('/structure/banks', async (req, res) => {
   try {
     const limit = Number.parseInt(req.query.limit, 10);

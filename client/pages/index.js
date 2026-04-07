@@ -1803,6 +1803,9 @@ export default function Home() {
             <Link className={styles.headerLink} href="/smart-pricing">
               Smart Pricing
             </Link>
+            <Link className={styles.headerLink} href="/early-warnings">
+              Early Warnings
+            </Link>
           </div>
         </div>
         <div className={styles.headerActions}>
