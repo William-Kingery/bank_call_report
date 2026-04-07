@@ -198,7 +198,9 @@ export default function EarlyWarningsPage() {
   }, [filterRequestKey]);
 
   const summaryLabel = useMemo(() => {
-    const parts = ['CRE/Tier 1 > 300% OR YoY Loan Growth < 0 OR YoY Deposit Growth < 0'];
+    const parts = [
+      'CRE/Tier 1 > 300% OR YoY Loan < 0 OR YoY Deposit < 0 OR L/D > 100% OR Charge-Off > 0.75% OR NPA > 0.50%',
+    ];
     parts.push(`one row per bank for ${formatQuarter(quarter)}`);
     if (selectedPortfolio !== 'National Average') parts.push(selectedPortfolio);
     if (selectedRegion !== 'All Regions') parts.push(selectedRegion);
@@ -238,7 +240,8 @@ export default function EarlyWarningsPage() {
             Review key balance sheet, profitability, asset quality, and funding metrics with one
             row per bank for each bank&apos;s latest available quarter, limited to banks with
             Total CRE Loans/Tier 1 Capital above 300%, or negative YoY Loan Growth, or negative
-            YoY Deposit Growth.
+            YoY Deposit Growth, or Loan to Deposit Ratio above 100%, or Charge-Off % above 0.75%,
+            or NPAs above 0.50%.
           </p>
           <div className={styles.headerLinks}>
             <Link className={styles.backButton} href="/">

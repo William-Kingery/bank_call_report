@@ -1382,6 +1382,9 @@ router.get('/early-warnings', async (req, res) => {
         OR (
           ((f.DEP - prev_f.DEP) / NULLIF(prev_f.DEP, 0)) * 100
         ) < 0
+        OR (r.LNLSDEPR > 100)
+        OR (r.NTLNLSQR > 0.75)
+        OR (r.NPERFV > 0.50)
       )`,
     ];
     const params = [];
