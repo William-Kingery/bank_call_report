@@ -317,10 +317,79 @@ const fetchSegmentSummary = async ({
     params
   );
 
-  const sortedRows = rows.sort((a, b) => {
+  const normalizedRows = rows.map((row) => ({
+    ...row,
+    bankCount: Number(row.bankCount) || 0,
+    assets: Number(row.assets) || 0,
+    deposits: Number(row.deposits) || 0,
+    liabilities: Number(row.liabilities) || 0,
+    equity: Number(row.equity) || 0,
+    intincqa: Number(row.intincqa) || 0,
+    eintxqa: Number(row.eintxqa) || 0,
+    netincqa: Number(row.netincqa) || 0,
+    ernast2: Number(row.ernast2) || 0,
+    eqtotcp: Number(row.eqtotcp) || 0,
+    nim: row.nim == null ? null : Number(row.nim),
+    roa: row.roa == null ? null : Number(row.roa),
+    roe: row.roe == null ? null : Number(row.roe),
+  }));
+
+  const assignRanks = (items, metric, rankField) => {
+    const ranked = [...items].sort((a, b) => {
+      const valueA = a[metric];
+      const valueB = b[metric];
+      const aMissing = valueA == null || Number.isNaN(valueA);
+      const bMissing = valueB == null || Number.isNaN(valueB);
+
+      if (aMissing !== bMissing) {
+        return aMissing ? 1 : -1;
+      }
+      if (aMissing && bMissing) {
+        const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+        const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+        return orderA - orderB;
+      }
+      if (valueB !== valueA) {
+        return valueB - valueA;
+      }
+      const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+      const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+
+    ranked.forEach((item, index) => {
+      item[rankField] = index + 1;
+    });
+  };
+
+  assignRanks(normalizedRows, 'roa', 'roaRank');
+  assignRanks(normalizedRows, 'roe', 'roeRank');
+  assignRanks(normalizedRows, 'nim', 'nimRank');
+
+  normalizedRows.forEach((row) => {
+    row.combinedRankScore = row.roaRank + row.roeRank + row.nimRank;
+  });
+
+  const sortedRows = normalizedRows.sort((a, b) => {
+    if (a.combinedRankScore !== b.combinedRankScore) {
+      return a.combinedRankScore - b.combinedRankScore;
+    }
+    if (a.roaRank !== b.roaRank) {
+      return a.roaRank - b.roaRank;
+    }
+    if (a.roeRank !== b.roeRank) {
+      return a.roeRank - b.roeRank;
+    }
+    if (a.nimRank !== b.nimRank) {
+      return a.nimRank - b.nimRank;
+    }
     const orderA = SEGMENT_ORDER.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
     const orderB = SEGMENT_ORDER.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
     return orderA - orderB;
+  });
+
+  sortedRows.forEach((row, index) => {
+    row.overallRank = index + 1;
   });
 
   return { rows: sortedRows, quarter: targetQuarter };
@@ -1571,7 +1640,7 @@ router.get('/early-warnings', async (req, res) => {
       params
     );
 
-    const results = rows.map((row) => ({
+    let results = rows.map((row) => ({
       ...row,
       region: REGION_BY_STATE[row.stateName] ?? 'Unknown',
       frbDistrict: getFrbDistrict(row.fed),
@@ -1584,6 +1653,91 @@ router.get('/early-warnings', async (req, res) => {
       }
       return maxQuarter == null || quarter > maxQuarter ? quarter : maxQuarter;
     }, null);
+
+    if (results.length) {
+      const segmentBuckets = results.reduce((acc, row) => {
+        const bucketKey = row.segment ?? 'Unknown';
+        if (!acc.has(bucketKey)) {
+          acc.set(bucketKey, []);
+        }
+        acc.get(bucketKey).push({ ...row });
+        return acc;
+      }, new Map());
+
+      const assignSegmentRanks = (items, metric, rankField, direction = 'desc') => {
+        const ranked = [...items].sort((a, b) => {
+          const valueA = a[metric] == null ? null : Number(a[metric]);
+          const valueB = b[metric] == null ? null : Number(b[metric]);
+          const aMissing = valueA == null || Number.isNaN(valueA);
+          const bMissing = valueB == null || Number.isNaN(valueB);
+
+          if (aMissing !== bMissing) {
+            return aMissing ? 1 : -1;
+          }
+          if (aMissing && bMissing) {
+            const assetDiff = (Number(b.totalAssets) || 0) - (Number(a.totalAssets) || 0);
+            if (assetDiff !== 0) {
+              return assetDiff;
+            }
+            return String(a.bankName ?? '').localeCompare(String(b.bankName ?? ''));
+          }
+
+          if (valueA !== valueB) {
+            return direction === 'asc' ? valueA - valueB : valueB - valueA;
+          }
+
+          const assetDiff = (Number(b.totalAssets) || 0) - (Number(a.totalAssets) || 0);
+          if (assetDiff !== 0) {
+            return assetDiff;
+          }
+          return String(a.bankName ?? '').localeCompare(String(b.bankName ?? ''));
+        });
+
+        ranked.forEach((item, index) => {
+          item[rankField] = index + 1;
+        });
+      };
+
+      segmentBuckets.forEach((bucketRows) => {
+        assignSegmentRanks(bucketRows, 'yoyLoanGrowth', 'yoyLoanGrowthRank', 'desc');
+        assignSegmentRanks(bucketRows, 'yoyDepositGrowth', 'yoyDepositGrowthRank', 'desc');
+        assignSegmentRanks(bucketRows, 'npaPercent', 'npaPercentRank', 'asc');
+        assignSegmentRanks(bucketRows, 'chargeOffPercent', 'chargeOffPercentRank', 'asc');
+        assignSegmentRanks(bucketRows, 'roaa', 'roaaRank', 'desc');
+        assignSegmentRanks(bucketRows, 'roae', 'roaeRank', 'desc');
+        assignSegmentRanks(bucketRows, 'nim', 'nimRank', 'desc');
+        assignSegmentRanks(bucketRows, 'loanToDepositRatio', 'loanToDepositRatioRank', 'asc');
+
+        bucketRows.forEach((row) => {
+          row.segmentCombinedScore =
+            row.yoyLoanGrowthRank +
+            row.yoyDepositGrowthRank +
+            row.npaPercentRank +
+            row.chargeOffPercentRank +
+            row.roaaRank +
+            row.roaeRank +
+            row.nimRank +
+            row.loanToDepositRatioRank;
+        });
+
+        const overallRanked = [...bucketRows].sort((a, b) => {
+          if (a.segmentCombinedScore !== b.segmentCombinedScore) {
+            return a.segmentCombinedScore - b.segmentCombinedScore;
+          }
+          const assetDiff = (Number(b.totalAssets) || 0) - (Number(a.totalAssets) || 0);
+          if (assetDiff !== 0) {
+            return assetDiff;
+          }
+          return String(a.bankName ?? '').localeCompare(String(b.bankName ?? ''));
+        });
+
+        overallRanked.forEach((row, index) => {
+          row.segmentOverallRank = index + 1;
+        });
+      });
+
+      results = Array.from(segmentBuckets.values()).flat();
+    }
 
     res.json({ results, quarter: latestQuarter });
   } catch (error) {

@@ -61,8 +61,17 @@ const formatPercent = (value) => {
   return `${numeric.toFixed(2)}%`;
 };
 
+const formatScore = (value) => {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 'N/A';
+  return numeric.toFixed(0);
+};
+
 const columns = [
   { key: 'bankName', label: 'Bank Name', formatter: (value) => value || 'N/A', sticky: true },
+  { key: 'segment', label: 'Asset Segment', formatter: (value) => value || 'N/A' },
+  { key: 'segmentOverallRank', label: 'Segment Rank', formatter: formatScore },
+  { key: 'segmentCombinedScore', label: 'Combined Score', formatter: formatScore },
   { key: 'totalAssets', label: 'Total Assets (MM)', formatter: formatMillions },
   { key: 'totalDeposits', label: 'Total Deposits (MM)', formatter: formatMillions },
   { key: 'tier1Capital', label: 'Tier 1 Capital (MM)', formatter: formatMillions },

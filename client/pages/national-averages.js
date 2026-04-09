@@ -177,6 +177,14 @@ const formatPercentage = (value) => {
   return `${value.toFixed(2)}%`;
 };
 
+const formatScore = (value) => {
+  if (!Number.isFinite(value)) return 'N/A';
+  return value.toFixed(0);
+};
+
+const displayPercentage = (value) =>
+  value == null ? 'N/A' : formatPercentage(Number(value));
+
 const getTileFill = (value, minValue, maxValue) => {
   if (!Number.isFinite(value)) {
     return '#e5e7eb';
@@ -547,6 +555,21 @@ const NationalAverages = () => {
     return summaryRows.filter((row) => String(row.callym) === selectedQuarterValue);
   }, [selectedQuarterValue, summaryRows]);
 
+  const orderedSegmentSummaryRows = useMemo(() => {
+    const assetRangeOrder = new Map(
+      BENCHMARK_PORTFOLIOS.filter((item) => item !== 'National Average').map((item, index) => [
+        item,
+        index,
+      ])
+    );
+
+    return [...segmentSummaryRows].sort((a, b) => {
+      const orderA = assetRangeOrder.get(a.segment) ?? Number.MAX_SAFE_INTEGER;
+      const orderB = assetRangeOrder.get(b.segment) ?? Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
+    });
+  }, [segmentSummaryRows]);
+
   const renderFilterControls = () => (
     <div className={styles.controlPanel}>
       <div className={styles.printControlGroup}>
@@ -824,6 +847,7 @@ const NationalAverages = () => {
                 <thead>
                   <tr>
                     <th>Asset range</th>
+                    <th>Combined score</th>
                     <th>Banks</th>
                     <th>Assets</th>
                     <th>Liabilities</th>
@@ -835,9 +859,10 @@ const NationalAverages = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {segmentSummaryRows.map((row) => (
+                  {orderedSegmentSummaryRows.map((row) => (
                     <tr key={row.segment}>
                       <td>{row.segment}</td>
+                      <td>{formatScore(Number(row.combinedRankScore))}</td>
                       <td>{formatCount(Number(row.bankCount))}</td>
                       <td>{formatCurrency(Number(row.assets))}</td>
                       <td>{formatCurrency(Number(row.liabilities))}</td>
@@ -848,9 +873,65 @@ const NationalAverages = () => {
                       <td>{formatPercentage(Number(row.roe))}</td>
                     </tr>
                   ))}
+                  {!orderedSegmentSummaryRows.length ? (
+                    <tr>
+                      <td colSpan={10}>No asset range summary data for the selected filters.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </div>
+
+        <div className={styles.summarySection}>
+          <div>
+            <p className={styles.sectionKicker}>Asset range ranking</p>
+            <h3 className={styles.bankTitle}>Ranked profitability by asset range</h3>
+            <p className={styles.sectionSubtitle}>
+              Combined score equals `ROAA rank + ROAE rank + nIM rank`. Lower scores rank
+              higher overall.
+            </p>
+          </div>
+          {segmentSummaryError ? <p className={styles.error}>{segmentSummaryError}</p> : null}
+          {segmentSummaryLoading ? (
+            <p className={styles.status}>Loading asset range ranking...</p>
+          ) : null}
+          {!segmentSummaryLoading && !segmentSummaryError ? (
+            <div className={styles.tableWrapper}>
+              <table className={styles.summaryTable}>
+                <thead>
+                  <tr>
+                    <th>Overall rank</th>
+                    <th>Asset range</th>
+                    <th>Combined score</th>
+                    <th>ROAA</th>
+                    <th>ROAA rank</th>
+                    <th>ROAE</th>
+                    <th>ROAE rank</th>
+                    <th>nIM</th>
+                    <th>nIM rank</th>
+                    <th>Banks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {segmentSummaryRows.map((row) => (
+                    <tr key={`${row.segment}-ranking`}>
+                      <td>{formatCount(Number(row.overallRank))}</td>
+                      <td>{row.segment}</td>
+                      <td>{formatScore(Number(row.combinedRankScore))}</td>
+                      <td>{displayPercentage(row.roa)}</td>
+                      <td>{formatCount(Number(row.roaRank))}</td>
+                      <td>{displayPercentage(row.roe)}</td>
+                      <td>{formatCount(Number(row.roeRank))}</td>
+                      <td>{displayPercentage(row.nim)}</td>
+                      <td>{formatCount(Number(row.nimRank))}</td>
+                      <td>{formatCount(Number(row.bankCount))}</td>
+                    </tr>
+                  ))}
                   {!segmentSummaryRows.length ? (
                     <tr>
-                      <td colSpan={9}>No asset range summary data for the selected filters.</td>
+                      <td colSpan={10}>No asset range ranking data for the selected filters.</td>
                     </tr>
                   ) : null}
                 </tbody>
