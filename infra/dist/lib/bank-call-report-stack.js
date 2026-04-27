@@ -124,6 +124,12 @@ class BankCallReportStack extends cdk.Stack {
                 password: cdk.SecretValue.unsafePlainText(props.existingDbPassword),
             },
         });
+        const sessionSecret = new secretsmanager.Secret(this, 'SessionSecret', {
+            generateSecretString: {
+                excludePunctuation: true,
+                passwordLength: 48,
+            },
+        });
         const dbInstance = new rds.DatabaseInstance(this, 'Database', {
             vpc,
             vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
@@ -158,6 +164,7 @@ class BankCallReportStack extends cdk.Stack {
             assumedBy: new iam.ServicePrincipal('tasks.apprunner.amazonaws.com'),
         });
         existingDbCredentialsSecret.grantRead(appRunnerInstanceRole);
+        sessionSecret.grantRead(appRunnerInstanceRole);
         const vpcConnector = new apprunner.CfnVpcConnector(this, 'ApiVpcConnector', {
             vpcConnectorName: `${cdk.Stack.of(this).stackName.toLowerCase()}-apivpc`,
             subnets: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE_ISOLATED }).subnetIds,
@@ -180,6 +187,9 @@ class BankCallReportStack extends cdk.Stack {
                             { name: 'DB_HOST', value: props.existingDbHost },
                             { name: 'DB_PORT', value: props.existingDbPort },
                             { name: 'DB_NAME', value: props.existingDbName },
+                            { name: 'COOKIE_SECURE', value: 'true' },
+                            { name: 'COOKIE_SAME_SITE', value: 'none' },
+                            { name: 'AUTH_SESSION_TTL_HOURS', value: '12' },
                             {
                                 name: 'CORS_ORIGIN',
                                 value: `https://${frontendDistribution.distributionDomainName}`,
@@ -188,6 +198,7 @@ class BankCallReportStack extends cdk.Stack {
                         runtimeEnvironmentSecrets: [
                             { name: 'DB_USER', value: `${secretArn}:username::` },
                             { name: 'DB_PASSWORD', value: `${secretArn}:password::` },
+                            { name: 'SESSION_SECRET', value: sessionSecret.secretArn },
                         ],
                     },
                 },
