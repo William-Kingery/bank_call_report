@@ -1834,9 +1834,11 @@ export default function Home() {
             <Link className={styles.headerLink} href="/national-averages">
               View national averages overview
             </Link>
+            {/*
             <Link className={styles.headerLink} href="/smart-pricing">
               Smart Pricing
             </Link>
+            */}
           </div>
         </div>
         <div className={styles.headerActions}>
